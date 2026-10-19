@@ -134,7 +134,24 @@ T0 ─┬─ T1 ── T2 ─┬─ T10 ─┐
 - 검증: 테스트 59개 통과, `typecheck`·`lint`·`build` 통과, `GILGAL_DEV_NOW` 로 11/8(쉼의 날)·11/9(DAY 7)·12/1(Catch-up) 임시 홈 확인.
 - 남은 검토: `days.ts` 의 장 제목·완료 메시지 문구(초안).
 
-### 다음 — T3~T7 (DB·로그인·이관·온보딩)
+### 완료 — T3~T16 Phase 1 기능 (2026-10-19, 사용자 위임으로 진행)
 
-선행 조건: 운영자 S1(Supabase 생성, `.env.local` 입력), S2(카카오 localhost URI 추가), S3(Selah CSV, 이관 방식 승인).
-진행 방식: T3 스키마 작성 → 생성된 마이그레이션 SQL 제시 → **승인 후** T4 적용 → T5 로그인 → T6 이관(dry-run 결과 제시 후 승인) → T7 온보딩.
+- **S1~S3 운영자 작업 완료**: `.env.local`, 카카오 localhost Redirect URI, Selah CSV 2개.
+- **T3·T4 DB**: `lib/db/schema.ts` → `drizzle/0000_init.sql`(9개 테이블, 전부 RLS) + `0001_lock_down_public.sql`(anon/authenticated REVOKE, default privileges). `pnpm db:migrate` 적용, 10개 테이블 RLS on·anon/authenticated SELECT 권한 없음 확인. `DIRECT_URL` 은 Session pooler(:5432)로 변경(Direct 는 IPv6 전용).
+- **T5 인증**: Auth.js + Kakao + DrizzleAdapter(DB 세션), `events.signIn` 에서 profile 생성 + 회원번호 자동 연결, `getViewer()`/`requireMember()`, `/login`. 로컬에서 카카오 authorize 리디렉트(`redirect_uri=http://localhost:3000/api/auth/callback/kakao`) 확인. **실제 카카오 계정 로그인은 운영자 확인 필요.**
+- **T6 이관**: `pnpm import:selah` — 셀 26개, 명단 229행(회원 134 + 명단 95, 회원번호 없음 45). 충돌 1건(같은 셀·같은 실명에 회원번호 2개 → 명단에 있는 계정만). 재실행 시 229행 unchanged(멱등). CSV 삭제.
+- **T7 온보딩**: 실명 매칭(공백 제거 완전 일치, 회원번호 없는 미점유 행 1건만, 5회 제한, 조건부 UPDATE) → 실패 시 셀 목록 선택. 검증: 잘못된 이름·0건·동명이인·회원번호 있는 행 보호·위조 셀 id·시도 제한·재로그인 시 자기 행 재사용·병렬 3건 중 1건만 성공.
+- **T8 아바타**: DiceBear 에 `marbles` 가 없어 자체 marble SVG(ADR-018), `/api/avatar/[seed]` 영구 캐시, 잘못된 seed 400.
+- **T9 디자인**: 토큰(paper/sand/stone/olive/mist/clay), Noto Sans/Serif KR, `word-break: keep-all`. 390px 에서 가로 스크롤 없음(login/onboarding/home/journey/day).
+- **T10 본문**: `mock`/`db` provider(ADR-019), `joshua.ts` 절 수(658), `pnpm bible:load` 파서·검증. 본문 파일은 운영자 제공 대기.
+- **T11·T12 읽기**: `/day/[day]`(장·절, 소제목, 글자 크기, Mock 배지, 표기) + `completeDayAction` + `CompletionMoment`. 검증(서버 액션 직접 호출): 완료→`completed`, 재호출→`already`, 미래 DAY→`locked`, 형식 오류→`invalid_day`, 비로그인 거부, 동시 5회→1행.
+- **T13·T14 지도**: `locations.ts` 좌표·지형, `mapState()`(+ 테스트 9개), `JourneyMap` SVG(걸은 길 실선/아직 걷지 않은 길 점선, 아바타 마커, 오늘 지점 강조).
+- **T15·T16 화면**: 홈(기간 전 D-n / 오늘의 여정 / 쉼의 날 / Catch-up / 종료 후 분기, 미니 지도, n/24, 오늘 공동체 숫자, 아직 걷지 않은 길), `/journey`(전체 지도, 나의 24일, 목록, 로그아웃). `GILGAL_DEV_NOW` 10/31·11/2·11/8·11/9·11/28 23:59·12/1·12/6 확인.
+- 자동 검증: `typecheck`·`lint`·`build` 통과, 테스트 88개 통과.
+
+### 다음
+
+- **운영자**: 실제 카카오 계정으로 로컬 로그인(`pnpm dev` → http://localhost:3000) → Selah 회원이면 바로 홈, 아니면 온보딩.
+- **운영자**: 본문 텍스트 파일 제공 → `pnpm bible:load` → `BIBLE_PROVIDER=db`.
+- T18 Vercel 배포(운영자 계정 필요): 환경변수(운영은 `GILGAL_CAMPAIGN=joshua-2026`, `BIBLE_PROVIDER`), 함수 리전 `icn1`, 배포 후 카카오 운영 Redirect URI 추가.
+- 댓글 최소판(T25~T28), Phase 2(T20~T24), `/finale`(T29).

@@ -1,16 +1,63 @@
 @import "tailwindcss";
 
-/* 임시 기본 톤 — 디자인 토큰(베이지·스톤·올리브·샌드·뮤트 블루)은 T9 에서 정한다 */
+/*
+ * 길갈 디자인 토큰 (requirements 16절): 베이지·스톤·올리브·샌드·뮤트 블루.
+ * 오래된 지도와 종이 위에 쓴 기록 같은 차분한 톤. 강한 원색·게임 같은 효과는 쓰지 않는다.
+ */
 @theme {
-  --color-paper: #f7f4ee;
-  --color-ink: #2f2d29;
-  --color-ink-soft: #77716a;
+  --color-paper: #f6f1e7;
+  --color-paper-deep: #efe7d8;
+  --color-card: #fbf8f2;
+  --color-sand: #e6d9bf;
+  --color-line: #e2d7c3;
+  --color-stone: #8b8275;
+  --color-ink: #2f2b25;
+  --color-ink-soft: #746b5f;
+  --color-olive: #6b7344;
+  --color-olive-deep: #4d5530;
+  --color-olive-soft: #dfe3cc;
+  --color-mist: #7d93a6;
+  --color-mist-soft: #dde5ea;
+  --color-clay: #b98b6e;
+
+  --font-sans: var(--font-noto-sans), ui-sans-serif, system-ui, "Apple SD Gothic Neo", sans-serif;
+  --font-serif: var(--font-noto-serif), "Nanum Myeongjo", "AppleMyungjo", serif;
 }
 
 html,
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
-  font-family: ui-sans-serif, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: var(--font-sans);
+  /* 한국어는 어절 단위로 줄바꿈해야 읽기 편하다 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* 종이 질감 — 아주 옅은 점 패턴 */
+body {
+  background-image: radial-gradient(rgb(139 130 117 / 0.06) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

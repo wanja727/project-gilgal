@@ -29,12 +29,15 @@
 - **도메인**: 커스텀 도메인 없이 Vercel 기본 도메인(예상 `https://project-gilgal.vercel.app`, 실제 할당 주소 기준).
 - **셀·온보딩**: 셀 편성은 Selah에서 이관한 셀 목록·명단이 기준이다. 온보딩은 Selah 방식(카카오 ID → 실명 매칭 → 기존 셀 목록에서 선택)을 따르며 셀 자유 입력은 없다. 셀 정정은 운영자가 DB에서 직접 하므로 관리자 셀 편성 화면은 만들지 않는다.
 - **개인정보**: Selah에서 가져오는 항목은 카카오 회원번호·실명·셀 이름뿐. 이관 CSV는 `data/private/`(gitignore)에 두고 적재 후 삭제한다. 카카오 회원번호는 클라이언트로 보내지 않는다.
-- **성경 본문**: 본문은 길갈 서비스 **안에서** 장·절 구분해 표시한다(외부 사이트 이동 없음). 개역개정은 저작권 보호 대상이므로 이용 허락 확인 전에는 본문을 수집(크롤링)·저장·표시하지 않고 `BIBLE_PROVIDER=mock` 으로 개발한다. 허락 후 `static`/`db` provider로 연결한다. 번역문을 저장소에 커밋하지 않는다(허락 조건이 허용하기 전까지).
+- **성경 본문**: 본문은 길갈 서비스 **안에서** 장·절 구분해 표시한다(외부 사이트 이동 없음). 개역개정은 저작권 보호 대상이므로 Claude가 웹에서 본문을 수집(크롤링)하지 않는다. 본문은 운영자가 파일로 제공 → `pnpm bible:load` 로 `bible_verse` 적재 → `BIBLE_PROVIDER=db`(ADR-019). 그 전에는 `mock`. 번역문을 저장소에 커밋하지 않는다.
 - 서비스가 성경 본문에 대한 AI 해석·신학적 해설을 생성/제공하지 않는다.
 
 ## 승인이 필요한 작업
 
-다음은 **계획을 먼저 제시하고 사용자 승인을 받은 뒤** 진행한다.
+> **2026-10-19 사용자 위임**: 소규모 비공개 서비스이므로 아래 작업도 사전 승인 없이 진행하고, 한 일과 결과(행 수·검증)를 보고한다.
+> 예외 — 실제 사용자 데이터(테스트 계정·`joshua-2026-test` 가 아닌 행)를 지우거나 되돌릴 수 없게 바꾸는 작업은 대상 행 수를 보여 주고 확인받는다.
+
+원래 승인 대상(위임 후에도 계획·결과를 보고한다):
 
 - 대규모 구현(여러 화면/모듈에 걸친 기능, 새 Phase 착수)
 - DB 변경: 테이블/컬럼/인덱스/제약/RLS/권한 추가·변경, 마이그레이션 실행
@@ -76,6 +79,10 @@
 pnpm이 전역 설치되어 있지 않으면 `corepack pnpm <명령>` 으로 실행한다(`package.json` 의 `packageManager` 버전 사용).
 
 - `pnpm dev` / `pnpm build` / `pnpm lint` / `pnpm typecheck` / `pnpm test`
+- `pnpm db:generate` → SQL 리뷰 → `pnpm db:migrate` (마이그레이션은 `drizzle/`, `push` 금지)
+- `pnpm import:selah [--dry] [--delete-csv]` — `data/private/A.csv`(Selah 회원), `B.csv`(cell_roster) → `cell`/`roster_entry`
+- `pnpm bible:load <파일> [--dry]` — 본문 텍스트 → `bible_verse` (형식은 `lib/bible/parse.ts`)
+- `pnpm test-user create [--pending] | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정과 세션 쿠키
 
 ## 검증
 
