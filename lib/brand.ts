@@ -1,0 +1,28 @@
+/**
+ * 서비스명·브랜딩 문구는 이 파일에서만 관리한다.
+ * 서비스명이 아직 최종 확정 전이므로(요구사항 4절) 컴포넌트에 문자열을 직접 쓰지 않는다.
+ */
+
+export const SERVICE_NAME = "길갈";
+export const SERVICE_SUBTITLE = "함께 말씀을 읽고, 함께 걸어가는 24일";
+
+export const BRAND = {
+  name: SERVICE_NAME,
+  subtitle: SERVICE_SUBTITLE,
+  /** 메타 description, 공유 미리보기 */
+  description: "공동체가 24일 동안 여호수아의 여정을 함께 걷는 통독",
+  /** 핵심 경험 한 줄 (요구사항 3절) */
+  tagline: "오늘 한 장을 읽으면 우리의 여정이 한 걸음 진행됩니다",
+
+  // ─── 서비스 언어: 출석/결석이 아니라 "함께 걷는 길" ─────────────────────
+  /** 아직 완료하지 않은 공개된 장 */
+  unwalkedPath: "아직 걷지 않은 길",
+  /** 오늘 아직 읽지 않은 참여자 (명단처럼 보이지 않게, 숫자와 함께만 사용) */
+  companionsNotStarted: "아직 여정을 시작하지 않은 동행자",
+  /** 읽기 완료 후 공통 문구 */
+  completionBody: "오늘도 공동체와 함께\n한 걸음 나아갔어요.",
+  /** 주일 */
+  restDay: "쉼의 날",
+  /** 24장 완주 */
+  finished: "여정을 완주했습니다.",
+} as const;

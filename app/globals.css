@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* 임시 기본 톤 — 디자인 토큰(베이지·스톤·올리브·샌드·뮤트 블루)은 T9 에서 정한다 */
+@theme {
+  --color-paper: #f7f4ee;
+  --color-ink: #2f2d29;
+  --color-ink-soft: #77716a;
+}
+
+html,
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
