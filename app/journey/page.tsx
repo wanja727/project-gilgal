@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
+import { AvatarShuffler } from "@/components/AvatarShuffler";
 import { JourneyMap, MAP_CAPTION } from "@/components/JourneyMap";
 import { ProgressDots } from "@/components/ProgressDots";
 import { signOut } from "@/lib/auth";
@@ -67,6 +68,11 @@ export default async function JourneyPage() {
             </ul>
           </section>
         )}
+
+        <section>
+          <h2 className="mb-3 text-[13px] font-semibold text-ink-soft">나의 아바타</h2>
+          <AvatarShuffler seed={member.avatarSeed} />
+        </section>
 
         <section className="pt-6 text-center text-xs text-stone">
           <p>

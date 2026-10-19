@@ -1,6 +1,6 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { randomAvatarSeed } from "@/lib/avatarSeed";
 import { db } from "@/lib/db";
 import { cells, profiles, rosterEntries } from "@/lib/db/schema";
 import { validateRealName } from "@/lib/roster/normalize";
@@ -16,15 +16,11 @@ import { validateRealName } from "@/lib/roster/normalize";
 
 export const MAX_NAME_MATCH_ATTEMPTS = 5;
 
-function newAvatarSeed() {
-  return randomBytes(9).toString("base64url");
-}
-
 /** 로그인 직후: 프로필이 없으면 만들고, 회원번호로 명단을 자동 연결한다 */
 export async function linkProfileOnSignIn(userId: string, kakaoId: string) {
   await db
     .insert(profiles)
-    .values({ userId, kakaoId, avatarSeed: newAvatarSeed() })
+    .values({ userId, kakaoId, avatarSeed: randomAvatarSeed() })
     .onConflictDoNothing({ target: profiles.userId });
   await claimByKakaoId(userId);
 }

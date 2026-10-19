@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { avatarSvg, isValidSeed } from "./avatar";
+import { AVATAR_SEED_RE, randomAvatarSeed } from "./avatarSeed";
 
 describe("avatar", () => {
   it("같은 seed 는 같은 SVG", () => {
@@ -13,5 +14,15 @@ describe("avatar", () => {
     expect(isValidSeed("abcDEF123_-x")).toBe(true);
     expect(isValidSeed("<script>")).toBe(false);
     expect(isValidSeed("../etc")).toBe(false);
+  });
+  it("섞기 seed 는 12자 base64url 이고 매번 다르다", () => {
+    const seeds = Array.from({ length: 200 }, randomAvatarSeed);
+    for (const s of seeds) {
+      expect(s).toMatch(AVATAR_SEED_RE);
+      expect(isValidSeed(s)).toBe(true);
+    }
+    expect(new Set(seeds).size).toBe(200);
+    expect(AVATAR_SEED_RE.test("abc")).toBe(false);
+    expect(AVATAR_SEED_RE.test("abcDEF123_-x/")).toBe(false);
   });
 });
