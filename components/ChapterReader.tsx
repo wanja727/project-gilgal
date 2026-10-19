@@ -73,14 +73,17 @@ export function ChapterReader({ text }: { text: ChapterText }) {
                 {section.heading}
               </h3>
             )}
-            <p>
+            {/* 절마다 줄을 나누고 절 번호를 왼쪽 칸에 둔다 — 본문 줄이 번호 아래로 파고들지 않아 읽기 편하다 */}
+            <ol className="space-y-1.5">
               {section.verses.map((v) => (
-                <span key={v.number}>
-                  <sup className="mr-1 font-sans text-[0.62em] font-semibold text-mist">{v.number}</sup>
-                  {v.text}{" "}
-                </span>
+                <li key={v.number} className="flex items-baseline gap-2">
+                  <span className="w-[1.6em] shrink-0 text-right font-sans text-[0.62em] font-semibold text-mist">
+                    {v.number}
+                  </span>
+                  <span className="min-w-0 flex-1">{v.text}</span>
+                </li>
               ))}
-            </p>
+            </ol>
           </section>
         ))}
       </div>
