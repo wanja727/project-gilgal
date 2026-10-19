@@ -2,43 +2,84 @@ import { JOSHUA_VERSE_COUNTS } from "./joshua";
 import type { FlatVerse } from "./sections";
 
 /**
- * 운영자가 제공한 본문 텍스트 파일을 읽는다(scripts/load-bible.ts).
- * 한 줄에 한 절, 다음 형식을 받는다.
+ * 운영자가 제공한 본문 텍스트 파일을 읽는다(scripts/load-bible.ts). 두 형식을 받는다.
  *
+ * A. 한 줄에 장:절이 함께 있는 형식
  *   수1:1 <여호와께서 여호수아에게 명령하시다> 여호와의 종 모세가 죽은 후에 …
  *   여호수아 1:2 이제 …
- *   1:3 …
+ *   - 책 이름 접두어(수/여호수아)는 있어도 없어도 된다. 절 앞의 <…> 는 소제목.
  *
- * - 책 이름 접두어(수/여호수아)는 있어도 없어도 된다.
- * - 절 앞의 <…> 는 그 절에서 시작하는 소제목으로 본다.
- * - 빈 줄과 # 으로 시작하는 줄은 무시한다.
+ * B. 장 머리 + 소제목 줄 + 절 번호 줄 (성경 사이트에서 복사한 형태)
+ *   제 1 장
+ *   여호와께서 여호수아에게 말씀하시다      ← 숫자로 시작하지 않는 줄 = 다음 절의 소제목
+ *   1   여호와의 종 모세가 죽은 후에 …
+ *
+ * 공통: 빈 줄과 # 으로 시작하는 줄은 무시한다. 본문 속 각주 표시("1)규빗"의 "1)")는 지운다.
  */
-const LINE_RE = /^(?:수|여호수아)?\s*(\d{1,2})\s*[:장]\s*(\d{1,3})\s*절?\s+(.*)$/;
+const FULL_LINE_RE = /^(?:수|여호수아)?\s*(\d{1,2})\s*[:장]\s*(\d{1,3})\s*절?\s+(.*)$/;
+const CHAPTER_RE = /^제\s*(\d{1,2})\s*장$/;
+const VERSE_RE = /^(\d{1,3})\s+(.*)$/;
 const HEADING_RE = /^<([^>]+)>\s*/;
+// 각주 표시: 숫자+")" 바로 뒤에 한글이 오는 경우만 (소제목의 "(삿 1:11-15)" 같은 참조는 남긴다)
+const FOOTNOTE_RE = /(^|[^\d:\-(])\d{1,2}\)(?=[가-힣])/g;
 
 export type ParsedChapter = { chapter: number; verses: FlatVerse[] };
 
+function cleanText(text: string): string {
+  return text.replace(FOOTNOTE_RE, "$1").replace(/\s+/g, " ").trim();
+}
+
 export function parseBibleText(text: string): ParsedChapter[] {
   const chapters = new Map<number, FlatVerse[]>();
-  const lines = text.replace(/^﻿/, "").split(/\r?\n/);
+  const push = (chapter: number, verse: FlatVerse) => {
+    const list = chapters.get(chapter) ?? [];
+    list.push(verse);
+    chapters.set(chapter, list);
+  };
+  let currentChapter: number | null = null;
+  let pendingHeading: string | undefined;
+
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/);
   lines.forEach((raw, i) => {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
-    const m = LINE_RE.exec(line);
-    if (!m) throw new Error(`${i + 1}행: "장:절 본문" 형식이 아닙니다`);
-    const chapter = Number(m[1]);
-    const number = Number(m[2]);
-    let body = m[3].trim();
-    let heading: string | undefined;
-    const h = HEADING_RE.exec(body);
-    if (h) {
-      heading = h[1].trim();
-      body = body.slice(h[0].length).trim();
+
+    const chapterHead = CHAPTER_RE.exec(line);
+    if (chapterHead) {
+      currentChapter = Number(chapterHead[1]);
+      pendingHeading = undefined;
+      return;
     }
-    if (!body) throw new Error(`${i + 1}행: 본문이 비어 있습니다`);
-    const list = chapters.get(chapter) ?? [];
-    list.push({ number, heading, text: body });
-    chapters.set(chapter, list);
+
+    const full = FULL_LINE_RE.exec(line);
+    if (full && currentChapter === null) {
+      let body = full[3].trim();
+      let heading: string | undefined;
+      const h = HEADING_RE.exec(body);
+      if (h) {
+        heading = h[1].trim();
+        body = body.slice(h[0].length);
+      }
+      body = cleanText(body);
+      if (!body) throw new Error(`${i + 1}행: 본문이 비어 있습니다`);
+      push(Number(full[1]), { number: Number(full[2]), heading, text: body });
+      return;
+    }
+
+    if (currentChapter === null) throw new Error(`${i + 1}행: "장:절 본문" 형식이 아닙니다`);
+
+    const verse = VERSE_RE.exec(line);
+    if (verse) {
+      const body = cleanText(verse[2]);
+      if (!body) throw new Error(`${i + 1}행: 본문이 비어 있습니다`);
+      push(currentChapter, { number: Number(verse[1]), heading: pendingHeading, text: body });
+      pendingHeading = undefined;
+      return;
+    }
+
+    // 숫자로 시작하지 않는 줄 = 소제목
+    if (pendingHeading) throw new Error(`${i + 1}행: 소제목이 연달아 나옵니다`);
+    pendingHeading = cleanText(line);
   });
   return [...chapters.entries()]
     .sort(([a], [b]) => a - b)

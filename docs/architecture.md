@@ -403,7 +403,7 @@ type JourneyDay = {
 
 ### 8.3 아바타 (DiceBear Marbles) (ADR-007)
 
-- ~~`@dicebear/core` + `@dicebear/collection` 을 서버에서 사용해 SVG 생성~~ → DiceBear에 `marbles` 가 없어 `lib/avatar.ts` 에서 marble SVG를 자체 생성(ADR-018). 외부 API 호출 없음.
+- `@dicebear/core`(v10) + `@dicebear/styles/marbles.json` 을 서버에서 사용해 SVG 생성(ADR-007). 외부 API 호출 없음.
 - seed: `profile.avatar_seed`(가입 시 랜덤, 고정). userId/이름/카카오 ID를 seed로 쓰지 않는다.
 - `GET /api/avatar/[seed]` → `image/svg+xml`, `Cache-Control: public, max-age=31536000, immutable`. 목록에서는 `<img>` 로 사용.
 - `Avatar` 컴포넌트는 `{ seed, style, options }` 를 받아 향후 꾸미기(`avatar_options`) 확장 시 인터페이스 변경 없음.
@@ -649,9 +649,9 @@ CREATE TABLE comment_reaction (
 ### ADR-006 RLS 대신 서버 계층 권한 + 직접 접근 차단 — 채택(독립 DB 기준으로 개정)
 - Supabase Auth 미사용으로 `auth.uid()` 정책 불가. 서버 계층에서 권한 강제, DB는 Data API 비활성화 + 모든 테이블 RLS(정책 없음) + anon/authenticated REVOKE.
 
-### ADR-007 DiceBear를 서버에서 생성해 자체 엔드포인트로 제공 — **대체됨(ADR-018)**
+### ADR-007 DiceBear를 서버에서 생성해 자체 엔드포인트로 제공 — 채택(유지, ADR-018 철회)
 - 대안 `api.dicebear.com` 직접 사용은 외부 가용성 의존·seed 제3자 전송.
-- "서버에서 SVG 생성, `/api/avatar/[seed]` 로 제공" 부분은 ADR-018에서도 유지.
+- 구현: DiceBear v10 — `@dicebear/core` + `@dicebear/styles/marbles.json`(CC0 1.0). v9 `@dicebear/collection` 에는 marbles 가 없고 v10부터 `@dicebear/styles` 로 제공된다.
 
 ### ADR-008 성경 본문 Provider 추상화 — 채택 (운영 link 모드 부분은 **대체됨(ADR-016)**)
 - 원결정: 개역개정 목표, 허락 전 운영은 `link`(대한성서공회 장 링크), 개발은 `mock`, 허락 후 `static`/`db`.
@@ -702,7 +702,8 @@ CREATE TABLE comment_reaction (
 - **결정**: 커스텀 도메인 없이 Vercel이 할당하는 `*.vercel.app` 주소(예상 `project-gilgal.vercel.app`)를 사용한다. 카카오 Redirect URI는 실제 할당 주소로 추가.
 - **결과**: 비용 없음. 주소가 바뀌면 카카오 콘솔 URI도 함께 추가해야 한다. Preview URL은 카카오 로그인 대상에서 제외.
 
-### ADR-018 Marble 아바타를 자체 생성 — 채택 (2026-10-19 구현 중 결정)
+### ADR-018 Marble 아바타를 자체 생성 — **철회** (2026-10-19, ADR-007 유지)
+- 철회 사유: DiceBear v10의 `@dicebear/styles` 에 `marbles` 가 있음을 확인(v9 컬렉션만 보고 잘못 판단). 자체 생성 코드를 지우고 DiceBear로 교체했다. 아래는 당시 기록.
 - **배경**: 구현 단계에서 확인해 보니 DiceBear 컬렉션(9.x)에는 `marbles` 스타일이 없다. "흐릿하게 섞인 색 덩어리 원형"은 Boring Avatars의 `marble` 변형이다.
 - **결정**: 의존성 없이 `lib/avatar.ts` 에서 seed → 결정적 marble SVG를 만든다(FNV-1a 해시 + mulberry32, 길갈 팔레트 6종). 제공 방식은 그대로 `/api/avatar/[seed]` + 영구 캐시. `profile.avatar_style='marbles'` 값 유지.
 - **대안**: ① Boring Avatars(React 컴포넌트)를 서버에서 문자열로 렌더 — 같은 모양이지만 색이 무작위 팔레트라 톤 통일이 어렵다. ② DiceBear `glass`/`shapes` — 요구한 느낌과 다르다.
@@ -713,6 +714,7 @@ CREATE TABLE comment_reaction (
 - **배경**: 운영자가 "소규모 비공개 서비스이니 본문을 넣어 달라"고 요청. 개역개정은 저작권 보호 대상이므로 수집·저장의 책임 주체가 운영자여야 하고, 저장소 공개 여부와 무관하게 커밋하지 않는 편이 안전하다.
 - **대안**: `static` JSON 동봉 — 배포에 본문이 포함되어 저장소·빌드 산출물에 복제가 남는다.
 - **결과**: 본문 교체는 파일 적재 + `BIBLE_PROVIDER=db` 만으로 끝난다. 적재 전 `db` 로 두면 화면은 "본문 준비 중"을 보인다.
+- **2026-10-19 적재**: 운영자가 개역개정 여호수아 1~24장 텍스트를 제공(소규모 비공개 서비스, 운영자 판단) → `bible_verse` 658행, 소제목 49개, 각주 표시(`1)` 등) 제거. 원본 파일은 `data/private/joshua-gae.txt`(gitignore). 대한성서공회 이용 허락 문의 TODO(8.5)는 운영자 판단으로 유지.
 
 ---
 

@@ -37,6 +37,27 @@ describe("parseBibleText", () => {
       { chapter: 2, verses: [{ number: 1, heading: "소제목 나", text: "다음 장" }] },
     ]);
   });
+  it("'제 N 장' + 소제목 줄 + 절 번호 줄 형식, 각주 표시 제거", () => {
+    const parsed = parseBibleText(
+      "제 1 장\n\n첫 소제목\n\n\n1   첫 절\n2   거리가 이천 1)규빗쯤 되게\n\n제 2 장\n1   둘째 장\n\n갈렙이 헤브론을 정복하다(삿 1:11-15)\n\n2   12)양들과 끝\n",
+    );
+    expect(parsed).toEqual([
+      {
+        chapter: 1,
+        verses: [
+          { number: 1, heading: "첫 소제목", text: "첫 절" },
+          { number: 2, heading: undefined, text: "거리가 이천 규빗쯤 되게" },
+        ],
+      },
+      {
+        chapter: 2,
+        verses: [
+          { number: 1, heading: undefined, text: "둘째 장" },
+          { number: 2, heading: "갈렙이 헤브론을 정복하다(삿 1:11-15)", text: "양들과 끝" },
+        ],
+      },
+    ]);
+  });
   it("형식이 다르면 줄 번호와 함께 거부", () => {
     expect(() => parseBibleText("수1:1 첫 절\n아무 문장")).toThrow("2행");
   });
