@@ -1,9 +1,10 @@
 /**
  * 서비스명·브랜딩 문구는 이 파일에서만 관리한다.
- * 서비스명이 아직 최종 확정 전이므로(요구사항 4절) 컴포넌트에 문자열을 직접 쓰지 않는다.
+ * 서비스명이 바뀔 수 있으므로(요구사항 4절) 컴포넌트에 문자열을 직접 쓰지 않는다.
+ * 2026-10-24 화면 표기를 "에벤"으로 변경(ADR-021). 저장소·DB·도메인 이름은 gilgal 그대로다.
  */
 
-export const SERVICE_NAME = "길갈";
+export const SERVICE_NAME = "에벤";
 export const SERVICE_SUBTITLE = "함께 말씀을 읽고, 함께 걸어가는 24일";
 
 export const BRAND = {
@@ -24,5 +25,7 @@ export const BRAND = {
   /** 주일 */
   restDay: "쉼의 날",
   /** 24장 완주 */
-  finished: "여정을 완주했습니다.",
+  finished: "여정을 완주했어요",
+  /** 지도 캡션 — 교육용 개념도임을 밝힌다 */
+  mapCaption: "위치는 이야기 흐름을 위한 개략적 표현입니다",
 } as const;

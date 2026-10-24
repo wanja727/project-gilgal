@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
+import { Gowun_Batang } from "next/font/google";
+// Pretendard 는 Google Fonts 에 없어 npm 패키지의 동적 서브셋 CSS 로 자체 호스팅한다(필요한 글자 조각만 내려받는다)
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
@@ -7,15 +9,9 @@ import "./globals.css";
 export const preferredRegion = "icn1";
 
 // 한글 폰트는 서브셋이 없어 preload 하지 않는다(필요한 글자만 브라우저가 내려받는다)
-const sans = Noto_Sans_KR({
-  weight: ["400", "500", "700"],
-  variable: "--font-noto-sans",
-  preload: false,
-  display: "swap",
-});
-const serif = Noto_Serif_KR({
-  weight: ["400", "600"],
-  variable: "--font-noto-serif",
+const serif = Gowun_Batang({
+  weight: ["400", "700"],
+  variable: "--font-gowun-batang",
   preload: false,
   display: "swap",
 });
@@ -28,7 +24,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f6f1e7",
+  themeColor: "#f1f3f6",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -37,10 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${sans.variable} ${serif.variable}`}>
-      <body className="min-h-dvh antialiased">
+    <html lang="ko" className={serif.variable}>
+      <body className="min-h-dvh">
         {/* 모바일 퍼스트: 가운데 정렬된 폭 제한 컨테이너 */}
-        <div className="mx-auto min-h-dvh w-full max-w-md">{children}</div>
+        <div className="relative mx-auto min-h-dvh w-full max-w-md">{children}</div>
       </body>
     </html>
   );

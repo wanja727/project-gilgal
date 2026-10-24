@@ -1,0 +1,140 @@
+import { Avatar } from "@/components/Avatar";
+import { ArrivalBoard } from "@/components/home/ArrivalBoard";
+import { CellCard } from "@/components/home/CellCard";
+import { ChapterPath } from "@/components/home/ChapterPath";
+import { buttonClass, ButtonLink, Card, CardHead, FlagIcon, MoreLink } from "@/components/ui";
+import { BRAND } from "@/lib/brand";
+import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
+import { requireMember } from "@/lib/data/viewer";
+import { JOSHUA_2026 } from "@/lib/journey/campaign";
+import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { goal, greeting, journeyProgress } from "@/lib/journey/guide";
+import { chapterStatus } from "@/lib/journey/mapState";
+import { todayKst } from "@/lib/time";
+
+// 날짜와 사용자에 따라 내용이 바뀌므로 정적 캐시하지 않는다
+export const dynamic = "force-dynamic";
+
+const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
+
+/** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 (기간 상태별 분기, architecture 7절) */
+export default async function Home() {
+  const member = await requireMember();
+  const today = todayKst();
+  const completed = await getCompletedDays(member.userId);
+  const p = journeyProgress(completed, today);
+
+  // 셀 카드 기준: 깃발이 있으면 그 장, 보충 기간·종료 후에는 24장 전체, 기간 전에는 없음
+  const criterion = p.flag ? [p.flag.day] : p.phase === "before" ? [] : ALL_DAYS;
+  const [board, cellMembers, community] = await Promise.all([
+    p.flag ? getArrivalBoard(p.flag.day, member.userId) : null,
+    getCellMembers(member.cellId, member.userId, criterion),
+    p.flag ? null : getCommunityToday(today),
+  ]);
+
+  const hello = greeting(p, member.realName);
+  const g = goal(p);
+  const statuses = JOURNEY_DAYS.map((d) => chapterStatus(d, p.done, today));
+  const flagLabel = p.flag
+    ? {
+        day: p.flag.day,
+        label: p.phase === "reading" ? `오늘 ${p.flag.day}장` : `${p.flag.day}장까지 열림`,
+        sub: `${board?.total ?? 0}명 도착`,
+      }
+    : null;
+
+  return (
+    <>
+      <header className="flex items-center justify-between px-5 pt-4">
+        <span className="font-serif text-[20px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</span>
+        <span className="flex items-center gap-2">
+          <span className="rounded-chip bg-surface px-2.5 py-1.5 text-[12.5px] font-semibold text-mute">{member.cellName}</span>
+          <Avatar seed={member.avatarSeed} size={34} />
+        </span>
+      </header>
+
+      <div className="px-6 pt-[22px] pb-1">
+        <p className="text-sub font-medium text-mute">{hello.kicker}</p>
+        <h1 className="mt-1.5 font-serif text-h1 font-bold tracking-[-0.04em] whitespace-pre-line text-main">
+          {hello.headline}
+        </h1>
+      </div>
+
+      <Card className="px-3 pt-5 pb-[18px]" aria-labelledby="path-title">
+        <div className="px-2">
+          <CardHead
+            id="path-title"
+            title="나의 여정"
+            sub={`${completed.length} / ${JOSHUA_2026.totalDays}`}
+            right={<MoreLink href="/journey">지도</MoreLink>}
+          />
+        </div>
+        <ChapterPath statuses={statuses} position={p.position} flag={flagLabel} avatarSeed={member.avatarSeed} />
+        <div className="mx-2 mt-1.5 flex items-center gap-3.5 rounded-tile bg-bg p-4">
+          <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface text-main">
+            <FlagIcon />
+          </span>
+          <span>
+            <b className="block text-title font-bold tracking-[-0.03em] text-main">{g.title}</b>
+            <span className="mt-0.5 block text-small text-mute">{g.body}</span>
+          </span>
+        </div>
+        <div className="mx-2 mt-3">
+          {g.action.href ? (
+            <ButtonLink href={g.action.href} variant={g.action.variant}>
+              {g.action.label}
+            </ButtonLink>
+          ) : (
+            <button type="button" disabled className={buttonClass("quiet")}>
+              {g.action.label}
+            </button>
+          )}
+        </div>
+      </Card>
+
+      {board && p.flag && (
+        <ArrivalBoard
+          board={board}
+          title={p.phase === "reading" ? `오늘 ${p.flag.day}장까지 읽은 사람` : `${p.flag.day}장까지 읽은 사람`}
+          avatarSeed={member.avatarSeed}
+          position={p.position}
+          remaining={p.unread.length}
+        />
+      )}
+
+      {community && p.phase !== "before" && (
+        <Card aria-labelledby="community-title">
+          <CardHead id="community-title" title="오늘의 공동체" />
+          <dl className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-btn bg-bg px-4 py-3.5">
+              <dt className="text-caption text-mute">오늘 함께 걸은 동행자</dt>
+              <dd className="mt-0.5 text-[19px] font-bold tracking-[-0.03em] text-main">{community.walkedToday}명</dd>
+            </div>
+            <div className="rounded-btn bg-bg px-4 py-3.5">
+              <dt className="text-caption text-mute">24장을 완주한 동행자</dt>
+              <dd className="mt-0.5 text-[19px] font-bold tracking-[-0.03em] text-main">
+                {community.finishers}명
+                <span className="ml-1 text-small font-medium text-mute">/ {community.participants}</span>
+              </dd>
+            </div>
+          </dl>
+        </Card>
+      )}
+
+      {member.cellName && (
+        <CellCard
+          cellName={member.cellName}
+          members={cellMembers}
+          showCount={p.phase !== "before"}
+          note={
+            p.phase === "before"
+              ? "11월 2일, 우리 셀이 함께 출발해요."
+              : p.flag
+                ? `흐린 얼굴은 아직 ${p.flag.day}장까지 오지 않은 셀원이에요.`
+                : "흐린 얼굴은 아직 24장을 걷고 있는 셀원이에요."
+          }
+        />
+      )}
+    </>
+  );
+}

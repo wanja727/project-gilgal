@@ -11,6 +11,7 @@ export async function saveAvatarAction(seed: string): Promise<ChangeAvatarResult
   if (result.status === "saved") {
     revalidatePath("/");
     revalidatePath("/journey");
+    revalidatePath("/me");
   }
   return result;
 }

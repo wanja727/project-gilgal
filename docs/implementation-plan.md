@@ -154,9 +154,20 @@ T0 ─┬─ T1 ── T2 ─┬─ T10 ─┐
 - 읽기 화면: 절마다 줄바꿈, 절 번호를 왼쪽 칸에 정렬.
 - 아바타 섞기(ADR-020): `/journey` 에서 미리보기 후 저장. 검증: 섞기→저장 시 헤더·카드 아바타 교체, 잘못된 형식 `invalid`, 다른 사용자 seed `taken`(기존 값 유지). 테스트 90개 통과.
 
+### 완료 — 디자인 시안 v5 적용 + 나눔 (2026-10-24, ADR-021·022)
+
+- 토큰·글꼴(남색 고정, 고운바탕·Pretendard), 표기명 "에벤", 아바타 남색 팔레트.
+- `lib/journey`: 장소 12곳(좌표·라벨·장면 이름·설명), 장별 장소·제목·도착 문구, `mapView`/`contiguousPosition`/`flagDay`/`nextToRead`, 홈 안내 문구(`guide.ts`) + 테스트.
+- 지도 컴포넌트 하나(`components/map/JourneyMap.tsx`) + 장소 아이콘(`SiteGlyph.tsx`).
+- 화면: 홈('ㄹ'자 진행도·장 정보 시트·도착 순서·셀 카드), 본문(장의 무대·절 단위·글자 크기·하단 고정 완료 버튼·나눔), 도착 화면(길 그리기, 3장 가나안), 여정 탭(지도/목록·장소 카드), 나눔 탭, 나 탭, `/finale`, 로그인·온보딩, 오류·없는 주소.
+- DB: `drizzle/0002_comments.sql`(reading_comment, reading_comment_like, RLS on, anon/authenticated 권한 없음 확인).
+- 검증: 3장 뒤처짐 / 오늘 장 도착 / 건너뛰고 읽음 / 주일 / 보충 기간 / 완주 / 기간 전, 완료 중복 0행, 도착 화면은 첫 완료에만, 순위 = 완료 시각 순, 나눔 작성·공감 토글·수정·운영자 숨김/복구.
+- TODO(Phase 2): 13~22장 지파별 영역 채우기(지금은 헤브론·실로·세겜·요단 동쪽 대표 장소), 18장 거점 이동·20장 도피성 마커 등 `mapEffect` 별 연출.
+
 ### 다음
 
 - **운영자**: 실제 카카오 계정으로 로컬 로그인(`pnpm dev` → http://localhost:3000) → Selah 회원이면 바로 홈, 아니면 온보딩.
 - 운영(Vercel) 환경변수에 `BIBLE_PROVIDER=db` 설정.
 - T18 Vercel 배포(운영자 계정 필요): 환경변수(운영은 `GILGAL_CAMPAIGN=joshua-2026`, `BIBLE_PROVIDER`), 함수 리전 `icn1`, 배포 후 카카오 운영 Redirect URI 추가.
-- 댓글 최소판(T25~T28), Phase 2(T20~T24), `/finale`(T29).
+- 교회 검토: 장 제목·장면 이름·장소 설명·도착 문구(`lib/journey/days.ts`, `locations.ts`).
+- Phase 2(T20~T24): 지파별 영역, `mapEffect` 연출.

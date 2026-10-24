@@ -212,3 +212,57 @@ export const bibleVerses = pgTable(
   },
   (v) => [primaryKey({ columns: [v.translation, v.book, v.chapter, v.verse] })],
 ).enableRLS();
+
+// ─── 나눔 (댓글 · 공감) ───────────────────────────────────────────────────
+
+export const COMMENT_MAX_LENGTH = 1000;
+
+/**
+ * 장별 나눔(architecture 8.7). 성경 해설이 아니라 공동체 나눔 공간이다.
+ * - 삭제는 작성자 soft delete(deleted_at), 운영자 숨김은 hidden_at — 둘 다 행은 남긴다.
+ * - campaign slug 로 로컬·Preview 나눔이 운영 화면에 섞이지 않게 한다(ADR-015).
+ */
+export const readingComments = pgTable(
+  "reading_comment",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    campaign: text("campaign").notNull(),
+    dayNo: smallint("day_no").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // 작성자가 내용을 고친 시각 (화면의 "수정됨")
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    hiddenAt: timestamp("hidden_at", { withTimezone: true }),
+    hiddenBy: text("hidden_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (c) => [
+    index("reading_comment_campaign_day_created_idx").on(c.campaign, c.dayNo, c.createdAt),
+    index("reading_comment_campaign_created_idx").on(c.campaign, c.createdAt),
+    index("reading_comment_user_idx").on(c.userId),
+    check("reading_comment_day_no_chk", sql`${c.dayNo} BETWEEN 1 AND 24`),
+    check(
+      "reading_comment_content_chk",
+      sql`char_length(btrim(${c.content})) BETWEEN 1 AND ${sql.raw(String(COMMENT_MAX_LENGTH))}`,
+    ),
+  ],
+).enableRLS();
+
+/** 공감: 한 사람이 한 나눔에 한 번만 (PK) */
+export const readingCommentLikes = pgTable(
+  "reading_comment_like",
+  {
+    commentId: bigint("comment_id", { mode: "number" })
+      .notNull()
+      .references(() => readingComments.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (l) => [primaryKey({ columns: [l.commentId, l.userId] }), index("reading_comment_like_user_idx").on(l.userId)],
+).enableRLS();

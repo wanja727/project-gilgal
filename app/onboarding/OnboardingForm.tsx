@@ -1,12 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { buttonClass } from "@/components/ui";
 import { submitCell, submitRealName, type CellStepState, type NameStepState } from "./actions";
 
 const inputClass =
-  "w-full rounded-xl border border-line bg-card px-4 py-3.5 text-[15px] text-ink placeholder:text-stone/60 focus:border-olive focus:ring-2 focus:ring-olive/20 focus:outline-none";
-const buttonClass =
-  "w-full rounded-xl bg-olive py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-50";
+  "h-[54px] w-full rounded-btn border border-line bg-surface px-4 text-body text-text placeholder:text-mid focus:border-main focus:outline-none";
 
 export function OnboardingForm({ cells }: { cells: { id: number; name: string }[] }) {
   const [nameState, nameAction, namePending] = useActionState<NameStepState, FormData>(submitRealName, {
@@ -19,14 +18,14 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string }[
   if (nameState.step === "cell" && !backToName) {
     return (
       <form action={cellAction} className="space-y-4">
-        <p className="rounded-xl bg-paper-deep px-4 py-3 text-center text-[13px] leading-5 text-ink-soft">
+        <p className="rounded-btn bg-soft px-4 py-3 text-center text-small leading-5 text-mute">
           {nameState.message}
         </p>
         <input type="hidden" name="realName" value={nameState.name} />
-        <p className="text-center text-sm">
-          <span className="font-semibold">{nameState.name}</span> 님의 소속 셀
+        <p className="text-center text-body text-text">
+          <span className="font-semibold text-main">{nameState.name}</span> 님의 소속 셀
         </p>
-        <select name="cellId" required defaultValue="" className={inputClass}>
+        <select name="cellId" aria-label="소속 셀" required defaultValue="" className={inputClass}>
           <option value="" disabled>
             소속 셀을 선택하세요
           </option>
@@ -36,18 +35,22 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string }[
             </option>
           ))}
         </select>
-        {cellState.error && <p className="text-center text-xs text-clay">{cellState.error}</p>}
-        <button type="submit" disabled={cellPending} className={buttonClass}>
+        {cellState.error && (
+          <p role="alert" className="text-center text-caption text-main">
+            {cellState.error}
+          </p>
+        )}
+        <button type="submit" disabled={cellPending} className={buttonClass("main")}>
           {cellPending ? "저장 중…" : "여정 시작하기"}
         </button>
         <button
           type="button"
           onClick={() => setBackToName(true)}
-          className="w-full text-center text-xs text-stone underline underline-offset-2"
+          className="min-h-11 w-full text-center text-caption text-mute underline underline-offset-2"
         >
           이름 다시 입력하기
         </button>
-        <p className="text-center text-[11px] leading-5 text-stone">
+        <p className="text-center text-[11px] leading-5 text-mute">
           셀 정보가 잘못되었다면 운영자에게 알려 주세요. 운영자가 바로잡아 드려요.
         </p>
       </form>
@@ -65,6 +68,7 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string }[
       <input
         name="realName"
         type="text"
+        aria-label="이름"
         placeholder="전체 이름 (예: 홍길동)"
         required
         minLength={2}
@@ -72,13 +76,15 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string }[
         autoComplete="name"
         className={inputClass}
       />
-      <p className="px-1 text-[11px] leading-5 text-stone">
+      <p className="px-1 text-[11px] leading-5 text-mute">
         카카오 닉네임이 아니라, 성을 포함한 실제 이름을 적어 주세요.
       </p>
       {nameState.step === "name" && nameState.error && (
-        <p className="text-center text-xs text-clay">{nameState.error}</p>
+        <p role="alert" className="text-center text-caption text-main">
+          {nameState.error}
+        </p>
       )}
-      <button type="submit" disabled={namePending} className={buttonClass}>
+      <button type="submit" disabled={namePending} className={buttonClass("main")}>
         {namePending ? "확인 중…" : "확인"}
       </button>
     </form>

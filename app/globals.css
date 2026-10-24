@@ -1,63 +1,173 @@
 @import "tailwindcss";
 
 /*
- * 길갈 디자인 토큰 (requirements 16절): 베이지·스톤·올리브·샌드·뮤트 블루.
- * 오래된 지도와 종이 위에 쓴 기록 같은 차분한 톤. 강한 원색·게임 같은 효과는 쓰지 않는다.
+ * 에벤 디자인 토큰 — 디자인 시안 v5 의 남색(navy) 톤 하나로 고정한다(ADR-021).
+ * 색·모서리·글자 크기는 여기서만 정하고 컴포넌트에는 토큰 이름(bg-surface, text-main …)만 쓴다.
+ * SVG 안에서는 같은 값을 var(--color-*) 로 참조한다.
  */
 @theme {
-  --color-paper: #f6f1e7;
-  --color-paper-deep: #efe7d8;
-  --color-card: #fbf8f2;
-  --color-sand: #e6d9bf;
-  --color-line: #e2d7c3;
-  --color-stone: #8b8275;
-  --color-ink: #2f2b25;
-  --color-ink-soft: #746b5f;
-  --color-olive: #6b7344;
-  --color-olive-deep: #4d5530;
-  --color-olive-soft: #dfe3cc;
-  --color-mist: #7d93a6;
-  --color-mist-soft: #dde5ea;
-  --color-clay: #b98b6e;
+  /* 색 */
+  --color-bg: #f1f3f6; /* 화면 바탕 */
+  --color-surface: #ffffff; /* 카드·시트 */
+  --color-line: #e1e6ed; /* 테두리 */
+  --color-soft: #e9edf3; /* 옅은 면, 구분선 */
+  --color-mid: #aab6c7; /* 비활성 글자·아이콘 */
+  --color-mute: #737f92; /* 보조 글자 */
+  --color-main: #1e3150; /* 주 색(남색) */
+  --color-main-2: #2e4569;
+  --color-text: #27324a; /* 본문 글자 */
+  --color-sea: #e3e9f1; /* 지도 바다 */
+  --color-water: #b7c6d9; /* 지도 강·호수 */
+  --color-scrim: rgb(10 14 22 / 0.36); /* 시트 뒤 어둡게 */
 
-  --font-sans: var(--font-noto-sans), ui-sans-serif, system-ui, "Apple SD Gothic Neo", sans-serif;
-  --font-serif: var(--font-noto-serif), "Nanum Myeongjo", "AppleMyungjo", serif;
+  /* 글꼴: 제목·성경 본문 = 고운바탕, 나머지 = Pretendard */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+  --font-serif: var(--font-gowun-batang), "Noto Serif KR", serif;
+
+  /* 글자 크기 위계 (시안 값) */
+  --text-display: 32px; /* 본문 화면 장 제목 */
+  --text-display--line-height: 1.25;
+  --text-h1: 26px; /* 화면 제목·인사 */
+  --text-h1--line-height: 1.38;
+  --text-h2: 23px; /* 시트·장소 카드 제목 */
+  --text-h2--line-height: 1.3;
+  --text-title: 16px; /* 카드 제목, 버튼 */
+  --text-body: 15px;
+  --text-sub: 13.5px;
+  --text-small: 13px;
+  --text-caption: 12px;
+  --text-micro: 10.5px; /* 탭 라벨 */
+  --text-verse: 17.5px; /* 성경 본문 기본 크기 */
+
+  /* 모서리 */
+  --radius-card: 24px;
+  --radius-sheet: 32px;
+  --radius-map: 26px;
+  --radius-tile: 18px;
+  --radius-btn: 16px;
+  --radius-chip: 9999px;
+
+  /* 간격: 화면 좌우 여백 */
+  --spacing-gutter: 16px;
+
+  --ease-journey: cubic-bezier(0.6, 0, 0.25, 1);
+  --ease-sheet: cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
 }
 
 html,
 body {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
+  letter-spacing: -0.015em;
   /* 한국어는 어절 단위로 줄바꿈해야 읽기 편하다 */
   word-break: keep-all;
   overflow-wrap: anywhere;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 종이 질감 — 아주 옅은 점 패턴 */
-body {
-  background-image: radial-gradient(rgb(139 130 117 / 0.06) 1px, transparent 1px);
-  background-size: 14px 14px;
+:focus-visible {
+  outline: 2px solid var(--color-main);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
+/* ─── 지도 SVG ─── */
+/* 지명 라벨: 바탕색 테두리로 길·아이콘 위에서도 읽히게 */
+.map-label {
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+/* 걸은 길이 그려지는 연출 (pathLength=1 기준) */
+.map-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: map-draw 1.3s 0.35s var(--ease-journey) forwards;
+}
+.map-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pop 0.45s 1.55s both;
+}
+.map-flag-up {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: map-flag 0.5s 1.7s both;
+}
+/* 3장: 요단을 건너면 가나안 점선이 사라지고 영역이 옅게 채워진다 */
+.map-canaan-in {
+  animation: map-fill-in 1.4s 1.4s var(--ease-journey) forwards;
+}
+.map-canaan-out {
+  animation: map-fade-out 0.8s 1.4s forwards;
+}
+
+@keyframes map-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes map-pop {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes map-flag {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes map-fill-in {
+  to {
+    fill-opacity: 0.065;
+  }
+}
+@keyframes map-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
+.rise-in {
+  opacity: 0;
+  animation: rise 0.5s var(--ease-journey) forwards;
+}
 
+/* 움직임 줄이기: 애니메이션을 끄고 최종 상태를 바로 보여 준다 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
   }
 }

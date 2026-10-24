@@ -69,7 +69,9 @@
 - 사용자 식별자는 **항상 서버 세션에서** 얻는다. 클라이언트가 보낸 userId/cellId 는 신뢰하지 않는다. 쓰기 쿼리는 소유권 조건을 WHERE에 포함한다.
 - 프로필·셀·관리자 여부는 `getViewer()`(요청당 1회 캐시)로 조회한다.
 - 24일 여정 데이터(장 제목·장소·지도 좌표·ACT·완료 메시지)는 `lib/journey/` 에서만 관리한다. 컴포넌트에 하드코딩 금지.
-- 서비스명·브랜딩 문구는 `lib/brand.ts` 상수로만 참조한다.
+- 서비스명·브랜딩 문구는 `lib/brand.ts` 상수로만 참조한다(화면 표기명 "에벤", ADR-021).
+- 색·모서리·글자 크기는 `app/globals.css` 의 `@theme` 토큰(디자인 시안 v5 남색)만 쓴다. 컴포넌트에 색 값을 직접 쓰지 않는다.
+- 지도는 `components/map/JourneyMap.tsx` 하나를 props 로 나눠 쓴다. 장소 데이터는 `lib/journey/locations.ts`, 아이콘은 `components/map/SiteGlyph.tsx`.
 - 성경 본문은 `BibleTextProvider` 를 통해서만 가져온다. 화면은 `ChapterText.mode` 만 보고 렌더링한다.
 - 사용자 대면 문구는 "결석/미완료자" 대신 "아직 걷지 않은 길", "아직 여정을 시작하지 않은 동행자" 같은 서비스 언어를 쓴다.
 - 주석은 한국어, "왜"를 설명하는 데 집중한다.
@@ -82,7 +84,7 @@ pnpm이 전역 설치되어 있지 않으면 `corepack pnpm <명령>` 으로 실
 - `pnpm db:generate` → SQL 리뷰 → `pnpm db:migrate` (마이그레이션은 `drizzle/`, `push` 금지)
 - `pnpm import:selah [--dry] [--delete-csv]` — `data/private/A.csv`(Selah 회원), `B.csv`(cell_roster) → `cell`/`roster_entry`
 - `pnpm bible:load <파일> [--dry]` — 본문 텍스트 → `bible_verse` (형식은 `lib/bible/parse.ts`)
-- `pnpm test-user create [--pending] | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정과 세션 쿠키
+- `pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정·세션 쿠키·읽기 기록
 
 ## 검증
 

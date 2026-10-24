@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { saveAvatarAction } from "@/app/journey/actions";
+import { saveAvatarAction } from "@/app/(tabs)/me/actions";
 import { randomAvatarSeed } from "@/lib/avatarSeed";
 import { Avatar } from "./Avatar";
+import { buttonClass } from "./ui";
 
 /**
  * 내 아바타 섞기. 섞기는 미리보기만 하고, "이걸로 할게요"를 눌러야 저장된다 —
@@ -42,12 +43,12 @@ export function AvatarShuffler({ seed }: { seed: string }) {
   };
 
   return (
-    <div className="rounded-2xl border border-line bg-card px-4 py-4">
+    <div>
       <div className="flex items-center gap-4">
-        <Avatar seed={candidate ?? seed} size={64} className={candidate ? "ring-2 ring-olive/50" : ""} />
+        <Avatar seed={candidate ?? seed} size={64} className={candidate ? "shadow-[0_0_0_2px_var(--color-surface),0_0_0_4px_var(--color-main)]" : ""} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">{candidate ? "이 모양은 어때요?" : "지금 아바타"}</p>
-          <p className="mt-0.5 text-xs text-stone">
+          <p className="text-body font-semibold text-main">{candidate ? "이 모양은 어때요?" : "지금 아바타"}</p>
+          <p className="mt-0.5 text-caption text-mute">
             {candidate ? "저장하기 전까지는 지금 아바타가 그대로예요" : "섞어서 새로운 모양을 만들 수 있어요"}
           </p>
         </div>
@@ -61,31 +62,25 @@ export function AvatarShuffler({ seed }: { seed: string }) {
               setMessage(null);
             }}
             disabled={pending}
-            className="rounded-xl border border-line py-2.5 text-sm text-ink-soft active:scale-[0.98] disabled:opacity-60"
+            className={buttonClass("quiet", "h-12 text-body")}
           >
             취소
           </button>
         )}
-        <button
-          type="button"
-          onClick={shuffle}
-          disabled={pending}
-          className="rounded-xl border border-line py-2.5 text-sm text-ink active:scale-[0.98] disabled:opacity-60"
-        >
+        <button type="button" onClick={shuffle} disabled={pending} className={buttonClass("line", "h-12 text-body")}>
           {candidate ? "다시 섞기" : "아바타 섞기"}
         </button>
         {candidate && (
-          <button
-            type="button"
-            onClick={save}
-            disabled={pending}
-            className="rounded-xl bg-olive py-2.5 text-sm font-semibold text-white active:scale-[0.98] disabled:opacity-60"
-          >
+          <button type="button" onClick={save} disabled={pending} className={buttonClass("main", "h-12 text-body")}>
             {pending ? "저장 중…" : "이걸로 할게요"}
           </button>
         )}
       </div>
-      {message && <p className="mt-2 text-center text-xs text-ink-soft">{message}</p>}
+      {message && (
+        <p role="status" className="mt-2 text-center text-caption text-mute">
+          {message}
+        </p>
+      )}
     </div>
   );
 }

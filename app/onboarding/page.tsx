@@ -18,8 +18,8 @@ export default async function OnboardingPage() {
   return (
     <main className="flex min-h-dvh flex-col justify-center px-7 py-12">
       <div className="mb-10 space-y-2 text-center">
-        <p className="font-serif text-2xl font-semibold text-olive-deep">{BRAND.name}에 오신 것을 환영해요</p>
-        <p className="text-sm leading-6 text-ink-soft">
+        <h1 className="font-serif text-h1 font-bold tracking-[-0.04em] text-main">{BRAND.name}에 오신 것을 환영해요</h1>
+        <p className="text-small leading-6 text-mute">
           함께 걸을 동행자를 찾기 위해
           <br />
           이름과 소속 셀을 확인할게요.

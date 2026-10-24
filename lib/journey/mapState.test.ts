@@ -1,71 +1,98 @@
 import { describe, expect, it } from "vitest";
-import { mapState, positionAfterDay } from "./mapState";
+import { JOURNEY_DAYS } from "./days";
+import {
+  chapterStatus,
+  contiguousPosition,
+  flagDay,
+  mapView,
+  nextToRead,
+  previousSite,
+  trail,
+} from "./mapState";
 
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
-const stateOf = (s: ReturnType<typeof mapState>, id: string) => s.locations.find((l) => l.id === id)?.state;
 
-describe("positionAfterDay", () => {
-  it("장소 없는 장은 직전 지점에 머문다", () => {
-    expect(positionAfterDay(0)).toBe("shittim");
-    expect(positionAfterDay(3)).toBe("jordan");
-    expect(positionAfterDay(12)).toBe("hazor");
-    expect(positionAfterDay(13)).toBe("hazor");
-    expect(positionAfterDay(15)).toBe("hebron");
-    expect(positionAfterDay(23)).toBe("shiloh");
-    expect(positionAfterDay(24)).toBe("shechem");
+describe("contiguousPosition (확정 결정 2)", () => {
+  it("아무것도 안 읽으면 0 (출발점)", () => {
+    expect(contiguousPosition([])).toBe(0);
+  });
+  it("1·2·3·5장을 읽으면 3", () => {
+    expect(contiguousPosition([1, 2, 3, 5])).toBe(3);
+  });
+  it("1장을 건너뛰면 0", () => {
+    expect(contiguousPosition([2, 3, 4])).toBe(0);
+  });
+  it("순서와 무관, 24장 모두면 24", () => {
+    expect(contiguousPosition(range(1, 24).reverse())).toBe(24);
   });
 });
 
-describe("mapState", () => {
-  it("0개 완료: 출발점에 마커, 걸은 길 없음", () => {
-    const s = mapState([]);
-    expect(s.marker).toBe("shittim");
-    expect(s.segments.every((seg) => !seg.walked)).toBe(true);
-    expect(stateOf(s, "shittim")).toBe("start");
-    expect(stateOf(s, "jericho")).toBe("upcoming");
+describe("chapterStatus", () => {
+  const done = new Set([1, 3]);
+  const today = "2026-11-04"; // 3장 공개일
+  it("완료 / 공개됐지만 안 읽음 / 잠김", () => {
+    expect(chapterStatus(JOURNEY_DAYS[0], done, today)).toBe("done");
+    expect(chapterStatus(JOURNEY_DAYS[1], done, today)).toBe("open");
+    expect(chapterStatus(JOURNEY_DAYS[2], done, today)).toBe("done");
+    expect(chapterStatus(JOURNEY_DAYS[3], done, today)).toBe("locked");
   });
+});
 
-  it("1개 완료: 출발점에 머문다(1장은 요단 동쪽)", () => {
-    expect(mapState([1]).marker).toBe("shittim");
+describe("flagDay", () => {
+  it("정식 기간 평일 = 오늘의 장", () => {
+    expect(flagDay("2026-11-07")?.day).toBe(6);
   });
-
-  it("3개 완료: 요단강, 첫 구간을 걸음", () => {
-    const s = mapState([1, 2, 3]);
-    expect(s.marker).toBe("jordan");
-    expect(s.segments.find((seg) => seg.day === 3)?.walked).toBe(true);
-    expect(stateOf(s, "jordan")).toBe("visited");
+  it("주일 = 가장 최근에 열린 장", () => {
+    expect(flagDay("2026-11-08")?.day).toBe(6);
+    expect(flagDay("2026-11-29")?.day).toBe(24);
   });
-
-  it("12개 완료: 하솔에 머묾, ACT 1~2 지점 모두 방문", () => {
-    const s = mapState(range(1, 12));
-    expect(s.marker).toBe("hazor");
-    for (const id of ["jordan", "gilgal", "jericho", "ai", "ebal", "gibeon", "hebron", "hazor"]) {
-      expect(stateOf(s, id)).toBe("visited");
-    }
-    expect(stateOf(s, "shiloh")).toBe("upcoming");
+  it("기간 전·보충 기간·종료 후에는 깃발 없음", () => {
+    expect(flagDay("2026-11-01")).toBeNull();
+    expect(flagDay("2026-12-01")).toBeNull();
+    expect(flagDay("2026-12-07")).toBeNull();
   });
+});
 
-  it("24개 완료: 세겜, 모든 구간을 걸음", () => {
-    const s = mapState(range(1, 24));
-    expect(s.marker).toBe("shechem");
-    expect(s.segments.every((seg) => seg.walked)).toBe(true);
-    expect(s.locations.filter((l) => l.state === "upcoming")).toEqual([]);
+describe("nextToRead", () => {
+  it("공개된 장 중 안 읽은 가장 앞 장", () => {
+    expect(nextToRead(new Set([1, 2, 3, 5]), "2026-11-07")?.day).toBe(4);
+    expect(nextToRead(new Set(range(1, 6)), "2026-11-07")).toBeNull();
   });
+});
 
-  it("순서와 무관: 앞 장을 건너뛰고 뒤 장만 완료해도 그 지점에 마커", () => {
-    const s = mapState([7]);
-    expect(s.marker).toBe("ai");
-    expect(stateOf(s, "ai")).toBe("visited");
-    expect(stateOf(s, "jericho")).toBe("upcoming");
-    expect(s.segments.find((seg) => seg.day === 6)?.walked).toBe(false);
+describe("trail", () => {
+  it("같은 지점이 이어지면 한 번만", () => {
+    expect(trail(1, 6)).toEqual(["shittim", "jordan", "gilgal", "jericho"]);
   });
+});
 
-  it("범위 밖 DAY 는 무시", () => {
-    expect(mapState([0, 25, -1]).marker).toBe("shittim");
+describe("mapView", () => {
+  it("3장 뒤처짐: 3장까지 실선, 3~6장 점선, 아바타는 요단강", () => {
+    const v = mapView({ completed: [1, 2, 3], position: 3, flag: 6 });
+    expect(v.walked).toEqual(["shittim", "jordan"]);
+    expect(v.ahead).toEqual(["jordan", "gilgal", "jericho"]);
+    expect(v.me).toBe("jordan");
+    expect(v.flag).toBe("jericho");
+    expect(v.canaanFilled).toBe(true);
   });
+  it("출발 전: 아바타 없음, 1장 지점부터 깃발까지 점선, 가나안은 점선 경계", () => {
+    const v = mapView({ completed: [], position: 0, flag: 2 });
+    expect(v.me).toBeNull();
+    expect(v.walked).toEqual([]);
+    expect(v.ahead).toEqual(["shittim"]);
+    expect(v.canaanFilled).toBe(false);
+  });
+  it("건너뛰고 읽은 장의 지점도 방문 표시", () => {
+    const v = mapView({ completed: [1, 2, 3, 6], position: 3, flag: 6 });
+    expect(v.visited).toContain("jericho");
+    expect(v.me).toBe("jordan");
+  });
+});
 
-  it("오늘의 DAY 지점을 강조", () => {
-    expect(mapState([], 6).highlight).toBe("jericho");
-    expect(mapState([], 13).highlight).toBeNull();
+describe("previousSite", () => {
+  it("이전 장의 지점", () => {
+    expect(previousSite(3)).toBe("shittim");
+    expect(previousSite(1)).toBe("shittim");
+    expect(previousSite(18)).toBe("shechem");
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { weekdayOf } from "@/lib/time";
 import { buildReadingDates, JOSHUA_2026, resolveCampaignSlug } from "./campaign";
 import { ACTS, JOURNEY_DAYS } from "./days";
-import { LOCATIONS } from "./locations";
+import { SITES } from "./locations";
 
 /** 요구사항 2절의 정확한 매핑 (11/2 → 1장 … 11/28 → 24장, 주일 제외) */
 const EXPECTED_DATES = [
@@ -48,24 +48,32 @@ describe("24일 여정 데이터 무결성", () => {
     expect(Object.keys(ACTS)).toHaveLength(4);
   });
 
-  it("모든 날에 제목·문구·완료 메시지가 있고 장소 id 가 유효", () => {
+  it("모든 날에 제목·장소·도착 문구가 있고 지점 id 가 유효", () => {
     for (const d of JOURNEY_DAYS) {
       expect(d.title.trim()).not.toBe("");
+      expect(d.place.trim()).not.toBe("");
       expect(d.ordinalLine).toMatch(/번째 걸음$/);
       expect(d.completion.headline.trim()).not.toBe("");
-      if (d.locationId) expect(LOCATIONS).toHaveProperty(d.locationId);
+      expect(SITES).toHaveProperty(d.site);
     }
   });
 
-  it("요구사항에 명시된 장면", () => {
+  it("요구사항·시안에 명시된 장면", () => {
     expect(JOURNEY_DAYS[7].ordinalLine).toBe("약속의 땅을 향한 여덟 번째 걸음");
-    expect(JOURNEY_DAYS[2].completion.headline).toBe("요단을 건넜습니다.");
+    expect(JOURNEY_DAYS[2].completion.headline).toBe("요단을 건너 가나안에 들어왔어요");
     expect(JOURNEY_DAYS[2].mapEffect).toBe("cross-jordan");
-    expect(JOURNEY_DAYS[5].completion.headline).toBe("여리고에 도착했습니다.");
-    expect(JOURNEY_DAYS[17].completion.headline).toBe("실로에 도착했습니다.");
-    expect(JOURNEY_DAYS[17].locationId).toBe("shiloh");
-    expect(JOURNEY_DAYS[23].completion.headline).toBe("여정을 완주했습니다.");
-    expect(JOURNEY_DAYS[23].locationId).toBe("shechem");
+    expect(JOURNEY_DAYS[5].completion.headline).toBe("여리고에 도착했어요");
+    expect(JOURNEY_DAYS[17].completion.headline).toBe("실로에 도착했어요");
+    expect(JOURNEY_DAYS[17].site).toBe("shiloh");
+    expect(JOURNEY_DAYS[23].completion.headline).toBe("여정을 완주했어요");
+    expect(JOURNEY_DAYS[23].site).toBe("shechem");
+  });
+
+  it("모든 지점에 장면 이름과 설명이 있다", () => {
+    for (const s of Object.values(SITES)) {
+      expect(s.scene.trim()).not.toBe("");
+      expect(s.description.trim()).not.toBe("");
+    }
   });
 
   it("13장부터 지도 표현이 territory 로 전환", () => {

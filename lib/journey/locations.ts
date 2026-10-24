@@ -1,36 +1,127 @@
 /**
- * 여정 지도의 주요 지점과 지형 (교육용 schematic map, architecture 8.2).
+ * 여정 지도의 장소와 지형 (교육용 개념도 schematic map, architecture 8.2).
  * 실제 위경도가 아니라 이야기 흐름을 보여 주기 위한 개략 좌표다.
- * 좌표계: viewBox 0 0 360 520, 북쪽이 위. 지중해는 왼쪽, 요단강은 오른쪽 세로선.
+ * 좌표계: viewBox 0 0 360 500, 북쪽이 위. 지중해는 왼쪽, 요단강은 오른쪽 세로선. (디자인 시안 v5)
+ *
+ * ⚠️ scene(핵심 장면 이름)·description 은 초안이다. 교회 검토 후 이 파일에서 고친다.
+ *    본문 사건을 짧게 가리키는 안내만 쓰고, 해석이나 신학적 해설은 덧붙이지 않는다(핵심 4).
  */
-export const MAP_VIEWBOX = { width: 360, height: 520 } as const;
+export const MAP_VIEWBOX = { x: 0, y: 0, width: 360, height: 500 } as const;
 
-export const LOCATIONS = {
-  shittim: { name: "요단 동쪽", x: 300, y: 312, labelSide: "right" },
-  jordan: { name: "요단강", x: 262, y: 300, labelSide: "right" },
-  gilgal: { name: "길갈", x: 244, y: 318, labelSide: "right" },
-  jericho: { name: "여리고", x: 226, y: 334, labelSide: "left" },
-  ai: { name: "아이", x: 200, y: 300, labelSide: "left" },
-  ebal: { name: "에발산", x: 186, y: 214, labelSide: "left" },
-  gibeon: { name: "기브온", x: 170, y: 326, labelSide: "left" },
-  hebron: { name: "헤브론", x: 168, y: 410, labelSide: "left" },
-  hazor: { name: "하솔", x: 236, y: 74, labelSide: "left" },
-  shiloh: { name: "실로", x: 214, y: 262, labelSide: "right" },
-  shechem: { name: "세겜", x: 206, y: 230, labelSide: "right" },
-} as const satisfies Record<string, { name: string; x: number; y: number; labelSide: "left" | "right" }>;
+type LabelAnchor = "start" | "middle" | "end";
 
-export type LocationId = keyof typeof LOCATIONS;
+export type Site = {
+  name: string;
+  x: number;
+  y: number;
+  /** 라벨 위치: 지점 중심에서의 기본 오프셋과 정렬 */
+  label: { dx: number; dy: number; anchor: LabelAnchor };
+  /** 핵심 장면 이름 (장소 카드·범례) */
+  scene: string;
+  /** 장소 카드 한 줄 설명 */
+  description: string;
+  /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게) */
+  avatarOffset?: { dx: number; dy: number };
+};
 
-/** 여정의 출발점 (DAY 1 이전의 위치) */
-export const START_LOCATION: LocationId = "shittim";
+export const SITES = {
+  shittim: {
+    name: "싯딤", x: 318, y: 312, label: { dx: 0, dy: -12, anchor: "middle" },
+    scene: "이스라엘의 진영",
+    description: "요단 동쪽에 진을 치고 강을 건널 준비를 한 곳이에요.",
+  },
+  jordan: {
+    name: "요단강", x: 263, y: 340, label: { dx: 10, dy: 16, anchor: "start" },
+    scene: "언약궤와 멈춘 강물",
+    description: "언약궤를 멘 제사장들의 발이 물에 닿자 흐르던 물이 멈추었어요.",
+    avatarOffset: { dx: 0, dy: 26 },
+  },
+  gilgal: {
+    name: "길갈", x: 242, y: 314, label: { dx: 0, dy: -12, anchor: "middle" },
+    scene: "열두 돌",
+    description: "요단 가운데서 가져온 열두 돌을 세워 하나님이 하신 일을 기억하게 했어요.",
+    avatarOffset: { dx: 26, dy: -2 },
+  },
+  jericho: {
+    name: "여리고", x: 210, y: 376, label: { dx: 0, dy: 21, anchor: "middle" },
+    scene: "여리고 성벽",
+    description: "칠 일 동안 성을 돌고 나팔을 불며 외치자 성벽이 무너졌어요.",
+    avatarOffset: { dx: -26, dy: 2 },
+  },
+  ai: {
+    name: "아이", x: 170, y: 300, label: { dx: -12, dy: 4, anchor: "end" },
+    scene: "아이 성의 돌무더기",
+    description: "한 번 패했던 아이 성을 다시 얻고, 그 자리에 큰 돌무더기를 쌓았어요.",
+  },
+  ebal: {
+    name: "에발산", x: 146, y: 206, label: { dx: -12, dy: 4, anchor: "end" },
+    scene: "율법을 새긴 돌",
+    description: "에발산에 제단을 쌓고 모세의 율법을 돌에 기록해 낭독했어요.",
+  },
+  gibeon: {
+    name: "기브온", x: 118, y: 338, label: { dx: 0, dy: 20, anchor: "middle" },
+    scene: "멈춘 해와 달",
+    description: "기브온을 지키던 날, 해와 달이 머물렀어요.",
+  },
+  hazor: {
+    name: "하솔", x: 222, y: 66, label: { dx: 12, dy: 4, anchor: "start" },
+    scene: "불탄 하솔",
+    description: "북쪽 연합군의 중심이던 하솔 성을 불살랐어요.",
+  },
+  hebron: {
+    name: "헤브론", x: 152, y: 452, label: { dx: 12, dy: 4, anchor: "start" },
+    scene: "갈렙의 산지",
+    description: "마흔다섯 해 전의 약속대로 갈렙이 헤브론 산지를 받았어요.",
+  },
+  shiloh: {
+    name: "실로", x: 194, y: 258, label: { dx: 12, dy: 4, anchor: "start" },
+    scene: "회막",
+    description: "온 회중이 실로에 모여 회막을 세우고 남은 땅을 나누었어요.",
+  },
+  shechem: {
+    name: "세겜", x: 180, y: 216, label: { dx: 12, dy: 4, anchor: "start" },
+    scene: "언약의 큰 돌",
+    description: "상수리나무 아래 큰 돌을 세워 언약의 증거로 삼았어요.",
+  },
+  east: {
+    name: "요단 동쪽", x: 316, y: 236, label: { dx: 0, dy: 20, anchor: "middle" },
+    scene: "엣 제단",
+    description: "요단 동쪽 지파가 요단 가에 증거의 제단을 쌓았어요.",
+  },
+} as const satisfies Record<string, Site>;
 
-/** 지형 경로 (SVG path d) */
+export type SiteId = keyof typeof SITES;
+export const SITE_IDS = Object.keys(SITES) as SiteId[];
+
+export function getSite(id: SiteId): Site {
+  return SITES[id];
+}
+
+/** 여정 탭 범례에 보여 줄 대표 장소 */
+export const LEGEND_SITES: SiteId[] = ["jordan", "gilgal", "jericho", "gibeon", "shiloh", "shechem"];
+
+/** 아바타 오프셋 기본값: 지점 왼쪽 위 */
+export const DEFAULT_AVATAR_OFFSET = { dx: -18, dy: -18 } as const;
+
+/** 지형 (SVG path d / ellipse) */
 export const TERRAIN = {
-  // 지중해 해안선: 이 선의 왼쪽이 바다
-  coast: "M0 0 L96 0 C92 60 88 110 84 150 C78 210 70 260 62 310 C54 360 46 420 40 520 L0 520 Z",
-  // 요단강: 갈릴리 호수 아래에서 사해까지
-  jordan:
-    "M252 146 C256 170 248 190 254 214 C260 236 252 256 258 278 C262 298 256 318 260 344",
-  galilee: { cx: 250, cy: 126, rx: 11, ry: 20 },
-  deadSea: { cx: 262, cy: 392, rx: 13, ry: 46 },
+  // 지중해: 이 경로 안쪽이 바다
+  sea: "M-40,-40 L84,-40 C80,90 70,220 56,330 C48,400 38,470 26,560 L-40,560Z",
+  // 가나안(요단 서쪽 약속의 땅): 3장 완료 전에는 점선 경계, 완료 후 옅게 채움
+  canaan:
+    "M80,40 L238,38 C246,70 250,100 245,114 L252,129 C262,170 242,210 254,250 S268,300 262,340 S270,372 268,388 L257,402 C254,430 254,456 258,474 L150,498 L38,498 C48,420 58,330 66,260 C72,180 78,100 80,40Z",
+  jordan: "M252,129 C262,170 242,210 254,250 S268,300 262,340 S270,372 268,388",
+  galilee: { cx: 252, cy: 112, rx: 11, ry: 17 },
+  deadSea: { cx: 268, cy: 430, rx: 12, ry: 42 },
+  labels: {
+    canaan: { x: 112, y: 150, sub: { x: 113, y: 166 } },
+    sea: { x: 40, y: 250, rotate: -82 },
+    deadSea: { x: 284, y: 440 },
+  },
 } as const;
+
+/** 지점 중심의 확대 영역(viewBox) — 시트·본문 무대·도착 화면의 지도 조각 */
+export function cropAround(id: SiteId, width = 180, height = 100): string {
+  const s = SITES[id];
+  return `${s.x - width / 2} ${s.y - height / 2 + 6} ${width} ${height}`;
+}

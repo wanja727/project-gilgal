@@ -15,6 +15,13 @@
       "when": 1792404896535,
       "tag": "0001_lock_down_public",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792836272428,
+      "tag": "0002_comments",
+      "breakpoints": true
     }
   ]
 }
