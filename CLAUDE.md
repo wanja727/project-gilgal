@@ -84,11 +84,11 @@ pnpm이 전역 설치되어 있지 않으면 `corepack pnpm <명령>` 으로 실
 - `pnpm db:generate` → SQL 리뷰 → `pnpm db:migrate` (마이그레이션은 `drizzle/`, `push` 금지)
 - `pnpm import:selah [--dry] [--delete-csv]` — `data/private/A.csv`(Selah 회원), `B.csv`(cell_roster) → `cell`/`roster_entry`
 - `pnpm bible:load <파일> [--dry]` — 본문 텍스트 → `bible_verse` (형식은 `lib/bible/parse.ts`)
-- `pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정·세션 쿠키·읽기 기록
+- `pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] [--cell 셀] [--campaign slug] | crowd <명수> --upto <장> [--lag] [--cell 셀] [--campaign slug] | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정·세션 쿠키·읽기 기록
 
 ## 검증
 
 - 기능 구현 후 `pnpm typecheck`, `pnpm lint`, `pnpm test` 를 실행하고 결과를 그대로 보고한다.
-- 날짜 의존 기능은 `GILGAL_DEV_NOW` 로 기간 전/정식/주일/Catch-up/종료 후 시나리오를 검증한다. 프로덕션에서는 무시된다.
+- 날짜 의존 기능은 `GILGAL_DEV_NOW` 로 기간 전/정식/주일/Catch-up/종료 후 시나리오를 검증한다. 프로덕션에서는 무시된다(오픈 전 테스트 모드 `GILGAL_PRELAUNCH_TEST=1` 일 때만 11/2 전까지 적용, ADR-024).
 - 작업 후 Selah 저장소가 변경되지 않았는지 확인한다.
 - `docs/requirements.md` 22절의 검증 시나리오 목록을 최종 체크리스트로 사용한다.

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { cells, profiles, readingProgress } from "@/lib/db/schema";
 import { campaignSlug } from "@/lib/journey/campaign";
 import { checkDayAccess } from "@/lib/journey/schedule";
-import { addDays, type IsoDate, nowKst } from "@/lib/time";
+import { addDays, type IsoDate, isPrelaunchTest, nowKst } from "@/lib/time";
 
 /**
  * 읽기 기록. 모든 함수는 현재 캠페인 slug(GILGAL_CAMPAIGN) 안에서만 읽고 쓴다 —
@@ -13,15 +13,15 @@ import { addDays, type IsoDate, nowKst } from "@/lib/time";
 
 /**
  * 공동체 통계·명단에 들어가는 사람: 온보딩을 마친 사용자.
- * 운영 캠페인에서는 테스트 계정을 빼고, 테스트 캠페인에서는 테스트 계정만 센다 —
- * 로컬에서 여러 테스트 계정으로 순위·셀 화면을 검증할 수 있게 하면서 운영 숫자는 그대로 둔다.
+ * - 테스트 캠페인: 테스트 계정만 센다(로컬에서 여러 테스트 계정으로 순위·셀 화면 검증).
+ * - 운영 캠페인: 테스트 계정을 뺀다. 단 오픈 전 운영 테스트 모드(ADR-024)에서는 실제 테스터와
+ *   테스트 계정을 함께 센다 — 셀 화면에 동행자가 보이는지 운영 서버에서 확인할 수 있게.
  */
 function communityMember() {
-  return and(
-    eq(profiles.isTest, campaignSlug() === "joshua-2026-test"),
-    isNotNull(profiles.realName),
-    isNotNull(profiles.cellId),
-  );
+  const onboarded = and(isNotNull(profiles.realName), isNotNull(profiles.cellId));
+  if (campaignSlug() === "joshua-2026-test") return and(eq(profiles.isTest, true), onboarded);
+  if (isPrelaunchTest(process.env, new Date())) return onboarded;
+  return and(eq(profiles.isTest, false), onboarded);
 }
 
 /** 내가 완료한 DAY 번호 (오름차순) */

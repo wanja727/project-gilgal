@@ -3,6 +3,8 @@ import { Gowun_Batang } from "next/font/google";
 // Pretendard 는 Google Fonts 에 없어 npm 패키지의 동적 서브셋 CSS 로 자체 호스팅한다(필요한 글자 조각만 내려받는다)
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import { BRAND } from "@/lib/brand";
+import { formatDate } from "@/lib/format";
+import { isTimeOverridden, todayKst } from "@/lib/time";
 import "./globals.css";
 
 // 서버리스 함수를 Supabase(서울)와 같은 리전에 둔다 — DB 왕복 지연 최소화
@@ -36,6 +38,12 @@ export default function RootLayout({
   return (
     <html lang="ko" className={serif.variable}>
       <body className="min-h-dvh">
+        {/* 날짜를 바꿔 보는 중이면(개발·오픈 전 운영 테스트) 모든 화면 위에 알린다 — 실제 날짜로 착각하지 않게 */}
+        {isTimeOverridden() && (
+          <p role="status" className="sticky top-0 z-[60] bg-main px-4 py-1.5 text-center text-caption font-semibold text-white">
+            테스트 모드 · {formatDate(todayKst(), true)}로 보는 중
+          </p>
+        )}
         {/* 모바일 퍼스트: 가운데 정렬된 폭 제한 컨테이너 */}
         <div className="relative mx-auto min-h-dvh w-full max-w-md">{children}</div>
       </body>

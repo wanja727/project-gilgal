@@ -1,9 +1,9 @@
 /**
  * 로컬 검증용 테스트 계정 (architecture 9.3).
  *
- *   pnpm test-user create [--pending] [--name 정다윤] [--done 1-3,5]
+ *   pnpm test-user create [--pending] [--name 정다윤] [--done 1-3,5] [--cell 셀이름] [--campaign joshua-2026]
  *                                        # 테스트 사용자 + 세션 생성, 브라우저 쿠키 값을 출력
- *   pnpm test-user crowd <명수> --upto <장> [--lag]
+ *   pnpm test-user crowd <명수> --upto <장> [--lag] [--cell 셀이름] [--campaign joshua-2026]
  *                                        # 같은 셀의 테스트 동행자 여러 명 + 1~upto장 읽기 기록(순위·셀 카드 확인용)
  *   pnpm test-user list                  # 테스트 계정·기록 행 수
  *   pnpm test-user delete                # 테스트 계정과 그 기록 모두 삭제
@@ -14,7 +14,9 @@
  * - --done: 완료한 장 목록. 완료 시각은 그 장 공개일 밤 9시(KST)로 넣는다.
  * - crowd: 완료 시각은 그 장 공개일 새벽 5시 40분부터 사람마다 7분 간격(순위가 시각 순인지 확인).
  *   --lag 면 뒤쪽 1/3 은 깃발 장을 아직 읽지 않은 상태로 둔다.
- * - 읽기 기록은 GILGAL_CAMPAIGN(로컬은 joshua-2026-test) 캠페인으로만 넣는다.
+ * - --cell: 이 셀에 넣는다(없으면 첫 번째 활성 셀). 내 셀의 셀 카드를 확인할 때.
+ * - --campaign: 읽기 기록을 넣을 캠페인(기본은 GILGAL_CAMPAIGN, 로컬은 joshua-2026-test).
+ *   오픈 전 운영 테스트(ADR-024)에서는 joshua-2026 으로 넣는다 — 오픈 전 정리 대상이다.
  * - 운영 DB 를 함께 쓰므로 delete 는 provider='test' 인 사용자만 지운다(cascade 로 profile·progress·session).
  */
 import { randomBytes, randomUUID } from "node:crypto";
@@ -53,11 +55,25 @@ function atKst(dayNo: number, hhmm: string, plusMinutes = 0): Date {
 const [command, ...flags] = process.argv.slice(2);
 
 async function main() {
+  const campaign = flag("--campaign");
+  if (campaign) process.env.GILGAL_CAMPAIGN = campaign;
   const url = process.env.DIRECT_URL;
   if (!url) throw new Error("DIRECT_URL 이 설정되지 않았습니다");
   const client = postgres(url, { prepare: false, max: 1 });
   const db = drizzle(client);
   try {
+    /** --cell 이름의 셀, 없으면 첫 번째 활성 셀 (offset 으로 다른 셀) */
+    const pickCell = async (offset = 0) => {
+      const name = flag("--cell");
+      if (name && offset === 0) {
+        const [c] = await db.select({ id: cells.id }).from(cells).where(eq(cells.name, name));
+        if (!c) throw new Error(`셀을 찾을 수 없습니다: ${name}`);
+        return c;
+      }
+      const [c] = await db.select({ id: cells.id }).from(cells).where(eq(cells.active, true)).offset(offset).limit(1);
+      return c;
+    };
+
     const testUserIds = async () =>
       (await db.select({ id: accounts.userId }).from(accounts).where(eq(accounts.provider, "test"))).map((r) => r.id);
 
@@ -67,7 +83,7 @@ async function main() {
       const done = parseDays(flag("--done"));
       const userId = randomUUID();
       const fakeId = `test-${randomBytes(4).toString("hex")}`;
-      const [cell] = await db.select({ id: cells.id }).from(cells).where(eq(cells.active, true)).limit(1);
+      const cell = await pickCell();
       const token = randomBytes(32).toString("hex");
       await db.transaction(async (tx) => {
         await tx.insert(users).values({ id: userId, name });
@@ -101,12 +117,12 @@ async function main() {
       const n = Math.min(Number(flags[0]) || 10, CROWD_NAMES.length);
       const upto = Number(flag("--upto") ?? 0);
       const lag = flags.includes("--lag");
-      const [cell] = await db.select({ id: cells.id }).from(cells).where(eq(cells.active, true)).limit(1);
+      const cell = await pickCell();
       for (let i = 0; i < n; i++) {
         const userId = randomUUID();
         const fakeId = `test-${randomBytes(4).toString("hex")}`;
         // 처음 몇 명은 다른 셀로 — 순위 카드에 여러 셀이 섞여 보이게
-        const [otherCell] = await db.select({ id: cells.id }).from(cells).where(eq(cells.active, true)).offset(i % 3 === 2 ? 1 : 0).limit(1);
+        const otherCell = i % 3 === 2 ? await pickCell(1) : cell;
         const last = lag && i >= Math.ceil((n * 2) / 3) ? Math.max(0, upto - 1 - (i % 3)) : upto;
         await db.transaction(async (tx) => {
           await tx.insert(users).values({ id: userId, name: CROWD_NAMES[i] });

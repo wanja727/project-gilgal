@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { JOSHUA_2026 } from "./journey/campaign";
 import {
   addDays,
   diffDays,
   isDevNowAllowed,
+  isPrelaunchTest,
+  PRELAUNCH_UNTIL,
   isIsoDate,
   resolveNow,
   toKstDate,
@@ -48,6 +51,28 @@ describe("resolveNow — GILGAL_DEV_NOW 오버라이드", () => {
     };
     expect(isDevNowAllowed(env)).toBe(false);
     expect(resolveNow(env, real)).toBe(real);
+  });
+
+  it("날짜만 주면 날짜만 바꾸고 시각은 실제 KST 시각", () => {
+    // real = 2026-10-19 12:00 KST
+    const now = resolveNow({ GILGAL_DEV_NOW: "2026-11-12" }, real);
+    expect(now.toISOString()).toBe("2026-11-12T03:00:00.000Z");
+  });
+
+  it("오픈 전 운영 테스트 모드: 첫 장 공개 전까지만 운영에서도 적용", () => {
+    const env = { GILGAL_DEV_NOW: "2026-11-12", VERCEL_ENV: "production", GILGAL_PRELAUNCH_TEST: "1" };
+    expect(isPrelaunchTest(env, real)).toBe(true);
+    expect(toKstDate(resolveNow(env, real))).toBe("2026-11-12");
+    // 11/2 00:00 KST 가 되면 환경변수가 남아 있어도 저절로 꺼진다
+    const launch = new Date("2026-11-01T15:00:00Z");
+    expect(isPrelaunchTest(env, launch)).toBe(false);
+    expect(resolveNow(env, launch)).toBe(launch);
+    // 값이 "1" 이 아니면 꺼짐
+    expect(isPrelaunchTest({ ...env, GILGAL_PRELAUNCH_TEST: "true" }, real)).toBe(false);
+  });
+
+  it("테스트 모드 종료 시각은 캠페인 첫 장 공개일과 같다", () => {
+    expect(PRELAUNCH_UNTIL.slice(0, 10)).toBe(JOSHUA_2026.startDate);
   });
 
   it("형식이 잘못되면 에러", () => {
