@@ -90,6 +90,17 @@ body {
   stroke-dashoffset: 1;
   animation: map-draw 1.3s 0.35s var(--ease-journey) forwards;
 }
+/* 여정 되짚기: 구간을 넘길 때마다 바로 그린다 */
+.map-draw-quick {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: map-draw 0.6s var(--ease-journey) forwards;
+}
+.map-pop-quick {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pop 0.4s 0.45s both;
+}
 .map-pop {
   transform-box: fill-box;
   transform-origin: center;

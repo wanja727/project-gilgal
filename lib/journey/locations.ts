@@ -82,6 +82,8 @@ export const SITES = {
     name: "세겜", x: 180, y: 216, label: { dx: 12, dy: 4, anchor: "start" },
     scene: "언약의 큰 돌",
     description: "상수리나무 아래 큰 돌을 세워 언약의 증거로 삼았어요.",
+    // 왼쪽 위에는 에발산이 가까이 있어 오른쪽 아래(실로 쪽 빈자리)에 둔다
+    avatarOffset: { dx: 22, dy: 18 },
   },
   east: {
     name: "요단 동쪽", x: 316, y: 236, label: { dx: 0, dy: 20, anchor: "middle" },

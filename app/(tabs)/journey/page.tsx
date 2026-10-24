@@ -16,8 +16,8 @@ export default async function JourneyPage() {
   const p = journeyProgress(completed, today);
   const view = mapView({ completed, position: p.position, flag: p.flag?.day ?? null });
   const statuses = JOURNEY_DAYS.map((d) => chapterStatus(d, p.done, today));
-  // 처음 열리는 장소: 깃발 → 내 위치 → 출발점
-  const initialSite = view.flag ?? view.me ?? JOURNEY_DAYS[0].site;
+  // 처음 보여 줄 장: 내가 이어 읽은 마지막 장(출발 전이면 1장)
+  const initialChapter = Math.max(1, p.position);
 
   return (
     <JourneyExplorer
@@ -26,7 +26,7 @@ export default async function JourneyPage() {
       position={p.position}
       flagDay={p.flag?.day ?? null}
       avatarSeed={member.avatarSeed}
-      initialSite={initialSite}
+      initialChapter={initialChapter}
     />
   );
 }

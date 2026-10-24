@@ -33,6 +33,12 @@ export type JourneyMapProps = {
   labels?: boolean;
   /** 도착 연출: 마지막 걸은 길을 그리고, 3장이면 요단을 건너 가나안을 채운다 */
   arrival?: { crossJordan: boolean } | null;
+  /**
+   * 진하게 보여 줄 구간. 지나온 길은 모두 옅게 그리고 이 구간만 진하게 그려 산만하지 않게 한다.
+   * 없으면 걸은 길의 마지막 구간. locked 면 아직 열리지 않은 장이라 점선으로 그린다.
+   * key 가 바뀌면 길 그리기 연출을 다시 한다(여정 되짚기).
+   */
+  leg?: { from: SiteId; to: SiteId; locked?: boolean; key: string } | null;
   onSelectSite?: (id: SiteId) => void;
   ariaLabel: string;
   className?: string;
@@ -70,6 +76,7 @@ export function JourneyMap({
   crop,
   labels = true,
   arrival = null,
+  leg,
   onSelectSite,
   ariaLabel,
   className = "",
@@ -83,6 +90,15 @@ export function JourneyMap({
   // 장소만 보여 주는 지도 조각은 가나안을 채워 둔다(시안과 같이)
   const canaanFilled = view.canaanFilled || focused;
   const lastWalked = walked.at(-1);
+  // 진한 구간: 지정한 구간, 없으면 걸은 길의 마지막 구간
+  const strong =
+    leg !== undefined
+      ? leg
+      : walked.length >= 2
+        ? { from: walked[walked.length - 2], to: walked[walked.length - 1], locked: false, key: "last" }
+        : null;
+  // 채운 아이콘: 내 위치·진한 구간의 도착 지점·강조 장소. 나머지 지나온 장소는 테두리만
+  const filled = new Set<SiteId>([view.me, strong?.to, focus].filter((x): x is SiteId => !!x));
 
   return (
     <svg
@@ -152,16 +168,11 @@ export function JourneyMap({
         </g>
       )}
 
-      {/* 걸은 길(실선) · 아직 걷지 않은 길(점선) */}
+      {/* 지나온 길(옅은 실선) · 아직 걷지 않은 길(점선) · 진한 구간 */}
       <g fill="none" strokeLinecap="round" stroke="var(--color-main)">
         {walked.map((site, i) =>
           i === 0 ? null : (
-            <path
-              key={`w${i}`}
-              d={curve(walked[i - 1], site, i)}
-              strokeWidth="2.6"
-              {...(arrival && i === walked.length - 1 ? { pathLength: 1, className: "map-draw" } : {})}
-            />
+            <path key={`w${i}`} d={curve(walked[i - 1], site, i)} strokeWidth="2" opacity=".22" />
           ),
         )}
         {ahead.map((site, i) =>
@@ -175,6 +186,17 @@ export function JourneyMap({
             />
           ),
         )}
+        {strong && strong.from !== strong.to && (
+          <path
+            key={strong.key}
+            d={curve(strong.from, strong.to, 1)}
+            strokeWidth="2.8"
+            strokeDasharray={strong.locked ? "4 4" : undefined}
+            {...(arrival || leg
+              ? { pathLength: 1, className: strong.locked ? undefined : arrival ? "map-draw" : "map-draw-quick" }
+              : {})}
+          />
+        )}
       </g>
 
       {/* 장소 */}
@@ -183,21 +205,22 @@ export function JourneyMap({
         const isVisited = visited.has(id);
         const isAhead = !isVisited && aheadSet.has(id);
         const isFocus = focus === id;
-        const on = isVisited || isFocus;
-        const color = on ? "#fff" : isAhead ? "var(--color-main)" : "var(--color-mid)";
+        const on = filled.has(id);
+        const ring = !on && (isVisited || isAhead);
+        const color = on ? "#fff" : ring ? "var(--color-main)" : "var(--color-mid)";
         const showLabel = labels || isFocus || (isVisited && !focused);
         const label = labelPosition(id);
-        const pop = arrival && id === lastWalked;
+        const popClass = arrival && id === lastWalked ? "map-pop" : leg && id === leg.to ? "map-pop-quick" : undefined;
         return (
-          <g key={id}>
+          <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id}>
             {selected === id && <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="var(--color-main)" strokeWidth="1.5" />}
-            <g className={pop ? "map-pop" : undefined}>
+            <g className={popClass}>
               <circle
                 cx={s.x}
                 cy={s.y}
                 r="13.5"
                 fill={on ? "var(--color-main)" : "var(--color-surface)"}
-                stroke={on || isAhead ? "var(--color-main)" : "var(--color-mid)"}
+                stroke={on || ring ? "var(--color-main)" : "var(--color-mid)"}
                 strokeWidth={isAhead ? 1.6 : 1.2}
                 strokeDasharray={isAhead ? "3 2.4" : undefined}
               />

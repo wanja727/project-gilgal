@@ -15,13 +15,16 @@ import { ChapterSheet } from "./ChapterSheet";
  */
 
 const W = 330;
-const H = 332;
+// 줄 간격은 깃발(칸 위 54px)과 그 옆 문구가 윗줄 장소 이름과 겹치지 않을 만큼 둔다
 const X0 = 40;
 const X1 = 290;
 const DX = (X1 - X0) / 5;
 const Y0 = 70;
-const DY = 74;
-const RT = DY / 2;
+const DY = 94;
+const H = Y0 + 3 * DY + 42;
+/** 줄이 바뀌는 곳의 곡선: 가로 반지름은 좌우 여백 안에 들도록 작게, 세로는 줄 간격의 절반 */
+const RX = 37;
+const RY = DY / 2;
 
 function pos(n: number) {
   const row = Math.floor((n - 1) / 6);
@@ -36,7 +39,7 @@ function segment(a: number, b: number): string {
   for (let n = a; n < b; n++) {
     const c = pos(n);
     const q = pos(n + 1);
-    d += q.row === c.row ? ` L${q.x},${q.y}` : ` A${RT},${RT} 0 0 ${c.row % 2 ? 0 : 1} ${q.x},${q.y}`;
+    d += q.row === c.row ? ` L${q.x},${q.y}` : ` A${RX},${RY} 0 0 ${c.row % 2 ? 0 : 1} ${q.x},${q.y}`;
   }
   return d;
 }
