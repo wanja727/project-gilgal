@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { weekdayOf } from "@/lib/time";
 import { buildReadingDates, JOSHUA_2026, resolveCampaignSlug } from "./campaign";
 import { ACTS, JOURNEY_DAYS } from "./days";
-import { SITES } from "./locations";
+import { cropAroundLeg, SITES } from "./locations";
+import { previousSite } from "./mapState";
 
 /** 요구사항 2절의 정확한 매핑 (11/2 → 1장 … 11/28 → 24장, 주일 제외) */
 const EXPECTED_DATES = [
@@ -89,5 +90,28 @@ describe("캠페인 slug", () => {
   });
   it("오타는 에러 (엉뚱한 slug 에 기록 방지)", () => {
     expect(() => resolveCampaignSlug("joshua-2026-tset")).toThrow(/GILGAL_CAMPAIGN/);
+  });
+});
+
+describe("도착 화면 확대 영역 (cropAroundLeg)", () => {
+  const box = (v: string) => {
+    const [x, y, w, h] = v.split(" ").map(Number);
+    return { x, y, w, h };
+  };
+  const inside = (b: ReturnType<typeof box>, id: keyof typeof SITES) =>
+    SITES[id].x > b.x && SITES[id].x < b.x + b.w && SITES[id].y > b.y && SITES[id].y < b.y + b.h;
+
+  it("모든 장에서 출발·도착 지점이 다 보이고, 가로세로 비율은 300:250", () => {
+    for (const d of JOURNEY_DAYS) {
+      const b = box(cropAroundLeg(previousSite(d.day), d.site));
+      expect(inside(b, previousSite(d.day))).toBe(true);
+      expect(inside(b, d.site)).toBe(true);
+      expect(b.w / b.h).toBeCloseTo(300 / 250, 2);
+    }
+  });
+
+  it("가까운 걸음은 기본 크기 그대로, 먼 걸음만 넓힌다", () => {
+    expect(box(cropAroundLeg("gilgal", "jericho")).w).toBe(300);
+    expect(box(cropAroundLeg("gibeon", "hazor")).w).toBeGreaterThan(300);
   });
 });

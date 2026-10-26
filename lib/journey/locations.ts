@@ -133,3 +133,32 @@ export function cropAround(id: SiteId, width = 180, height = 100): string {
   const s = SITES[id];
   return `${s.x - width / 2} ${s.y - height / 2 + 6} ${width} ${height}`;
 }
+
+/**
+ * 두 지점(출발 → 도착)이 함께 보이는 확대 영역 — 도착 화면에서 아바타가 화면 밖에서 들어오지 않게.
+ * 기본 크기(width×height)에 들어가면 그 크기 그대로 두 지점의 가운데를 비추고,
+ * 먼 걸음이면 가로세로 비율을 지킨 채 넓힌다(지도는 slice 로 채우므로 비율이 바뀌면 잘린다).
+ * 여백은 아바타·"내 위치" 이름표·지명이 들어갈 만큼.
+ */
+export function cropAroundLeg(from: SiteId, to: SiteId, width = 300, height = 250): string {
+  const a = SITES[from];
+  const b = SITES[to];
+  // 위쪽은 아바타 위 "내 위치" 이름표와 닫기 버튼 자리까지 넉넉히, 아래쪽은 지명만큼
+  const PAD_X = 60;
+  const PAD_TOP = 84;
+  const PAD_BOTTOM = 52;
+  const left = Math.min(a.x, b.x) - PAD_X;
+  const right = Math.max(a.x, b.x) + PAD_X;
+  const top = Math.min(a.y, b.y) - PAD_TOP;
+  const bottom = Math.max(a.y, b.y) + PAD_BOTTOM;
+  const scale = Math.max(1, (right - left) / width, (bottom - top) / height);
+  const w = width * scale;
+  const h = height * scale;
+  const cx = (left + right) / 2;
+  const cy = (top + bottom) / 2;
+  return `${round(cx - w / 2)} ${round(cy - h / 2)} ${round(w)} ${round(h)}`;
+}
+
+function round(n: number): number {
+  return Math.round(n * 10) / 10;
+}

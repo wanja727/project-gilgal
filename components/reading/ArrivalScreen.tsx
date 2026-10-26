@@ -7,8 +7,8 @@ import { buttonClass, CloseIcon } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
 import { flagCaption, goal, journeyProgress } from "@/lib/journey/guide";
-import { cropAround, SITES } from "@/lib/journey/locations";
-import { type MapView, trail } from "@/lib/journey/mapState";
+import { cropAroundLeg, SITES } from "@/lib/journey/locations";
+import { type MapView, previousSite, trail } from "@/lib/journey/mapState";
 
 /**
  * 도착 화면 — 읽기 완료를 처음 저장했을 때만 뜬다(다시 읽기·이미 완료한 장에서는 뜨지 않음).
@@ -111,7 +111,7 @@ export function ArrivalScreen({
           view={view}
           avatarSeed={avatarSeed}
           flagLabel={flagCaption(p)}
-          crop={cropAround(day.site, 300, 250)}
+          crop={cropAroundLeg(previousSite(day.day), day.site)}
           arrival={{ crossJordan: day.day === 3 }}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
         />

@@ -501,7 +501,7 @@ interface BibleTextProvider {
 - `completeDay(dayNo)` → `{ status, day }`. `already` 면 연출 생략.
 - Phase 1: `CompletionMoment` — 설정 파일의 완료 메시지(3장 "🌊 요단을 건넜습니다." 등) + 지도 마커 한 칸 이동 + 짧은 진동(지원 시). 과한 효과 없음.
 - Phase 2: 3/6/18/24장 `mapEffect` 별 차등 연출.
-- **[변경 2026-10-24]** 전체 화면 도착 화면(`components/reading/ArrivalScreen.tsx`): 이전 장소 → 이번 장소 길 그리기(내 아바타도 같은 시간·가속으로 길을 따라 걸어감, `components/map/MovingAvatar.tsx` — 움직임 줄이기면 바로 도착 위치) [추가 2026-10-26], 3장은 가나안 점선이 사라지고 영역이 채워짐, 장별 도착 문구(`days.ts` completion), 다음 장 버튼. `completeDay` 가 `completed` 일 때만 띄운다(다시 읽기·이미 완료 시 없음). 오늘의 장이면 도착 순서도 보여 준다.
+- **[변경 2026-10-24]** 전체 화면 도착 화면(`components/reading/ArrivalScreen.tsx`): 이전 장소 → 이번 장소 길 그리기(내 아바타도 같은 시간·가속으로 길을 따라 걸어감, `components/map/MovingAvatar.tsx` — 움직임 줄이기면 바로 도착 위치) [추가 2026-10-26]. 지도 확대 영역은 출발·도착 지점이 함께 보이게(`cropAroundLeg` — 가까운 걸음은 기본 300×250, 먼 걸음은 비율을 지켜 넓힘). 카메라가 아바타를 따라가는 방식은 300px 높이에서 출발·도착이 모두 화면 밖으로 나가고 화면이 흔들려 택하지 않음, 3장은 가나안 점선이 사라지고 영역이 채워짐, 장별 도착 문구(`days.ts` completion), 다음 장 버튼. `completeDay` 가 `completed` 일 때만 띄운다(다시 읽기·이미 완료 시 없음). 오늘의 장이면 도착 순서도 보여 준다.
 
 ### 8.7 댓글 / 공감 — **[변경 2026-10-24] 오픈 포함으로 구현** (`reading_comment`, `reading_comment_like`, 마이그레이션 0002)
 

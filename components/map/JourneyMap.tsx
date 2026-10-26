@@ -30,7 +30,7 @@ export type JourneyMapProps = {
   selected?: SiteId | null;
   /** 이 장소만 강조 (길·아바타·깃발을 그리지 않는다) */
   focus?: SiteId | null;
-  /** 확대 영역 viewBox (cropAround) */
+  /** 확대 영역 viewBox (cropAround · cropAroundLeg) */
   crop?: string;
   /** 모든 지명과 지역 이름 표시 */
   labels?: boolean;
