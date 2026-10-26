@@ -128,6 +128,12 @@ export const TERRAIN = {
   },
 } as const;
 
+/**
+ * 여정 탭 지도 영역: 장소·지명·이름표가 있는 가나안 주변만(지중해 쪽 빈 바다를 뺀다).
+ * 높이를 제한한 틀에 meet 로 넣어 지도·장 카드가 한 화면에 들어오게 한다(2026-10-26).
+ */
+export const EXPLORER_CROP = "62 10 300 476";
+
 /** 지점 중심의 확대 영역(viewBox) — 시트·본문 무대·도착 화면의 지도 조각 */
 export function cropAround(id: SiteId, width = 180, height = 100): string {
   const s = SITES[id];

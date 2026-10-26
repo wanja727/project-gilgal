@@ -30,8 +30,13 @@ export type JourneyMapProps = {
   selected?: SiteId | null;
   /** 이 장소만 강조 (길·아바타·깃발을 그리지 않는다) */
   focus?: SiteId | null;
-  /** 확대 영역 viewBox (cropAround · cropAroundLeg) */
+  /** 확대 영역 viewBox (cropAround · cropAroundLeg · EXPLORER_CROP) */
   crop?: string;
+  /**
+   * slice: 영역을 꽉 채우고 넘치는 부분을 자른다(기본). meet: 영역 전체가 보이게 줄이고 남는 옆은 바다·땅이 그대로 이어진다
+   * — 여정 탭처럼 높이를 제한한 틀에서 장소가 잘리지 않게.
+   */
+  fit?: "slice" | "meet";
   /** 모든 지명과 지역 이름 표시 */
   labels?: boolean;
   /**
@@ -84,6 +89,7 @@ export function JourneyMap({
   selected = null,
   focus = null,
   crop,
+  fit = "slice",
   labels = true,
   arrival = null,
   leg,
@@ -118,7 +124,7 @@ export function JourneyMap({
   return (
     <svg
       viewBox={crop ?? `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
-      preserveAspectRatio="xMidYMid slice"
+      preserveAspectRatio={`xMidYMid ${fit}`}
       role={onSelectSite ? "group" : "img"}
       aria-label={ariaLabel}
       className={`block h-full w-full font-sans ${className}`}
