@@ -3,7 +3,8 @@ import { ArrivalBoard } from "@/components/home/ArrivalBoard";
 import { CellCard } from "@/components/home/CellCard";
 import { ChapterPath } from "@/components/home/ChapterPath";
 import { SharePreview } from "@/components/home/SharePreview";
-import { buttonClass, ButtonLink, Card, CardHead, FlagIcon, MoreLink } from "@/components/ui";
+import Link from "next/link";
+import { buttonClass, ButtonLink, Card, CardHead, ChevronRight, FlagIcon, MoreLink } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { countComments, listComments, listRecentComments, toShared } from "@/lib/data/comments";
 import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
@@ -12,6 +13,7 @@ import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus } from "@/lib/journey/mapState";
+import { OVERVIEW_INTRO } from "@/lib/journey/overview";
 import { nowKst, todayKst } from "@/lib/time";
 
 // 날짜와 사용자에 따라 내용이 바뀌므로 정적 캐시하지 않는다
@@ -72,6 +74,26 @@ export default async function Home() {
           {hello.headline}
         </h1>
       </div>
+
+      {/* 출발 전이거나 아직 한 장도 읽지 않았으면 개관부터 권한다 (탭 순서는 그대로, 2026-10-26) */}
+      {(p.phase === "before" || completed.length === 0) && (
+        <Link href="/overview" className="mx-gutter mt-3 flex items-center gap-3.5 rounded-card bg-main px-5 py-4 text-white">
+          <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-white/12" aria-hidden>
+            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">
+              <path d="M12 6.5C10 5 7.5 4.5 4 4.5v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <b className="block text-title font-bold tracking-[-0.03em]">
+              {p.phase === "before" ? "출발 전에 여호수아 개관을 읽어 보세요" : "1장을 읽기 전에 개관을 먼저 살펴보세요"}
+            </b>
+            <span className="mt-0.5 block text-small text-white/70">
+              표어 ‘{OVERVIEW_INTRO.theme}’ · 네 부분으로 보는 여호수아
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-white/70" />
+        </Link>
+      )}
 
       <Card className="px-3 pt-5 pb-[18px]" aria-labelledby="path-title">
         <div className="px-2">
