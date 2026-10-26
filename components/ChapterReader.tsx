@@ -2,7 +2,7 @@ import type { ChapterText } from "@/lib/bible/types";
 
 /**
  * 장·절 구분 본문 (architecture 8.5). ChapterText 만 보고 렌더링하므로 Provider 와 무관하다.
- * 글자 크기는 FontSizeButton 이 정하는 CSS 변수(--verse-size)를 따른다.
+ * 글자 크기·글꼴·굵기·줄 간격은 읽기 설정(ReaderSettingsButton)이 정하는 CSS 변수를 따른다(.reader-text).
  */
 export function ChapterReader({ text }: { text: ChapterText }) {
   return (
@@ -12,7 +12,7 @@ export function ChapterReader({ text }: { text: ChapterText }) {
           Mock 본문 · 실제 성경 본문이 아닙니다
         </p>
       )}
-      <div className="font-serif text-[length:var(--verse-size,var(--text-verse))] leading-[2.05] text-text">
+      <div className="reader-text text-text">
         {text.sections.map((section, i) => (
           <section key={i}>
             {section.heading && (

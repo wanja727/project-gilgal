@@ -1,8 +1,9 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChapterReader } from "@/components/ChapterReader";
 import { JourneyMap } from "@/components/map/JourneyMap";
-import { FontSizeButton } from "@/components/reading/FontSizeButton";
+import { READER_ROOT_ID, ReaderSettingsButton } from "@/components/reading/ReaderSettingsButton";
 import { CommentCard } from "@/components/share/CommentCard";
 import { CommentComposer } from "@/components/share/CommentComposer";
 import { ButtonLink, CardHead, ChevronLeft, EmptyState } from "@/components/ui";
@@ -17,6 +18,7 @@ import { cropAround, type SiteId, SITES } from "@/lib/journey/locations";
 import type { MapView } from "@/lib/journey/mapState";
 import { nextToRead } from "@/lib/journey/mapState";
 import { checkDayAccess, getDay } from "@/lib/journey/schedule";
+import { parseReaderSettings, READER_COOKIE, readerCssVars, type ReaderSettings } from "@/lib/reading/settings";
 import { nowKst, todayKst } from "@/lib/time";
 import { CompleteDock } from "./CompleteDock";
 
@@ -24,14 +26,31 @@ export const dynamic = "force-dynamic";
 
 const STAGE_VIEW: MapView = { walked: [], visited: [], me: null, flag: null, canaanFilled: true };
 
-function ReadingBar({ title }: { title: string }) {
+/**
+ * 본문 화면 전체를 감싸 읽기 설정(배경·글꼴 등)을 쿠키 값으로 처음부터 적용한다 — 열 때 기본값으로 번쩍이지 않게.
+ * 설정을 바꾸면 ReaderSettingsButton 이 이 요소의 속성을 바로 고친다.
+ */
+function ReaderRoot({ settings, children }: { settings: ReaderSettings; children: React.ReactNode }) {
+  return (
+    <div
+      id={READER_ROOT_ID}
+      data-reader-theme={settings.theme}
+      style={readerCssVars(settings) as React.CSSProperties}
+      className="min-h-dvh bg-bg text-text"
+    >
+      {children}
+    </div>
+  );
+}
+
+function ReadingBar({ title, settings }: { title: string; settings: ReaderSettings }) {
   return (
     <div className="flex items-center justify-between px-3 pt-[max(env(safe-area-inset-top),6px)] text-main">
       <Link href="/" aria-label="오늘로 돌아가기" className="grid size-11 place-items-center rounded-full">
         <ChevronLeft />
       </Link>
       <span className="text-[14px] font-semibold">{title}</span>
-      <FontSizeButton />
+      <ReaderSettingsButton initial={settings} />
     </div>
   );
 }
@@ -63,6 +82,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   const { sort: sortParam } = await searchParams;
   const sort: CommentSort = sortParam === "likes" ? "likes" : "latest";
   const today = todayKst();
+  const settings = parseReaderSettings((await cookies()).get(READER_COOKIE)?.value);
 
   // 공개 여부는 서버에서 판단한다. 미래 장은 URL 을 직접 입력해도 본문을 내보내지 않는다.
   const access = checkDayAccess(dayParam, today);
@@ -71,8 +91,8 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   if (!access.ok) {
     const day = getDay(Number(dayParam))!;
     return (
-      <>
-        <ReadingBar title={`${formatDate(day.readingDate)}의 장`} />
+      <ReaderRoot settings={settings}>
+        <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
         <Stage chapter={day.chapter} site={day.site} title={day.title} />
         <div className="mx-gutter mt-3 rounded-card bg-surface">
           <EmptyState title="아직 열리지 않은 길">
@@ -86,7 +106,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
             오늘의 여정으로
           </ButtonLink>
         </div>
-      </>
+      </ReaderRoot>
     );
   }
 
@@ -104,8 +124,9 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   const shared = toShared(comments, nowKst());
 
   return (
-    <div className="pb-[max(env(safe-area-inset-bottom),24px)]">
-      <ReadingBar title={`${formatDate(day.readingDate)}의 장`} />
+    <ReaderRoot settings={settings}>
+      <div className="pb-[max(env(safe-area-inset-bottom),24px)]">
+      <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
       <Stage chapter={day.chapter} site={day.site} title={day.title} />
 
       <div className="px-7 pt-[26px]">
@@ -166,6 +187,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         )}
       </section>
 
-    </div>
+      </div>
+    </ReaderRoot>
   );
 }

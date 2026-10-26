@@ -70,6 +70,53 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * 본문 읽기 배경(읽기 설정). 본문 화면을 감싼 요소에 data-reader-theme 를 달면 그 안의 토큰만 바뀌어
+ * 카드·버튼·지도까지 같은 색 체계로 따라온다(컴포넌트는 그대로 토큰 이름만 쓴다).
+ * 어둡게: 주 색(main)이 밝아지므로 그 위 글자(text-white)는 어두운 색으로 바꾼다.
+ */
+[data-reader-theme="sepia"] {
+  --color-bg: #f3ecdc;
+  --color-surface: #fbf7ee;
+  --color-line: #e4d9c2;
+  --color-soft: #ebe1cc;
+  --color-mid: #b5a88e;
+  --color-mute: #7a6d57;
+  --color-main: #4a3a22;
+  --color-main-2: #5e4b2e;
+  --color-text: #3d3426;
+  --color-sea: #e8dfcb;
+  --color-water: #c9b896;
+}
+[data-reader-theme="dark"] {
+  --color-bg: #11151c;
+  --color-surface: #1a2029;
+  --color-line: #2a313d;
+  --color-soft: #242b36;
+  --color-mid: #5d687a;
+  --color-mute: #98a2b3;
+  --color-main: #d5deeb;
+  --color-main-2: #b8c4d6;
+  --color-text: #d9dfe8;
+  --color-sea: #1f2632;
+  --color-water: #3a4a61;
+  --color-white: #11151c;
+}
+/* 본문 화면이 어둡거나 종이색이면 화면 끝(넘겨 당김 등)도 같은 색으로 */
+body:has(#reader-root[data-reader-theme="sepia"]) {
+  background-color: #f3ecdc;
+}
+body:has(#reader-root[data-reader-theme="dark"]) {
+  background-color: #11151c;
+}
+/* 성경 본문: 읽기 설정의 CSS 변수(lib/reading/settings.ts readerCssVars)를 따른다 */
+.reader-text {
+  font-family: var(--reader-font, var(--font-serif));
+  font-size: var(--verse-size, var(--text-verse));
+  font-weight: var(--reader-weight, 400);
+  line-height: var(--reader-leading, 2.05);
+}
+
 :focus-visible {
   outline: 2px solid var(--color-main);
   outline-offset: 2px;

@@ -321,7 +321,7 @@ export function JourneyMap({
 /** 장소 아이콘: on 채움(내 위치·강조) / ring 테두리(지나온 곳) / off 흐림 */
 function Marker({ id, tone }: { id: SiteId; tone: "on" | "ring" | "off" }) {
   const s = SITES[id];
-  const color = tone === "on" ? "#fff" : tone === "ring" ? "var(--color-main)" : "var(--color-mid)";
+  const color = tone === "on" ? "var(--color-white, #fff)" : tone === "ring" ? "var(--color-main)" : "var(--color-mid)";
   return (
     <>
       <circle
@@ -391,7 +391,7 @@ function Tag({
         textAnchor="middle"
         fontSize={FS}
         fontWeight="700"
-        fill={tone === "solid" ? "#fff" : "var(--color-main)"}
+        fill={tone === "solid" ? "var(--color-white, #fff)" : "var(--color-main)"}
       >
         {text}
       </text>
