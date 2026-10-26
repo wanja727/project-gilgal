@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
@@ -11,7 +12,8 @@ import { ChapterSheet } from "./ChapterSheet";
  * - 칸 상태: 읽음(채움) / 공개됐지만 안 읽음(점선) / 아직 열리지 않음(옅은 테두리) — 칸마다 실제 완료 여부
  * - 내 아바타 = 1장부터 이어서 읽은 마지막 장(없으면 1장 앞 출발점)
  * - 깃발 = 오늘의 장(주일에는 가장 최근에 열린 장)
- * - 칸을 누르면 장 정보 시트
+ * - 칸을 누르면 그 장 본문으로 바로 간다("이어 읽기"와 같은 경험 — 장 소개는 본문 맨 위에서).
+ *   아직 열리지 않은 장만 언제 열리는지 작은 시트로 알린다(2026-10-26)
  */
 
 const W = 330;
@@ -57,7 +59,12 @@ export type ChapterPathProps = {
 const STATUS_LABEL: Record<ChapterStatus, string> = { done: "읽음", open: "읽을 차례", locked: "아직 열리지 않음" };
 
 export function ChapterPath({ statuses, position, flag, avatarSeed }: ChapterPathProps) {
+  const router = useRouter();
   const [openDay, setOpenDay] = useState<number | null>(null);
+  const select = (day: number) => {
+    if (statuses[day - 1] === "locked") setOpenDay(day);
+    else router.push(`/day/${day}`);
+  };
   const me = position > 0 ? pos(position) : START;
   const flagPos = flag ? pos(flag.day) : null;
   const total = statuses.length;
@@ -93,16 +100,16 @@ export function ChapterPath({ statuses, position, flag, avatarSeed }: ChapterPat
           return (
             <g
               key={d.day}
-              role="button"
+              role={st === "locked" ? "button" : "link"}
               tabIndex={0}
               aria-label={`${d.day}장 ${d.place}, ${STATUS_LABEL[st]}`}
-              aria-haspopup="dialog"
+              aria-haspopup={st === "locked" ? "dialog" : undefined}
               className="cursor-pointer outline-none [&:focus-visible>circle:nth-child(2)]:stroke-[3]"
-              onClick={() => setOpenDay(d.day)}
+              onClick={() => select(d.day)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setOpenDay(d.day);
+                  select(d.day);
                 }
               }}
             >
@@ -154,12 +161,7 @@ export function ChapterPath({ statuses, position, flag, avatarSeed }: ChapterPat
       </div>
 
       {openDay !== null && (
-        <ChapterSheet
-          day={JOURNEY_DAYS[openDay - 1]}
-          status={statuses[openDay - 1]}
-          isFlag={openDay === flag?.day}
-          onClose={() => setOpenDay(null)}
-        />
+        <ChapterSheet day={JOURNEY_DAYS[openDay - 1]} onClose={() => setOpenDay(null)} />
       )}
     </div>
   );

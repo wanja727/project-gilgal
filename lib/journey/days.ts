@@ -30,7 +30,7 @@ export type MapEffect =
 export type CompletionMessage = {
   /** 도착 화면 제목 */
   headline: string;
-  /** 도착 화면 설명. 없으면 장별 한 줄(summary)을 쓴다 */
+  /** 도착 화면 설명(선택). 장 요약은 읽기 전(본문 맨 위)에 보이므로 도착 화면에서는 반복하지 않는다 */
   body?: string;
 };
 
@@ -44,7 +44,7 @@ export type JourneyDay = {
   place: string;
   /** 이 장을 마쳤을 때 지도에서 머무는 지점 */
   site: SiteId;
-  /** 이 장에서 있었던 일 한 줄 (여정 탭 장 카드·도착 화면). 사건만 짧게, 해석은 쓰지 않는다 */
+  /** 이 장에서 있었던 일 한 줄 (본문 맨 위 장 소개·여정 탭 장 카드). 사건만 짧게, 해석은 쓰지 않는다 */
   summary: string;
   /** 예: "약속의 땅을 정복하는 여덟 번째 걸음" */
   ordinalLine: string;

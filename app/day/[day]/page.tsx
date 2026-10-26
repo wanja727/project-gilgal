@@ -13,8 +13,8 @@ import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { formatDate } from "@/lib/format";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
-import { ACTS } from "@/lib/journey/days";
-import { cropAround, type SiteId, SITES } from "@/lib/journey/locations";
+import { ACTS, type JourneyDay } from "@/lib/journey/days";
+import { cropAround, SITES } from "@/lib/journey/locations";
 import type { MapView } from "@/lib/journey/mapState";
 import { nextToRead } from "@/lib/journey/mapState";
 import { checkDayAccess, getDay } from "@/lib/journey/schedule";
@@ -55,24 +55,39 @@ function ReadingBar({ title, settings }: { title: string; settings: ReaderSettin
   );
 }
 
-function Stage({ chapter, site, title }: { chapter: number; site: SiteId; title: string }) {
+/**
+ * 장 머리: ACT · "여호수아 N장" + 장 소개 카드(무대 지도 · 장소 · 장 제목 · 한 줄 요약).
+ * 어느 경로(홈 진행도·이어 읽기·여정 탭)로 들어와도 읽기 전에 이 장이 어디서 무슨 일인지 먼저 본다(2026-10-26).
+ * 장 소개는 여기 한 곳에만 둔다 — 홈 진행도 시트·도착 화면에서는 반복하지 않는다.
+ */
+function ChapterIntro({ day }: { day: JourneyDay }) {
   return (
-    <div className="mx-gutter mt-2 grid grid-cols-[118px_1fr] overflow-hidden rounded-[22px] bg-surface">
-      <div className="h-[104px]">
-        <JourneyMap
-          view={STAGE_VIEW}
-          focus={site}
-          crop={cropAround(site, 120, 106)}
-          labels={false}
-          ariaLabel={`${chapter}장의 무대: ${SITES[site].name}`}
-        />
+    <>
+      <div className="px-5 pt-4">
+        <p className="text-caption font-semibold text-mute">
+          ACT {day.act} · {ACTS[day.act].title}
+        </p>
+        <h1 className="mt-1 font-serif text-display font-bold tracking-[-0.04em] text-main">
+          {JOSHUA_2026.book.name} {day.chapter}장
+        </h1>
       </div>
-      <div className="flex flex-col justify-center py-4 pr-4 pl-3.5">
-        <p className="text-caption font-semibold text-mute">{chapter}장의 무대</p>
-        <b className="mt-[3px] font-serif text-[19px] font-bold tracking-[-0.03em] text-main">{SITES[site].name}</b>
-        <span className="mt-[3px] text-small text-mute">{title}</span>
-      </div>
-    </div>
+      <section aria-label={`${day.chapter}장 소개`} className="mx-gutter mt-4 grid grid-cols-[96px_1fr] overflow-hidden rounded-[22px] bg-surface">
+        <div className="min-h-[112px]">
+          <JourneyMap
+            view={STAGE_VIEW}
+            focus={day.site}
+            crop={cropAround(day.site, 110, 120)}
+            labels={false}
+            ariaLabel={`${day.chapter}장의 무대: ${SITES[day.site].name}`}
+          />
+        </div>
+        <div className="py-4 pr-4 pl-3.5">
+          <p className="text-caption font-semibold text-mute">{day.place}</p>
+          <b className="mt-0.5 block font-serif text-[18px] leading-snug font-bold tracking-[-0.03em] text-main">{day.title}</b>
+          <p className="mt-1.5 text-small leading-[1.6] text-text">{day.summary}</p>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -93,7 +108,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
     return (
       <ReaderRoot settings={settings}>
         <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
-        <Stage chapter={day.chapter} site={day.site} title={day.title} />
+        <ChapterIntro day={day} />
         <div className="mx-gutter mt-3 rounded-card bg-surface">
           <EmptyState title="아직 열리지 않은 길">
             {JOSHUA_2026.book.name} {day.chapter}장은 {formatDate(day.readingDate, true)}에 열려요.
@@ -127,16 +142,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
     <ReaderRoot settings={settings}>
       <div className="pb-[max(env(safe-area-inset-bottom),24px)]">
       <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
-      <Stage chapter={day.chapter} site={day.site} title={day.title} />
-
-      <div className="px-5 pt-[26px]">
-        <h1 className="font-serif text-display font-bold tracking-[-0.04em] text-main">
-          {JOSHUA_2026.book.name} {day.chapter}장
-        </h1>
-        <p className="mt-3 inline-block rounded-[8px] bg-soft px-2.5 py-1.5 text-caption font-semibold text-mute">
-          ACT {day.act} · {ACTS[day.act].title}
-        </p>
-      </div>
+      <ChapterIntro day={day} />
 
       {chapter ? (
         <ChapterReader text={chapter} />

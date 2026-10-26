@@ -71,7 +71,8 @@ export function ArrivalScreen({
       suffix = `오늘의 깃발에 닿았어요. ${goal(p).body}.`;
     }
   }
-  const desc = [day.completion.body ?? day.summary, suffix].filter(Boolean).join(" ");
+  // 순위 카드가 없을 때는 아래 숫자 카드(나의 여정·남은 길)가 같은 말을 하므로 남은 길 문장은 뺀다
+  const desc = [day.completion.body, arrival ? suffix : null].filter(Boolean).join(" ");
 
   const stats: [string, string][] = arrival
     ? [
@@ -128,9 +129,11 @@ export function ArrivalScreen({
         >
           {day.completion.headline}
         </h2>
-        <p className="rise-in mt-2 text-body leading-[1.65] text-mute" style={{ animationDelay: "1.9s" }}>
-          {desc}
-        </p>
+        {desc && (
+          <p className="rise-in mt-2 text-body leading-[1.65] text-mute" style={{ animationDelay: "1.9s" }}>
+            {desc}
+          </p>
+        )}
         <dl className="rise-in mt-5 grid grid-cols-2 gap-2" style={{ animationDelay: "2s" }}>
           {stats.map(([k, v]) => (
             <div key={k} className="rounded-btn bg-surface px-4 py-3.5">
