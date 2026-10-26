@@ -8,7 +8,7 @@ import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } 
 import { requireMember } from "@/lib/data/viewer";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
-import { goal, greeting, journeyProgress } from "@/lib/journey/guide";
+import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus } from "@/lib/journey/mapState";
 import { todayKst } from "@/lib/time";
 
@@ -38,7 +38,7 @@ export default async function Home() {
   const flagLabel = p.flag
     ? {
         day: p.flag.day,
-        label: p.phase === "reading" ? `오늘 ${p.flag.day}장` : `${p.flag.day}장까지 열림`,
+        label: flagCaption(p)!,
         sub: `${board?.total ?? 0}명 도착`,
       }
     : null;

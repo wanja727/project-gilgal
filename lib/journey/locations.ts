@@ -20,13 +20,14 @@ export type Site = {
   scene: string;
   /** 장소 카드 한 줄 설명 */
   description: string;
-  /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게) */
+  /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게). dy > 0 이면 "내 위치" 이름표는 아바타 아래 */
   avatarOffset?: { dx: number; dy: number };
 };
 
 export const SITES = {
   shittim: {
-    name: "싯딤", x: 318, y: 312, label: { dx: 0, dy: -12, anchor: "middle" },
+    // 왼쪽 위는 아바타·"내 위치" 이름표 자리라 지명은 오른쪽에
+    name: "싯딤", x: 318, y: 312, label: { dx: 12, dy: 4, anchor: "start" },
     scene: "이스라엘의 진영",
     description: "요단 동쪽에 진을 치고 강을 건널 준비를 한 곳이에요.",
   },
@@ -37,7 +38,8 @@ export const SITES = {
     avatarOffset: { dx: 0, dy: 26 },
   },
   gilgal: {
-    name: "길갈", x: 242, y: 314, label: { dx: 0, dy: -12, anchor: "middle" },
+    // 오른쪽엔 아바타와 "내 위치" 이름표가 오므로 지명은 왼쪽에 둔다
+    name: "길갈", x: 242, y: 314, label: { dx: -12, dy: 4, anchor: "end" },
     scene: "열두 돌",
     description: "요단 가운데서 가져온 열두 돌을 세워 하나님이 하신 일을 기억하게 했어요.",
     avatarOffset: { dx: 26, dy: -2 },
@@ -46,7 +48,8 @@ export const SITES = {
     name: "여리고", x: 210, y: 376, label: { dx: 0, dy: 21, anchor: "middle" },
     scene: "여리고 성벽",
     description: "칠 일 동안 성을 돌고 나팔을 불며 외치자 성벽이 무너졌어요.",
-    avatarOffset: { dx: -26, dy: 2 },
+    // 아래는 지명 자리라 이름표가 위로 가게 살짝 위로
+    avatarOffset: { dx: -26, dy: -2 },
   },
   ai: {
     name: "아이", x: 170, y: 300, label: { dx: -12, dy: 4, anchor: "end" },
@@ -74,16 +77,18 @@ export const SITES = {
     description: "마흔다섯 해 전의 약속대로 갈렙이 헤브론 산지를 받았어요.",
   },
   shiloh: {
-    name: "실로", x: 194, y: 258, label: { dx: 12, dy: 4, anchor: "start" },
+    name: "실로", x: 194, y: 258, label: { dx: 0, dy: 18, anchor: "middle" },
     scene: "회막",
     description: "온 회중이 실로에 모여 회막을 세우고 남은 땅을 나누었어요.",
+    // 왼쪽 위는 세겜, 왼쪽 아래는 세겜의 아바타 자리라 오른쪽에 두고, 지명은 아래로
+    avatarOffset: { dx: 26, dy: -2 },
   },
   shechem: {
     name: "세겜", x: 180, y: 216, label: { dx: 12, dy: 4, anchor: "start" },
     scene: "언약의 큰 돌",
     description: "상수리나무 아래 큰 돌을 세워 언약의 증거로 삼았어요.",
-    // 왼쪽 위에는 에발산이 가까이 있어 오른쪽 아래(실로 쪽 빈자리)에 둔다
-    avatarOffset: { dx: 22, dy: 18 },
+    // 왼쪽 위는 에발산, 위는 깃발, 오른쪽 아래는 실로라 왼쪽 아래 빈자리에 둔다
+    avatarOffset: { dx: -22, dy: 20 },
   },
   east: {
     name: "요단 동쪽", x: 316, y: 236, label: { dx: 0, dy: 20, anchor: "middle" },
@@ -116,7 +121,8 @@ export const TERRAIN = {
   galilee: { cx: 252, cy: 112, rx: 11, ry: 17 },
   deadSea: { cx: 268, cy: 430, rx: 12, ry: 42 },
   labels: {
-    canaan: { x: 112, y: 150, sub: { x: 113, y: 166 } },
+    // 에발산의 "내 위치" 이름표와 겹치지 않게 조금 위로
+    canaan: { x: 112, y: 134, sub: { x: 113, y: 150 } },
     sea: { x: 40, y: 250, rotate: -82 },
     deadSea: { x: 284, y: 440 },
   },

@@ -24,6 +24,7 @@ export function JourneyExplorer({
   statuses,
   position,
   flagDay,
+  flagLabel,
   avatarSeed,
   initialChapter,
 }: {
@@ -31,6 +32,7 @@ export function JourneyExplorer({
   statuses: ChapterStatus[];
   position: number;
   flagDay: number | null;
+  flagLabel: string | null;
   avatarSeed: string;
   initialChapter: number;
 }) {
@@ -84,6 +86,7 @@ export function JourneyExplorer({
             <JourneyMap
               view={view}
               avatarSeed={avatarSeed}
+              flagLabel={flagLabel}
               selected={site}
               leg={{
                 from: previousSite(chapter),

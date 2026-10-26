@@ -37,6 +37,12 @@ export function journeyProgress(completed: Iterable<number>, today: IsoDate): Jo
   };
 }
 
+/** 깃발 이름표: 정식 기간 평일은 "오늘 N장", 주일엔 "N장까지 열림" (홈 진행도·지도 공통) */
+export function flagCaption(p: JourneyProgress): string | null {
+  if (!p.flag) return null;
+  return p.phase === "reading" ? `오늘 ${p.flag.day}장` : `${p.flag.day}장까지 열림`;
+}
+
 export type Greeting = { kicker: string; headline: string };
 
 export function greeting(p: JourneyProgress, realName: string): Greeting {

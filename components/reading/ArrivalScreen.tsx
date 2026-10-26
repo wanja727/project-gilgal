@@ -6,7 +6,7 @@ import { JourneyMap } from "@/components/map/JourneyMap";
 import { buttonClass, CloseIcon } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
-import { goal, journeyProgress } from "@/lib/journey/guide";
+import { flagCaption, goal, journeyProgress } from "@/lib/journey/guide";
 import { cropAround, SITES } from "@/lib/journey/locations";
 import { type MapView, trail } from "@/lib/journey/mapState";
 
@@ -110,6 +110,7 @@ export function ArrivalScreen({
         <JourneyMap
           view={view}
           avatarSeed={avatarSeed}
+          flagLabel={flagCaption(p)}
           crop={cropAround(day.site, 300, 250)}
           arrival={{ crossJordan: day.day === 3 }}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}

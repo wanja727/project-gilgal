@@ -2,7 +2,7 @@ import { JourneyExplorer } from "@/components/journey/JourneyExplorer";
 import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
-import { journeyProgress } from "@/lib/journey/guide";
+import { flagCaption, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus, mapView } from "@/lib/journey/mapState";
 import { todayKst } from "@/lib/time";
 
@@ -25,6 +25,7 @@ export default async function JourneyPage() {
       statuses={statuses}
       position={p.position}
       flagDay={p.flag?.day ?? null}
+      flagLabel={flagCaption(p)}
       avatarSeed={member.avatarSeed}
       initialChapter={initialChapter}
     />
