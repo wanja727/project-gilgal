@@ -18,8 +18,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const errorMessage =
     typeof error === "string" ? (ERROR_MESSAGES[error] ?? "로그인 중 문제가 생겼어요. 다시 시도해 주세요.") : null;
 
+  // 아래 여백(pb-24)은 예전 안내 문구(약 56px) 자리까지 포함 — 문구를 지워도 버튼 위치를 그대로 두려고
   return (
-    <main className="flex min-h-dvh flex-col justify-between px-7 pt-24 pb-10">
+    <main className="flex min-h-dvh flex-col justify-between px-7 pt-24 pb-24">
       <div className="space-y-5 text-center">
         <p className="text-caption font-semibold tracking-[0.3em] text-mute">{BRAND.kicker}</p>
         <h1 className="font-serif text-[44px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</h1>
