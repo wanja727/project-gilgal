@@ -217,11 +217,15 @@ export function JourneyMap({
             <g className={popClass}>
               <Marker id={id} tone={on ? "on" : ring ? "ring" : "off"} />
             </g>
-            {/* 바로 전 강조를 그 위에 겹쳐 두고 서서히 지운다 */}
+            {/* 바로 전 강조를 그 위에 겹쳐 두고 가운데로 오므라들며 사라지게 한다 — 도착할 때 가운데에서 차오르는 것의 반대 */}
             {fading === id && (
-              <g key={`fade-${fadeKey}`} className={arrival ? "map-unfill" : "map-unfill-quick"} aria-hidden pointerEvents="none">
-                {selected !== null && <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="var(--color-main)" strokeWidth="1.5" />}
-                <Marker id={id} tone="on" />
+              <g key={`fade-${fadeKey}`} aria-hidden pointerEvents="none">
+                {selected !== null && (
+                  <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="var(--color-main)" strokeWidth="1.5" className="map-unfill-quick" />
+                )}
+                <g className={arrival ? "map-unpop" : "map-unpop-quick"}>
+                  <Marker id={id} tone="on" />
+                </g>
               </g>
             )}
             {showLabel && (

@@ -111,10 +111,18 @@ body {
   transform-origin: bottom;
   animation: map-flag 0.5s 1.7s both;
 }
-/* 바로 전에 강조된 장소: 채운 아이콘을 겹쳐 두고 서서히 지운다(갑자기 꺼지면 어색해서) */
-.map-unfill {
-  animation: map-fade-out 0.9s 0.35s var(--ease-journey) forwards;
+/* 바로 전에 강조된 장소: 채운 아이콘을 겹쳐 두고 가운데로 오므라들며 사라지게 한다(map-pop 의 반대 — 머물다 떠나는 느낌) */
+.map-unpop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-unpop 0.5s 0.35s forwards;
 }
+.map-unpop-quick {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-unpop 0.4s forwards;
+}
+/* 이전 장소의 선택 테두리는 오므라들지 않고 흐려진다 */
 .map-unfill-quick {
   animation: map-fade-out 0.45s var(--ease-journey) forwards;
 }
@@ -156,6 +164,17 @@ body {
 @keyframes map-fill-in {
   to {
     fill-opacity: 0.065;
+  }
+}
+@keyframes map-unpop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(0);
   }
 }
 @keyframes map-fade-in {
