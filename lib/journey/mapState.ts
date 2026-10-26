@@ -53,10 +53,11 @@ export function trail(from: number, to: number): SiteId[] {
 }
 
 export type MapView = {
-  /** 1장~내 위치까지 걸은 길 (실선) */
+  /**
+   * 1장~내 위치까지 걸은 길 (옅은 실선).
+   * 아직 걷지 않은 길(내 위치~깃발)은 그리지 않는다 — 점선이 겹쳐 산만해서(2026-10-26 운영자 피드백)
+   */
   walked: SiteId[];
-  /** 내 위치~깃발까지 아직 걷지 않은 길 (점선) */
-  ahead: SiteId[];
   /** 채운 아이콘으로 보일 지점: 걸은 길 + 실제로 완료한 장의 지점 */
   visited: SiteId[];
   /** 내 아바타가 있는 지점 (아직 출발 전이면 null) */
@@ -78,13 +79,10 @@ export function mapView({
 }): MapView {
   const done = new Set(completed);
   const walked = position > 0 ? trail(1, position) : [];
-  // 출발 전이면 1장 지점부터 깃발까지가 앞으로 걸을 길이다
-  const ahead = flag && flag > position ? trail(Math.max(1, position), flag) : [];
   const visited = new Set<SiteId>(walked);
   for (const d of JOURNEY_DAYS) if (done.has(d.day)) visited.add(d.site);
   return {
     walked,
-    ahead,
     visited: [...visited],
     me: position > 0 ? JOURNEY_DAYS[position - 1].site : null,
     flag: flag ? JOURNEY_DAYS[flag - 1].site : null,

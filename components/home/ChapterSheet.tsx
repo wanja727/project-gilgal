@@ -9,7 +9,7 @@ import type { JourneyDay } from "@/lib/journey/days";
 import { cropAround } from "@/lib/journey/locations";
 import type { ChapterStatus, MapView } from "@/lib/journey/mapState";
 
-const EMPTY_VIEW: MapView = { walked: [], ahead: [], visited: [], me: null, flag: null, canaanFilled: true };
+const EMPTY_VIEW: MapView = { walked: [], visited: [], me: null, flag: null, canaanFilled: true };
 
 /** 진행도 칸을 눌렀을 때 아래에서 올라오는 장 정보 시트 (장소 지도 조각·날짜·상태·읽기 버튼) */
 export function ChapterSheet({

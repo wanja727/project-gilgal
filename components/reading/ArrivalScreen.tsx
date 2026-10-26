@@ -55,7 +55,6 @@ export function ArrivalScreen({
   const walked = trail(1, day.day);
   const view: MapView = {
     walked,
-    ahead: [],
     visited: walked,
     me: day.site,
     flag: p.flag ? p.flag.site : null,

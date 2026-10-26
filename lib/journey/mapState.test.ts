@@ -67,19 +67,17 @@ describe("trail", () => {
 });
 
 describe("mapView", () => {
-  it("3장 뒤처짐: 3장까지 실선, 3~6장 점선, 아바타는 요단강", () => {
+  it("3장 뒤처짐: 3장까지 걸은 길, 아바타는 요단강, 깃발은 여리고", () => {
     const v = mapView({ completed: [1, 2, 3], position: 3, flag: 6 });
     expect(v.walked).toEqual(["shittim", "jordan"]);
-    expect(v.ahead).toEqual(["jordan", "gilgal", "jericho"]);
     expect(v.me).toBe("jordan");
     expect(v.flag).toBe("jericho");
     expect(v.canaanFilled).toBe(true);
   });
-  it("출발 전: 아바타 없음, 1장 지점부터 깃발까지 점선, 가나안은 점선 경계", () => {
+  it("출발 전: 아바타·걸은 길 없음, 가나안은 점선 경계", () => {
     const v = mapView({ completed: [], position: 0, flag: 2 });
     expect(v.me).toBeNull();
     expect(v.walked).toEqual([]);
-    expect(v.ahead).toEqual(["shittim"]);
     expect(v.canaanFilled).toBe(false);
   });
   it("건너뛰고 읽은 장의 지점도 방문 표시", () => {

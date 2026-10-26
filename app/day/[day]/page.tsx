@@ -22,7 +22,7 @@ import { CompleteDock } from "./CompleteDock";
 
 export const dynamic = "force-dynamic";
 
-const STAGE_VIEW: MapView = { walked: [], ahead: [], visited: [], me: null, flag: null, canaanFilled: true };
+const STAGE_VIEW: MapView = { walked: [], visited: [], me: null, flag: null, canaanFilled: true };
 
 function ReadingBar({ title }: { title: string }) {
   return (

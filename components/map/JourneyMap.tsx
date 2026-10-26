@@ -37,8 +37,9 @@ export type JourneyMapProps = {
    * 진하게 보여 줄 구간. 지나온 길은 모두 옅게 그리고 이 구간만 진하게 그려 산만하지 않게 한다.
    * 없으면 걸은 길의 마지막 구간. locked 면 아직 열리지 않은 장이라 점선으로 그린다.
    * key 가 바뀌면 길 그리기 연출을 다시 한다(여정 되짚기).
+   * prev: 바로 전에 강조돼 있던 장소 — 강조가 갑자기 꺼지지 않고 서서히 빠지게 한다.
    */
-  leg?: { from: SiteId; to: SiteId; locked?: boolean; key: string } | null;
+  leg?: { from: SiteId; to: SiteId; locked?: boolean; key: string; prev?: SiteId | null } | null;
   onSelectSite?: (id: SiteId) => void;
   ariaLabel: string;
   className?: string;
@@ -83,9 +84,7 @@ export function JourneyMap({
 }: JourneyMapProps) {
   const focused = focus !== null;
   const walked = focused ? [] : view.walked;
-  const ahead = focused ? [] : view.ahead;
   const visited = new Set(focused ? [] : view.visited);
-  const aheadSet = new Set(ahead);
   const crossNow = arrival?.crossJordan ?? false;
   // 장소만 보여 주는 지도 조각은 가나안을 채워 둔다(시안과 같이)
   const canaanFilled = view.canaanFilled || focused;
@@ -99,7 +98,10 @@ export function JourneyMap({
         : null;
   // 채운 아이콘: 내 위치·진한 구간의 도착 지점·강조 장소. 나머지 지나온 장소는 테두리만
   const filled = new Set<SiteId>([view.me, strong?.to, focus].filter((x): x is SiteId => !!x));
-
+  // 강조가 빠지는 장소: 도착 연출이면 출발한 장소, 되짚기면 바로 전에 고른 장소
+  const fadeFrom = arrival ? strong?.from : leg?.prev;
+  const fading = fadeFrom && !filled.has(fadeFrom) ? fadeFrom : null;
+  const fadeKey = leg?.key ?? "arrival";
   return (
     <svg
       viewBox={crop ?? `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
@@ -168,22 +170,11 @@ export function JourneyMap({
         </g>
       )}
 
-      {/* 지나온 길(옅은 실선) · 아직 걷지 않은 길(점선) · 진한 구간 */}
+      {/* 지나온 길(옅은 실선) · 진한 구간. 아직 걷지 않은 길은 그리지 않는다 */}
       <g fill="none" strokeLinecap="round" stroke="var(--color-main)">
         {walked.map((site, i) =>
           i === 0 ? null : (
             <path key={`w${i}`} d={curve(walked[i - 1], site, i)} strokeWidth="2" opacity=".22" />
-          ),
-        )}
-        {ahead.map((site, i) =>
-          i === 0 ? null : (
-            <path
-              key={`a${i}`}
-              d={curve(ahead[i - 1], site, i + walked.length)}
-              strokeWidth="1.8"
-              strokeDasharray="4 4"
-              opacity=".7"
-            />
           ),
         )}
         {strong && strong.from !== strong.to && (
@@ -203,38 +194,36 @@ export function JourneyMap({
       {SITE_IDS.map((id) => {
         const s = SITES[id];
         const isVisited = visited.has(id);
-        const isAhead = !isVisited && aheadSet.has(id);
         const isFocus = focus === id;
         const on = filled.has(id);
-        const ring = !on && (isVisited || isAhead);
-        const color = on ? "#fff" : ring ? "var(--color-main)" : "var(--color-mid)";
+        const ring = !on && isVisited;
         const showLabel = labels || isFocus || (isVisited && !focused);
         const label = labelPosition(id);
         const popClass = arrival && id === lastWalked ? "map-pop" : leg && id === leg.to ? "map-pop-quick" : undefined;
         return (
           <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id}>
-            {selected === id && <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="var(--color-main)" strokeWidth="1.5" />}
-            <g className={popClass}>
+            {selected === id && (
               <circle
+                key={leg ? `sel-${leg.key}` : "sel"}
                 cx={s.x}
                 cy={s.y}
-                r="13.5"
-                fill={on ? "var(--color-main)" : "var(--color-surface)"}
-                stroke={on || ring ? "var(--color-main)" : "var(--color-mid)"}
-                strokeWidth={isAhead ? 1.6 : 1.2}
-                strokeDasharray={isAhead ? "3 2.4" : undefined}
-              />
-              <g
-                transform={`translate(${s.x - 9} ${s.y - 9}) scale(.75)`}
+                r="18"
                 fill="none"
-                stroke={color}
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <SiteGlyphPaths id={id} />
-              </g>
+                stroke="var(--color-main)"
+                strokeWidth="1.5"
+                className={leg?.prev ? "map-fade-in" : undefined}
+              />
+            )}
+            <g className={popClass}>
+              <Marker id={id} tone={on ? "on" : ring ? "ring" : "off"} />
             </g>
+            {/* 바로 전 강조를 그 위에 겹쳐 두고 서서히 지운다 */}
+            {fading === id && (
+              <g key={`fade-${fadeKey}`} className={arrival ? "map-unfill" : "map-unfill-quick"} aria-hidden pointerEvents="none">
+                {selected !== null && <circle cx={s.x} cy={s.y} r="18" fill="none" stroke="var(--color-main)" strokeWidth="1.5" />}
+                <Marker id={id} tone="on" />
+              </g>
+            )}
             {showLabel && (
               <text
                 className="map-label"
@@ -242,8 +231,8 @@ export function JourneyMap({
                 y={label.y}
                 textAnchor={label.anchor}
                 fontSize="11.5"
-                fontWeight={isVisited || isAhead || isFocus ? 700 : 500}
-                fill={isVisited || isAhead || isFocus ? "var(--color-main)" : "var(--color-mute)"}
+                fontWeight={isVisited || isFocus ? 700 : 500}
+                fill={isVisited || isFocus ? "var(--color-main)" : "var(--color-mute)"}
               >
                 {s.name}
               </text>
@@ -278,6 +267,34 @@ export function JourneyMap({
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
       {!focused && view.me && avatarSeed && <MapAvatar site={view.me} seed={avatarSeed} />}
     </svg>
+  );
+}
+
+/** 장소 아이콘: on 채움(내 위치·강조) / ring 테두리(지나온 곳) / off 흐림 */
+function Marker({ id, tone }: { id: SiteId; tone: "on" | "ring" | "off" }) {
+  const s = SITES[id];
+  const color = tone === "on" ? "#fff" : tone === "ring" ? "var(--color-main)" : "var(--color-mid)";
+  return (
+    <>
+      <circle
+        cx={s.x}
+        cy={s.y}
+        r="13.5"
+        fill={tone === "on" ? "var(--color-main)" : "var(--color-surface)"}
+        stroke={tone === "off" ? "var(--color-mid)" : "var(--color-main)"}
+        strokeWidth="1.2"
+      />
+      <g
+        transform={`translate(${s.x - 9} ${s.y - 9}) scale(.75)`}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <SiteGlyphPaths id={id} />
+      </g>
+    </>
   );
 }
 

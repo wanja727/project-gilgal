@@ -35,8 +35,15 @@ export function JourneyExplorer({
   initialChapter: number;
 }) {
   const [mode, setMode] = useState<ViewMode>("map");
-  const [chapter, setChapter] = useState(initialChapter);
+  const [chapter, setChapterState] = useState(initialChapter);
+  // 바로 전에 고른 장의 장소 — 지도에서 그 강조를 서서히 빼는 데 쓴다
+  const [prevSite, setPrevSite] = useState<SiteId | null>(null);
   const site = JOURNEY_DAYS[chapter - 1].site;
+  const setChapter = (n: number) => {
+    if (n === chapter) return;
+    setPrevSite(site);
+    setChapterState(n);
+  };
 
   // 지도에서 장소를 누르면 그 장소의 장 중 지금 고른 장에서 가장 가까운 장으로
   const selectSite = (id: SiteId) => {
@@ -83,6 +90,7 @@ export function JourneyExplorer({
                 to: site,
                 locked: statuses[chapter - 1] === "locked",
                 key: String(chapter),
+                prev: prevSite,
               }}
               onSelectSite={selectSite}
               ariaLabel={`여호수아 여정 지도. ${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. 장소를 누르면 그 장소의 장으로 옮겨요`}
