@@ -19,7 +19,7 @@ const serif = Gowun_Batang({
 });
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} — ${BRAND.subtitle}`,
+  title: `${BRAND.name}: ${BRAND.subtitle}`,
   description: BRAND.description,
 };
 

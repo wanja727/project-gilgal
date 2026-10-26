@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import { getViewer } from "@/lib/data/viewer";
-import { JOSHUA_2026 } from "@/lib/journey/campaign";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +21,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="flex min-h-dvh flex-col justify-between px-7 pt-24 pb-10">
       <div className="space-y-5 text-center">
-        <p className="text-caption font-semibold tracking-[0.3em] text-mute">{JOSHUA_2026.title}</p>
+        <p className="text-caption font-semibold tracking-[0.3em] text-mute">{BRAND.kicker}</p>
         <h1 className="font-serif text-[44px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</h1>
-        <p className="text-body leading-relaxed text-mute">{BRAND.subtitle}</p>
+        <p className="font-serif text-[18px] leading-relaxed font-bold tracking-[-0.03em] text-main-2">{BRAND.subtitle}</p>
         <p className="mx-auto max-w-[17rem] pt-6 font-serif text-[15px] leading-7 text-text">{BRAND.tagline}</p>
       </div>
 

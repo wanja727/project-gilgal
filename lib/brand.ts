@@ -1,15 +1,18 @@
 /**
  * 서비스명·브랜딩 문구는 이 파일에서만 관리한다.
  * 서비스명이 바뀔 수 있으므로(요구사항 4절) 컴포넌트에 문자열을 직접 쓰지 않는다.
- * 2026-10-24 화면 표기를 "에벤"으로 변경(ADR-021). 저장소·DB·도메인 이름은 gilgal 그대로다.
+ * 2026-10-26 화면 표기를 "여호수아 읽기 : 거룩한 하나님 백성으로 살기"로 변경(ADR-025, 이전 "에벤").
+ * 저장소·DB·도메인 이름은 gilgal 그대로다.
  */
 
-export const SERVICE_NAME = "에벤";
-export const SERVICE_SUBTITLE = "함께 말씀을 읽고, 함께 걸어가는 24일";
+export const SERVICE_NAME = "여호수아 읽기";
+export const SERVICE_SUBTITLE = "거룩한 하나님 백성으로 살기";
 
 export const BRAND = {
   name: SERVICE_NAME,
   subtitle: SERVICE_SUBTITLE,
+  /** 로그인 화면 맨 위 작은 글씨 (이름에 이미 "여호수아"가 있어 기간·방식만) */
+  kicker: "함께 걷는 24일 통독",
   /** 메타 description, 공유 미리보기 */
   description: "공동체가 24일 동안 여호수아의 여정을 함께 걷는 통독",
   /** 핵심 경험 한 줄 (요구사항 3절) */

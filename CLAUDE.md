@@ -69,7 +69,7 @@
 - 사용자 식별자는 **항상 서버 세션에서** 얻는다. 클라이언트가 보낸 userId/cellId 는 신뢰하지 않는다. 쓰기 쿼리는 소유권 조건을 WHERE에 포함한다.
 - 프로필·셀·관리자 여부는 `getViewer()`(요청당 1회 캐시)로 조회한다.
 - 24일 여정 데이터(장 제목·장소·지도 좌표·ACT·완료 메시지)는 `lib/journey/` 에서만 관리한다. 컴포넌트에 하드코딩 금지.
-- 서비스명·브랜딩 문구는 `lib/brand.ts` 상수로만 참조한다(화면 표기명 "에벤", ADR-021).
+- 서비스명·브랜딩 문구는 `lib/brand.ts` 상수로만 참조한다(화면 표기명 "여호수아 읽기 : 거룩한 하나님 백성으로 살기", ADR-025).
 - 색·모서리·글자 크기는 `app/globals.css` 의 `@theme` 토큰(디자인 시안 v5 남색)만 쓴다. 컴포넌트에 색 값을 직접 쓰지 않는다.
 - 지도는 `components/map/JourneyMap.tsx` 하나를 props 로 나눠 쓴다. 장소 데이터는 `lib/journey/locations.ts`, 아이콘은 `components/map/SiteGlyph.tsx`.
 - 성경 본문은 `BibleTextProvider` 를 통해서만 가져온다. 화면은 `ChapterText.mode` 만 보고 렌더링한다.
