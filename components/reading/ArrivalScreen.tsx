@@ -112,7 +112,7 @@ export function ArrivalScreen({
           view={view}
           avatarSeed={avatarSeed}
           crop={cropAroundLeg(previousSite(day.day), day.site)}
-          arrival={{ crossJordan: day.day === 3 }}
+          arrival={{ crossJordan: day.day === 3, from: previousSite(day.day) }}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
         />
       </div>

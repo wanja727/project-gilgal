@@ -34,8 +34,12 @@ export type JourneyMapProps = {
   crop?: string;
   /** 모든 지명과 지역 이름 표시 */
   labels?: boolean;
-  /** 도착 연출: 마지막 걸은 길을 그리고, 3장이면 요단을 건너 가나안을 채운다 */
-  arrival?: { crossJordan: boolean } | null;
+  /**
+   * 도착 연출: from(이전 장의 장소) → view.me(이번 장의 장소) 길을 그리고, 3장이면 요단을 건너 가나안을 채운다.
+   * 같은 장소에 머무는 장(1·2장 싯딤, 14·15장 헤브론 등)은 길·이동 없이 그 자리에서 채움만 차오른다.
+   * (걸은 길 walked 는 같은 장소가 이어지면 하나로 합치므로 이전 장소를 거기서 꺼내면 안 된다)
+   */
+  arrival?: { crossJordan: boolean; from: SiteId } | null;
   /**
    * 진하게 보여 줄 구간. 지나온 길은 모두 옅게 그리고 이 구간만 진하게 그려 산만하지 않게 한다.
    * 없으면 걸은 길의 마지막 구간. locked 면 아직 열리지 않은 장이라 점선으로 그린다.
@@ -93,17 +97,19 @@ export function JourneyMap({
   const crossNow = arrival?.crossJordan ?? false;
   // 장소만 보여 주는 지도 조각은 가나안을 채워 둔다(시안과 같이)
   const canaanFilled = view.canaanFilled || focused;
-  const lastWalked = walked.at(-1);
   // 진한 구간: 지정한 구간, 없으면 걸은 길의 마지막 구간
   const strong =
     leg !== undefined
       ? leg
-      : walked.length >= 2
+      : arrival && view.me
+        ? { from: arrival.from, to: view.me, locked: false, key: "arrival" }
+        : walked.length >= 2
         ? { from: walked[walked.length - 2], to: walked[walked.length - 1], locked: false, key: "last" }
         : null;
   // 채운 아이콘: 진한 구간의 도착 지점·강조 장소. 나머지 지나온 장소는 테두리만.
   // 내 위치는 아바타가 보여 주므로 칠하지 않는다 — 되짚기로 다른 장을 볼 때 강조가 둘로 보여 헷갈리지 않게
-  const filled = new Set<SiteId>([strong?.to, focus].filter((x): x is SiteId => !!x));
+  // 진한 구간이 없으면(1장만 읽음 등) 내 위치를 칠한다
+  const filled = new Set<SiteId>([strong ? strong.to : view.me, focus].filter((x): x is SiteId => !!x));
   // 강조가 빠지는 장소: 도착 연출이면 출발한 장소, 되짚기면 바로 전에 고른 장소
   const fadeFrom = arrival ? strong?.from : leg?.prev;
   const fading = fadeFrom && !filled.has(fadeFrom) ? fadeFrom : null;
@@ -206,9 +212,10 @@ export function JourneyMap({
         const ring = !on && isVisited;
         const showLabel = labels || isFocus || (isVisited && !focused);
         const label = labelPosition(id);
-        const popClass = arrival && id === lastWalked ? "map-pop" : leg && id === leg.to ? "map-pop-quick" : undefined;
+        const popClass = arrival && id === view.me ? "map-pop" : leg && id === leg.to ? "map-pop-quick" : undefined;
         // 도착할 장소는 미리 보이게 두고(도착 전 모습), 채운 아이콘만 그 위에서 차오르게 한다
-        const beforeTone: "ring" | "off" = (arrival ? walked.slice(0, -1).includes(id) : isVisited) ? "ring" : "off";
+        const beforeTone: "ring" | "off" =
+          (arrival ? id === arrival.from || walked.slice(0, -1).includes(id) : isVisited) ? "ring" : "off";
         return (
           <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id}>
             {selected === id && (
