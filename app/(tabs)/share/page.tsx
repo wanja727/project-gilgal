@@ -8,7 +8,10 @@ import { nowKst, todayKst } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
-/** 나눔 탭: 공개된 장들의 최근 나눔을 한곳에서 (장 이름을 누르면 그 장의 본문과 나눔으로) */
+/**
+ * 모든 나눔: 공개된 장들의 최근 나눔을 한곳에서 (장 이름을 누르면 그 장의 본문과 나눔으로).
+ * 2026-10-26 하단 탭에서 빠지고 홈 나눔 미리보기의 "다른 장 나눔도 보기"로 들어온다.
+ */
 export default async function SharePage() {
   const member = await requireMember();
   const today = todayKst();
@@ -16,7 +19,7 @@ export default async function SharePage() {
 
   return (
     <>
-      <PageTitle>나눔</PageTitle>
+      <PageTitle>모든 나눔</PageTitle>
       <p className="px-5 pt-1.5 text-sub text-mute">말씀을 읽고 마음에 남은 것을 함께 나눠요</p>
       <div className="px-gutter pt-3">
         {comments.length === 0 ? (

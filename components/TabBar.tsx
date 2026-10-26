@@ -11,7 +11,6 @@ const TABS = [
     label: "개관",
     icon: <path d="M12 6.5C10 5 7.5 4.5 4 4.5v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13" />,
   },
-  { href: "/share", label: "나눔", icon: <path d="M4.5 5.5h15v10h-9l-4.5 4v-4h-1.5z" /> },
   {
     href: "/me",
     label: "나",
@@ -24,13 +23,13 @@ const TABS = [
   },
 ];
 
-/** 하단 탭 (오늘 · 여정 · 개관 · 나눔 · 나). 본문 읽기·로그인·온보딩 화면에는 없다 */
+/** 하단 탭 (오늘 · 여정 · 개관 · 나). 나눔은 탭 대신 홈 미리보기·본문 아래에서(2026-10-26). 본문 읽기·로그인·온보딩 화면에는 없다 */
 export function TabBar() {
   const pathname = usePathname();
   return (
     <nav
       aria-label="주요 화면"
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-5 border-t border-line bg-surface/95 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-4 border-t border-line bg-surface/95 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur"
     >
       {TABS.map((tab) => {
         const on = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);

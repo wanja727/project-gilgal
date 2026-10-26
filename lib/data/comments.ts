@@ -94,12 +94,12 @@ async function selectComments(viewer: Viewer, where: ReturnType<typeof and>, sor
   );
 }
 
-/** 한 장의 나눔 */
-export function listComments(viewer: Viewer, dayNo: number, sort: CommentSort = "latest") {
-  return selectComments(viewer, and(eq(readingComments.dayNo, dayNo)), sort, 200);
+/** 한 장의 나눔 (홈 미리보기는 limit 을 작게) */
+export function listComments(viewer: Viewer, dayNo: number, sort: CommentSort = "latest", limit = 200) {
+  return selectComments(viewer, and(eq(readingComments.dayNo, dayNo)), sort, limit);
 }
 
-/** 나눔 탭: 공개된 장들의 최근 나눔 */
+/** 모든 나눔(/share)·홈 미리보기: 공개된 장들의 최근 나눔 */
 export function listRecentComments(viewer: Viewer, today: IsoDate, limit = 40) {
   const days = unlockedDays(today).map((d) => d.day);
   if (days.length === 0) return Promise.resolve([] as CommentView[]);

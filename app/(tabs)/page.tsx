@@ -2,22 +2,26 @@ import { Avatar } from "@/components/Avatar";
 import { ArrivalBoard } from "@/components/home/ArrivalBoard";
 import { CellCard } from "@/components/home/CellCard";
 import { ChapterPath } from "@/components/home/ChapterPath";
+import { SharePreview } from "@/components/home/SharePreview";
 import { buttonClass, ButtonLink, Card, CardHead, FlagIcon, MoreLink } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
+import { countComments, listComments, listRecentComments, toShared } from "@/lib/data/comments";
 import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus } from "@/lib/journey/mapState";
-import { todayKst } from "@/lib/time";
+import { nowKst, todayKst } from "@/lib/time";
 
 // 날짜와 사용자에 따라 내용이 바뀌므로 정적 캐시하지 않는다
 export const dynamic = "force-dynamic";
 
 const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
+/** 홈 나눔 미리보기 개수 */
+const SHARE_PREVIEW = 3;
 
-/** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 (기간 상태별 분기, architecture 7절) */
+/** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 + 나눔 미리보기 (기간 상태별 분기, architecture 7절) */
 export default async function Home() {
   const member = await requireMember();
   const today = todayKst();
@@ -26,11 +30,20 @@ export default async function Home() {
 
   // 셀 카드 기준: 깃발이 있으면 그 장, 보충 기간·종료 후에는 24장 전체, 기간 전에는 없음
   const criterion = p.flag ? [p.flag.day] : p.phase === "before" ? [] : ALL_DAYS;
-  const [board, cellMembers, community] = await Promise.all([
+  // 나눔 미리보기: 깃발 장의 나눔, 깃발이 없으면(보충 기간·종료 후) 여러 장의 최근 나눔, 기간 전엔 없음.
+  // 숨김 처리된 나눔은 작성자·운영자에게도 미리보기에서는 빼므로 몇 개 더 가져온다
+  const [board, cellMembers, community, recent, shareTotal] = await Promise.all([
     p.flag ? getArrivalBoard(p.flag.day, member.userId) : null,
     getCellMembers(member.cellId, member.userId, criterion),
     p.flag ? null : getCommunityToday(today),
+    p.flag
+      ? listComments(member, p.flag.day, "latest", SHARE_PREVIEW + 3)
+      : p.phase === "before"
+        ? null
+        : listRecentComments(member, today, SHARE_PREVIEW + 3),
+    p.flag ? countComments(p.flag.day) : 0,
   ]);
+  const sharePreview = recent ? toShared(recent.filter((c) => !c.hidden).slice(0, SHARE_PREVIEW), nowKst()) : null;
 
   const hello = greeting(p, member.realName);
   const g = goal(p);
@@ -135,6 +148,8 @@ export default async function Home() {
           }
         />
       )}
+
+      {sharePreview && <SharePreview dayNo={p.flag?.day ?? null} comments={sharePreview} total={shareTotal} />}
     </>
   );
 }
