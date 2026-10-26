@@ -1,3 +1,5 @@
+import { ACTS, type ActNo } from "./days";
+
 /**
  * 개관 탭 내용 — 교회(청년캠프1)에서 준 여호수아 개관 글을 그대로 옮긴다(2026-10-26).
  * 문구를 고칠 때는 이 파일만 바꾼다. 서비스가 해설을 덧붙이지 않는다(핵심 4).
@@ -27,15 +29,15 @@ export const BACKGROUND_QUESTION = "이 땅에서 나는 어떻게 거룩을 유
 export const BACKGROUND_BLESSING = "이 질문에 대한 답이 얻어지는 성경 통독이 되기를 축복합니다.";
 
 export type OverviewSection = {
-  no: 1 | 2 | 3 | 4;
+  no: ActNo;
   /** 한 단어 요약 (막대·제목 옆 표시) */
   keyword: string;
   title: string;
   /** 원문에 적힌 구절 범위 */
   range: string;
   /**
-   * 24칸 막대에서 이 부분이 차지하는 장. 원문 범위는 5장·13장에서 겹치므로
-   * 막대에서는 겹치지 않게 나눈다(5장 → 1부, 13장 → 3부).
+   * 24칸 막대에서 이 부분이 차지하는 장 = 여정의 ACT 구간(days.ts ACTS).
+   * 원문 범위는 5장·13장에서 겹치므로 막대에서는 겹치지 않게 나눈다(5장 → 1부, 13장 → 3부).
    */
   chapters: [number, number];
   points: string[];
@@ -47,7 +49,7 @@ export const OVERVIEW_SECTIONS: OverviewSection[] = [
     keyword: "입성",
     title: "약속의 땅으로 들어가는 이스라엘",
     range: "1:1–5:12",
-    chapters: [1, 5],
+    chapters: ACTS[1].chapters,
     points: ["여호수아를 세우시는 여호와", "여리고 정탐 명령을 내리는 여호수아", "요단강을 건너는 이스라엘"],
   },
   {
@@ -55,7 +57,7 @@ export const OVERVIEW_SECTIONS: OverviewSection[] = [
     keyword: "정복",
     title: "약속의 땅을 정복하는 이스라엘",
     range: "5:13–13:7",
-    chapters: [6, 12],
+    chapters: ACTS[2].chapters,
     points: [
       "여리고를 정복한 이스라엘",
       "아간을 처단한 이스라엘",
@@ -69,7 +71,7 @@ export const OVERVIEW_SECTIONS: OverviewSection[] = [
     keyword: "분배",
     title: "약속의 땅을 분배하는 이스라엘",
     range: "13:1–21:45",
-    chapters: [13, 21],
+    chapters: ACTS[3].chapters,
     points: ["땅 분배 명령", "요단 동편 땅 분배", "요단 서편 땅 분배", "나머지 땅 분배", "도피성", "레위 사람들의 성읍"],
   },
   {
@@ -77,7 +79,7 @@ export const OVERVIEW_SECTIONS: OverviewSection[] = [
     keyword: "언약",
     title: "언약을 새롭게 하는 이스라엘",
     range: "22:1–24:33",
-    chapters: [22, 24],
+    chapters: ACTS[4].chapters,
     points: [
       "요단 강 양편 지파들의 불화와 화해",
       "여호와만 사랑하라고 강권하는 여호수아",

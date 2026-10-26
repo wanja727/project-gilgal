@@ -44,18 +44,22 @@ export type JourneyDay = {
   place: string;
   /** 이 장을 마쳤을 때 지도에서 머무는 지점 */
   site: SiteId;
-  /** 예: "약속의 땅을 향한 여덟 번째 걸음" */
+  /** 예: "약속의 땅을 정복하는 여덟 번째 걸음" */
   ordinalLine: string;
   mapMode: MapMode;
   mapEffect?: MapEffect;
   completion: CompletionMessage;
 };
 
+/**
+ * ACT 구분·이름은 목사님이 쓰신 여호수아 개관(overview.ts)의 네 부분을 따른다(2026-10-26).
+ * 개관은 절 단위(5:12·13:7)로 나누지만 여정은 하루 한 장이라 장 단위로 맞춘다.
+ */
 export const ACTS: Record<ActNo, { title: string; short: string; chapters: [number, number]; phrase: string }> = {
   1: { title: "약속의 땅으로 들어가다", short: "들어가다", chapters: [1, 5], phrase: "약속의 땅으로 들어가는" },
-  2: { title: "땅을 향해 나아가다", short: "나아가다", chapters: [6, 12], phrase: "약속의 땅을 향한" },
-  3: { title: "약속의 땅을 나누다", short: "나누다", chapters: [13, 22], phrase: "약속의 땅을 나누는" },
-  4: { title: "기억하고 선택하다", short: "기억하고 선택하다", chapters: [23, 24], phrase: "기억하고 선택하는" },
+  2: { title: "약속의 땅을 정복하다", short: "정복하다", chapters: [6, 12], phrase: "약속의 땅을 정복하는" },
+  3: { title: "약속의 땅을 분배하다", short: "분배하다", chapters: [13, 21], phrase: "약속의 땅을 분배하는" },
+  4: { title: "언약을 새롭게 하다", short: "언약을 새롭게 하다", chapters: [22, 24], phrase: "언약을 새롭게 하는" },
 };
 
 const ORDINALS = [
@@ -84,7 +88,7 @@ const CONTENT: DayContent[] = [
   { title: "할례와 유월절", place: "길갈", site: "gilgal", mapMode: "journey",
     completion: { headline: "길갈에 머물렀어요" } },
 
-  // ─── ACT 2 — 땅을 향해 나아가다 (6~12장) ───
+  // ─── ACT 2 — 약속의 땅을 정복하다 (6~12장) ───
   { title: "성벽이 무너지다", place: "여리고", site: "jericho", mapMode: "journey",
     completion: { headline: "여리고에 도착했어요" } },
   { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey",
@@ -100,7 +104,7 @@ const CONTENT: DayContent[] = [
   { title: "정복한 서른한 왕", place: "길갈", site: "gilgal", mapMode: "review", mapEffect: "overview",
     completion: { headline: "지나온 길을 돌아보았어요" } },
 
-  // ─── ACT 3 — 약속의 땅을 나누다 (13~22장) ───
+  // ─── ACT 3 — 약속의 땅을 분배하다 (13~21장) ───
   { title: "동쪽 지파의 기업", place: "요단 동쪽", site: "east", mapMode: "territory", mapEffect: "fill-territory",
     completion: { headline: "요단 동쪽 땅이 나뉘었어요" } },
   { title: "갈렙의 기업", place: "헤브론", site: "hebron", mapMode: "territory", mapEffect: "fill-territory",
@@ -119,10 +123,12 @@ const CONTENT: DayContent[] = [
     completion: { headline: "도피성이 정해졌어요" } },
   { title: "레위인의 성읍", place: "레위 성읍", site: "shiloh", mapMode: "territory",
     completion: { headline: "레위인의 성읍이 정해졌어요" } },
+
+  // ─── ACT 4 — 언약을 새롭게 하다 (22~24장) ───
+  // 22장은 지도에서는 아직 땅(territory) 표현을 이어 간다 — 동쪽 지파가 자기 땅으로 돌아가는 장면
   { title: "엣 제단", place: "요단 가", site: "east", mapMode: "territory", mapEffect: "return-east",
     completion: { headline: "요단 동쪽 지파가 집으로 돌아갔어요" } },
 
-  // ─── ACT 4 — 기억하고 선택하다 (23~24장) ───
   { title: "여호수아의 마지막 권면", place: "이스라엘", site: "shechem", mapMode: "review", mapEffect: "overview",
     completion: { headline: "지나온 모든 길을 바라보았어요" } },
   { title: "세겜 언약", place: "세겜", site: "shechem", mapMode: "review", mapEffect: "arrive-final",

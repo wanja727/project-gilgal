@@ -39,12 +39,12 @@ describe("24일 여정 데이터 무결성", () => {
     });
   });
 
-  it("ACT 구간: 1~5 / 6~12 / 13~22 / 23~24", () => {
+  it("ACT 구간: 1~5 / 6~12 / 13~21 / 22~24 (개관의 네 부분)", () => {
     const actOf = (n: number) => JOURNEY_DAYS[n - 1].act;
     expect([1, 5].map(actOf)).toEqual([1, 1]);
     expect([6, 12].map(actOf)).toEqual([2, 2]);
-    expect([13, 22].map(actOf)).toEqual([3, 3]);
-    expect([23, 24].map(actOf)).toEqual([4, 4]);
+    expect([13, 21].map(actOf)).toEqual([3, 3]);
+    expect([22, 24].map(actOf)).toEqual([4, 4]);
     expect(Object.keys(ACTS)).toHaveLength(4);
   });
 
@@ -59,7 +59,7 @@ describe("24일 여정 데이터 무결성", () => {
   });
 
   it("요구사항·시안에 명시된 장면", () => {
-    expect(JOURNEY_DAYS[7].ordinalLine).toBe("약속의 땅을 향한 여덟 번째 걸음");
+    expect(JOURNEY_DAYS[7].ordinalLine).toBe("약속의 땅을 정복하는 여덟 번째 걸음");
     expect(JOURNEY_DAYS[2].completion.headline).toBe("요단을 건너 가나안에 들어왔어요");
     expect(JOURNEY_DAYS[2].mapEffect).toBe("cross-jordan");
     expect(JOURNEY_DAYS[5].completion.headline).toBe("여리고에 도착했어요");
