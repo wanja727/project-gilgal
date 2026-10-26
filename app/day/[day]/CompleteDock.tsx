@@ -9,7 +9,7 @@ import type { JourneyDay } from "@/lib/journey/days";
 import { type CompleteDayResponse, completeDayAction } from "./actions";
 
 /**
- * 본문 화면 아래에 고정된 "N장 읽기 완료" 버튼.
+ * 본문이 끝나는 자리의 "N장 읽기 완료" 버튼. 읽는 도중에 누를 일이 없어 화면 아래에 고정하지 않는다(2026-10-26).
  * 처음 완료가 저장된 경우에만 도착 화면을 띄우고, 이미 읽은 장이면 다음 걸음으로 이어 준다.
  */
 export function CompleteDock({
@@ -69,7 +69,7 @@ export function CompleteDock({
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md border-t border-line bg-bg px-gutter pt-3 pb-[max(env(safe-area-inset-bottom),20px)]">
+      <div className="px-gutter pt-8 pb-2">
         {error && (
           <p role="alert" className="mb-2 text-center text-caption text-main">
             {error}

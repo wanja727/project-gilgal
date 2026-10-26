@@ -104,7 +104,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   const shared = toShared(comments, nowKst());
 
   return (
-    <div className="pb-[calc(110px+env(safe-area-inset-bottom))]">
+    <div className="pb-[max(env(safe-area-inset-bottom),24px)]">
       <ReadingBar title={`${formatDate(day.readingDate)}의 장`} />
       <Stage chapter={day.chapter} site={day.site} title={day.title} />
 
@@ -126,6 +126,14 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
           </EmptyState>
         </div>
       )}
+
+      <CompleteDock
+        day={day}
+        initiallyDone={done.has(day.day)}
+        after={after}
+        today={today}
+        avatarSeed={member.avatarSeed}
+      />
 
       <section id="share" aria-labelledby="share-title" className="scroll-mt-4 px-gutter pt-2 pb-7">
         <div className="px-1 pt-3.5 pb-1">
@@ -158,13 +166,6 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         )}
       </section>
 
-      <CompleteDock
-        day={day}
-        initiallyDone={done.has(day.day)}
-        after={after}
-        today={today}
-        avatarSeed={member.avatarSeed}
-      />
     </div>
   );
 }
