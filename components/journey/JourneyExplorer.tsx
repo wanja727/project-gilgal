@@ -100,8 +100,7 @@ export function JourneyExplorer({
               className="!h-auto"
             />
           </div>
-          <ChapterStepper chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
-          <p className="px-5 pt-2 text-center text-[11px] text-mid">{BRAND.mapCaption}</p>
+          {/* 아이콘 설명은 지도 바로 아래 — 지도를 보며 바로 읽히게 */}
           <ul className="flex flex-wrap gap-x-3.5 gap-y-2 px-[22px] pt-3 text-caption text-mute" aria-label="장소 아이콘">
             {LEGEND_SITES.map((id) => (
               <li key={id} className="flex items-center gap-1.5">
@@ -110,6 +109,8 @@ export function JourneyExplorer({
               </li>
             ))}
           </ul>
+          <p className="px-5 pt-2 text-center text-[11px] text-mid">{BRAND.mapCaption}</p>
+          <ChapterStepper chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
           <PlaceCard site={site} chapter={chapter} statuses={statuses} flagDay={flagDay} onSelect={setChapter} />
         </div>
       ) : (
