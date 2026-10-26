@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <p className="text-caption font-semibold tracking-[0.3em] text-mute">{BRAND.kicker}</p>
         <h1 className="font-serif text-[44px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</h1>
         <p className="font-serif text-[18px] leading-relaxed font-bold tracking-[-0.03em] text-main-2">{BRAND.subtitle}</p>
-        <p className="mx-auto max-w-[17rem] pt-6 font-serif text-[15px] leading-7 text-text">{BRAND.tagline}</p>
+        <p className="mx-auto pt-6 font-serif text-[15px] leading-7 whitespace-pre-line text-text">{BRAND.tagline}</p>
       </div>
 
       <div className="space-y-4">
@@ -49,11 +49,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             카카오로 시작하기
           </button>
         </form>
-        <p className="text-center text-[11px] leading-5 text-mute">
-          셀라에서 사용하던 이름과 셀 정보를 불러와 연결합니다.
-          <br />
-          정보가 다르다면 셀 리더나 운영자에게 알려 주세요.
-        </p>
       </div>
     </main>
   );
