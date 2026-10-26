@@ -129,7 +129,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
       <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
       <Stage chapter={day.chapter} site={day.site} title={day.title} />
 
-      <div className="px-7 pt-[26px]">
+      <div className="px-5 pt-[26px]">
         <h1 className="font-serif text-display font-bold tracking-[-0.04em] text-main">
           {JOSHUA_2026.book.name} {day.chapter}장
         </h1>

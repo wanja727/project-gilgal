@@ -116,6 +116,10 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   font-weight: var(--reader-weight, 400);
   line-height: var(--reader-leading, 2.05);
 }
+/* 절 번호: 본문 첫 줄과 같은 줄 높이로 세로 가운데를 맞춘다 */
+.reader-num {
+  line-height: calc(var(--verse-size, var(--text-verse)) * var(--reader-leading, 2.05));
+}
 
 :focus-visible {
   outline: 2px solid var(--color-main);

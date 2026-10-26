@@ -6,7 +6,7 @@ import type { ChapterText } from "@/lib/bible/types";
  */
 export function ChapterReader({ text }: { text: ChapterText }) {
   return (
-    <article className="px-7 pt-[22px] pb-2">
+    <article className="px-5 pt-[22px] pb-2">
       {text.source === "mock" && (
         <p className="mb-4 inline-block rounded-[8px] bg-soft px-2.5 py-1.5 text-caption font-semibold text-mute">
           Mock 본문 · 실제 성경 본문이 아닙니다
@@ -21,8 +21,9 @@ export function ChapterReader({ text }: { text: ChapterText }) {
             {/* 절마다 줄을 나누고 절 번호를 왼쪽 칸에 둔다 — 본문 줄이 번호 아래로 파고들지 않아 읽기 편하다 */}
             <ol>
               {section.verses.map((v) => (
-                <li key={v.number} className="mb-3 grid grid-cols-[26px_1fr]">
-                  <span className="pt-[0.62em] font-sans text-[11px] leading-none font-bold text-mid">{v.number}</span>
+                <li key={v.number} className="mb-3 grid grid-cols-[24px_1fr]">
+                  {/* 절 번호 줄 높이 = 본문 한 줄 높이 → 글자 크기·줄 간격을 바꿔도 첫 줄 가운데에 맞는다 */}
+                  <span className="reader-num font-sans text-[11px] font-bold text-mid">{v.number}</span>
                   <span>{v.text}</span>
                 </li>
               ))}
