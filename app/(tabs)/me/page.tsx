@@ -57,7 +57,7 @@ export default async function MePage() {
       <Card aria-labelledby="me-info">
         <CardHead id="me-info" title="알려 드려요" />
         <ul className="mt-3 space-y-2 text-small leading-6 text-mute">
-          <li>이름이 누락됐을 경우 셀 리더나 운영자에게 알려 주세요.</li>
+          <li>이름이나 셀이 잘못됐거나 빠졌다면 셀 리더나 운영자에게 알려 주세요.</li>
           <li>지도는 이야기 흐름을 보여 주는 개념도이고, 실제 위치와 다를 수 있어요.</li>
         </ul>
       </Card>
