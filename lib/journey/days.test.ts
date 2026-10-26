@@ -55,6 +55,9 @@ describe("24일 여정 데이터 무결성", () => {
       expect(d.place.trim()).not.toBe("");
       expect(d.ordinalLine).toMatch(/번째 걸음$/);
       expect(d.completion.headline.trim()).not.toBe("");
+      expect(d.summary.trim()).not.toBe("");
+      // 장 카드에서 모바일 두 줄 안쪽
+      expect(d.summary.length).toBeLessThanOrEqual(48);
       expect(SITES).toHaveProperty(d.site);
     }
   });

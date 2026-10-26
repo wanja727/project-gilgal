@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { formatDate } from "@/lib/format";
 import { ACTS, JOURNEY_DAYS, type ActNo } from "@/lib/journey/days";
-import { EXPLORER_CROP, LEGEND_SITES, SITES, type SiteId } from "@/lib/journey/locations";
+import { EXPLORER_CROP, SITES, type SiteId } from "@/lib/journey/locations";
 import { type ChapterStatus, type MapView, previousSite } from "@/lib/journey/mapState";
 
 type ViewMode = "map" | "list";
@@ -83,8 +83,9 @@ export function JourneyExplorer({
 
       {mode === "map" ? (
         <div>
-          {/* 지도 높이 = 화면 높이 - (제목·아이콘 설명·장 카드·하단 탭 약 505px). 장 카드가 첫 화면에 다 들어오게 */}
-          <div className="mx-gutter mt-3 h-[clamp(220px,calc(100dvh-505px),400px)] overflow-hidden rounded-map bg-surface">
+          {/* 지도 높이 = 화면 높이 - (제목·장 카드·하단 탭 약 470px). 장 카드가 첫 화면에 다 들어오게.
+              장소 아이콘 설명은 장 카드(아이콘 + 장소 이름)가 대신한다 */}
+          <div className="mx-gutter mt-3 h-[clamp(240px,calc(100dvh-470px),440px)] overflow-hidden rounded-map bg-surface">
             <JourneyMap
               view={view}
               avatarSeed={avatarSeed}
@@ -103,18 +104,6 @@ export function JourneyExplorer({
               ariaLabel={`여호수아 여정 지도. ${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. 장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
             />
           </div>
-          {/* 아이콘 설명: 지도 바로 아래 한 줄(넘치면 옆으로 밀기) */}
-          <ul
-            className="flex gap-3.5 overflow-x-auto px-[22px] pt-2.5 pb-1 text-caption whitespace-nowrap text-mute [scrollbar-width:none]"
-            aria-label="장소 아이콘"
-          >
-            {LEGEND_SITES.map((id) => (
-              <li key={id} className="flex shrink-0 items-center gap-1.5">
-                <SiteGlyph id={id} size={15} className="text-main" />
-                {SITES[id].scene}
-              </li>
-            ))}
-          </ul>
           <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
         </div>
       ) : (
@@ -175,14 +164,11 @@ function ChapterCard({
         </button>
       </div>
 
-      {/* 그 장소에서 있었던 일 */}
+      {/* 이 장에서 있었던 일 (장별 한 줄) */}
       <div className="mx-1 mt-2.5 flex gap-3 rounded-tile bg-bg px-3.5 py-3">
         <SiteGlyph id={day.site} size={22} strokeWidth={1.7} className="mt-0.5 shrink-0 text-main" />
         <p className="text-small leading-[1.6] text-text">
-          <b className="font-bold text-main">
-            {place.name} · {place.scene}
-          </b>{" "}
-          {place.description}
+          <b className="font-bold text-main">{place.name}</b> {day.summary}
         </p>
       </div>
 

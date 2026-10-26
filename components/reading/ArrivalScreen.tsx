@@ -71,7 +71,7 @@ export function ArrivalScreen({
       suffix = `오늘의 깃발에 닿았어요. ${goal(p).body}.`;
     }
   }
-  const desc = [day.completion.body ?? site.description, suffix].filter(Boolean).join(" ");
+  const desc = [day.completion.body ?? day.summary, suffix].filter(Boolean).join(" ");
 
   const stats: [string, string][] = arrival
     ? [

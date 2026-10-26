@@ -104,9 +104,6 @@ export function getSite(id: SiteId): Site {
   return SITES[id];
 }
 
-/** 여정 탭 범례에 보여 줄 대표 장소 */
-export const LEGEND_SITES: SiteId[] = ["jordan", "gilgal", "jericho", "gibeon", "shiloh", "shechem"];
-
 /** 아바타 오프셋 기본값: 지점 왼쪽 위 */
 export const DEFAULT_AVATAR_OFFSET = { dx: -18, dy: -18 } as const;
 
