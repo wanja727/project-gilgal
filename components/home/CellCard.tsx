@@ -4,8 +4,8 @@ import type { CellMember } from "@/lib/data/progress";
 import { givenName } from "@/lib/format";
 
 /**
- * 우리 셀: 기준 장까지 온 셀원은 선명하게(이름 표시), 아직인 셀원은 흐리게(이름 없음).
- * 이름 없는 흐린 아바타로 "미완료자 명단"처럼 보이지 않게 한다(요구사항 10절, 2026-10-24 결정).
+ * 우리 셀: 기준 장까지 온 셀원은 선명하게, 아직인 셀원은 흐리게. 이름은 모두 보인다.
+ * (2026-10-26 운영자 변경 — 이전엔 아직인 셀원은 이름 없이 흐린 아바타만. 같은 셀끼리 서로 알아보고 격려하게)
  */
 export function CellCard({
   cellName,

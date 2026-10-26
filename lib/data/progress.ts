@@ -194,7 +194,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
 export type CellMember = {
   isMe: boolean;
   avatarSeed: string;
-  /** 도착한 셀원과 나만 이름을 보낸다 — 아직인 셀원은 이름 없이 흐린 아바타로(2026-10-24 결정) */
+  /** 셀원 모두 이름을 보낸다 — 아직인 셀원은 흐린 아바타 + 이름(2026-10-26 운영자 변경, 이전엔 도착한 셀원만) */
   name: string | null;
   arrived: boolean;
 };
@@ -229,7 +229,7 @@ export async function getCellMembers(cellId: number, userId: string, criterionDa
     const arrived = criterionDays.length > 0 && r.done >= criterionDays.length;
     const isMe = r.userId === userId;
     return {
-      member: { isMe, avatarSeed: r.avatarSeed, name: arrived || isMe ? r.name : null, arrived },
+      member: { isMe, avatarSeed: r.avatarSeed, name: r.name, arrived },
       lastAt: r.lastAt ? new Date(r.lastAt).getTime() : Infinity,
     };
   });
