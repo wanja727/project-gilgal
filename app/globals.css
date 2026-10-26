@@ -106,11 +106,6 @@ body {
   transform-origin: center;
   animation: map-pop 0.45s 1.55s both;
 }
-.map-flag-up {
-  transform-box: fill-box;
-  transform-origin: bottom;
-  animation: map-flag 0.5s 1.7s both;
-}
 /* 바로 전에 강조된 장소: 채운 아이콘을 겹쳐 두고 가운데로 오므라들며 사라지게 한다(map-pop 의 반대 — 머물다 떠나는 느낌) */
 .map-unpop {
   transform-box: fill-box;
@@ -151,14 +146,6 @@ body {
   }
   100% {
     transform: scale(1);
-  }
-}
-@keyframes map-flag {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
   }
 }
 @keyframes map-fill-in {

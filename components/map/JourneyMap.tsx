@@ -207,6 +207,8 @@ export function JourneyMap({
         const showLabel = labels || isFocus || (isVisited && !focused);
         const label = labelPosition(id);
         const popClass = arrival && id === lastWalked ? "map-pop" : leg && id === leg.to ? "map-pop-quick" : undefined;
+        // 도착할 장소는 미리 보이게 두고(도착 전 모습), 채운 아이콘만 그 위에서 차오르게 한다
+        const beforeTone: "ring" | "off" = (arrival ? walked.slice(0, -1).includes(id) : isVisited) ? "ring" : "off";
         return (
           <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id}>
             {selected === id && (
@@ -221,9 +223,16 @@ export function JourneyMap({
                 className={leg?.prev ? "map-fade-in" : undefined}
               />
             )}
-            <g className={popClass}>
+            {popClass && on ? (
+              <>
+                <Marker id={id} tone={beforeTone} />
+                <g className={popClass}>
+                  <Marker id={id} tone="on" />
+                </g>
+              </>
+            ) : (
               <Marker id={id} tone={on ? "on" : ring ? "ring" : "off"} />
-            </g>
+            )}
             {/* 바로 전 강조를 그 위에 겹쳐 두고 가운데로 오므라들며 사라지게 한다 — 도착할 때 가운데에서 차오르는 것의 반대 */}
             {fading === id && (
               <g key={`fade-${fadeKey}`} aria-hidden pointerEvents="none">
@@ -279,7 +288,6 @@ export function JourneyMap({
           x={SITES[view.flag].x}
           y={SITES[view.flag].y}
           label={meAtFlag ? [MY_PLACE, flagLabel].filter(Boolean).join(" · ") : flagLabel}
-          animate={!!arrival}
         />
       )}
 
@@ -378,9 +386,9 @@ function Tag({
   );
 }
 
-function Flag({ x, y, label, animate }: { x: number; y: number; label: string | null; animate: boolean }) {
+function Flag({ x, y, label }: { x: number; y: number; label: string | null }) {
   return (
-    <g className={animate ? "map-flag-up" : undefined} aria-hidden>
+    <g aria-hidden>
       <line x1={x} y1={y - 14} x2={x} y2={y - 40} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
       <path d={`M${x + 1},${y - 40} L${x + 21},${y - 34} L${x + 1},${y - 28}Z`} fill="var(--color-main)" />
       {/* 깃발이 오른쪽으로 날리므로 이름표도 깃대에서 오른쪽으로 */}

@@ -6,7 +6,7 @@ import { JourneyMap } from "@/components/map/JourneyMap";
 import { buttonClass, CloseIcon } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
-import { flagCaption, goal, journeyProgress } from "@/lib/journey/guide";
+import { goal, journeyProgress } from "@/lib/journey/guide";
 import { cropAroundLeg, SITES } from "@/lib/journey/locations";
 import { type MapView, previousSite, trail } from "@/lib/journey/mapState";
 
@@ -57,7 +57,8 @@ export function ArrivalScreen({
     walked,
     visited: walked,
     me: day.site,
-    flag: p.flag ? p.flag.site : null,
+    // 도착 장면은 이번 걸음에만 집중한다 — 깃발은 그리지 않는다(남은 장 수는 아래 문구로)
+    flag: null,
     canaanFilled: p.done.has(3) && day.day !== 3,
   };
 
@@ -110,7 +111,6 @@ export function ArrivalScreen({
         <JourneyMap
           view={view}
           avatarSeed={avatarSeed}
-          flagLabel={flagCaption(p)}
           crop={cropAroundLeg(previousSite(day.day), day.site)}
           arrival={{ crossJordan: day.day === 3 }}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
@@ -141,6 +141,8 @@ export function ArrivalScreen({
         </dl>
       </div>
 
+      {/* 떠오르기 전(8px 아래)의 버튼이 화면 높이를 넘어 스크롤바가 잠깐 생기지 않게 바깥에서 자른다 */}
+      <div className="overflow-hidden">
       <div
         className="rise-in grid gap-2 px-5 pt-[18px] pb-[max(env(safe-area-inset-bottom),40px)]"
         style={{ animationDelay: "2.1s" }}
@@ -167,6 +169,7 @@ export function ArrivalScreen({
             </Link>
           </>
         )}
+      </div>
       </div>
     </div>
   );
