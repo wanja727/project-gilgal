@@ -134,8 +134,23 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   ]);
   const done = new Set(completed);
   const next = nextToRead(done, today);
-  const after =
-    next && next.day !== day.day ? { label: `${next.day}장 이어 읽기`, href: `/day/${next.day}` } : { label: "오늘의 여정으로", href: "/" };
+  // 읽은 장 끝의 다음 걸음: 책의 다음 장(열렸으면)이 먼저 — 다시 읽는 중에 이어 읽던 먼 장으로 건너뛰지 않게.
+  // 이어 읽던 곳이 따로 있으면 작은 링크로 남긴다(2026-10-29)
+  const following = checkDayAccess(day.day + 1, today);
+  const resumeDay = next && next.day !== day.day ? next.day : null;
+  const after = following.ok
+    ? {
+        primary: {
+          label: `${following.day.chapter}장 ${resumeDay === following.day.day ? "이어 읽기" : "읽기"}`,
+          href: `/day/${following.day.day}`,
+        },
+        secondary:
+          resumeDay && resumeDay !== following.day.day ? { label: `이어 읽던 ${resumeDay}장으로`, href: `/day/${resumeDay}` } : null,
+      }
+    : {
+        primary: resumeDay ? { label: `${resumeDay}장 이어 읽기`, href: `/day/${resumeDay}` } : { label: "오늘의 여정으로", href: "/" },
+        secondary: null,
+      };
   const shared = toShared(comments, nowKst());
 
   return (

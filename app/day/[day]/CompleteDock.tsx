@@ -23,8 +23,8 @@ export function CompleteDock({
 }: {
   day: JourneyDay;
   initiallyDone: boolean;
-  /** 이미 읽은 장일 때 버튼: 다음에 읽을 장 또는 홈 */
-  after: { label: string; href: string };
+  /** 이미 읽은 장일 때: 주 버튼(책의 다음 장, 없으면 이어 읽을 장·홈) + 이어 읽던 곳 링크(다를 때만) */
+  after: { primary: { label: string; href: string }; secondary: { label: string; href: string } | null };
   today: string;
   avatarKey: string;
 }) {
@@ -83,9 +83,14 @@ export function CompleteDock({
               </svg>
               {day.chapter}장을 읽었어요
             </p>
-            <Link href={after.href} className={buttonClass("line")}>
-              {after.label}
+            <Link href={after.primary.href} className={buttonClass("line")}>
+              {after.primary.label}
             </Link>
+            {after.secondary && (
+              <Link href={after.secondary.href} className="mx-auto mt-1 flex min-h-11 w-fit items-center px-4 text-small font-semibold text-mute">
+                {after.secondary.label}
+              </Link>
+            )}
           </>
         ) : (
           <button type="button" onClick={onComplete} disabled={pending} className={buttonClass("main")}>
