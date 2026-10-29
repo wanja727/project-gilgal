@@ -6,7 +6,7 @@ import { createCommentAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
-import { formatVerseRef, insertVerse, referencedVerses, removeVerse, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
+import { formatVerseRef, referencedVerses, splitVerseRefs, tapVerse, type VerseRef } from "@/lib/share/verseRef";
 import { VerseSheet } from "./VerseRefText";
 
 const ERRORS: Record<string, string> = {
@@ -219,13 +219,7 @@ function DockForm({
       if (!row) return;
       const verse = Number(row.dataset.verse);
       setText((t) => {
-        // 이미 고른 절을 다시 누르면 선택 취소
-        if (referencedVerses(t, chapter).has(verse)) {
-          const next = removeVerse(t, chapter, verse);
-          caret.current = Math.min(caret.current ?? next.length, next.length);
-          return next;
-        }
-        const r = insertVerse(t, caret.current ?? t.length, chapter, verse, maxLength);
+        const r = tapVerse(t, caret.current ?? t.length, chapter, verse, maxLength);
         caret.current = r.caret;
         return r.text;
       });

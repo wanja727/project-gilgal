@@ -57,7 +57,35 @@ export function referencedVerses(content: string, chapter: number): Set<number> 
 }
 
 /**
- * 입력창에서 절을 눌렀을 때 커서 자리에 구절을 넣는다.
+ * 입력창에서 절을 눌렀을 때: 이미 고른 절이면 빼고, 아니면 커서 자리에 넣는다.
+ * 커서가 구절 표기 한가운데("16|:7")에 있으면 그 표기 끝으로 옮긴 뒤 넣는다 — 표기가 쪼개져 "16 :7" 같은 글이 남지 않게.
+ */
+export function tapVerse(
+  text: string,
+  caret: number,
+  chapter: number,
+  verse: number,
+  maxLength: number,
+): { text: string; caret: number } {
+  if (referencedVerses(text, chapter).has(verse)) {
+    const next = removeVerse(text, chapter, verse);
+    return { text: next, caret: outsideRef(next, Math.min(caret, next.length)) };
+  }
+  return insertVerse(text, outsideRef(text, caret), chapter, verse, maxLength);
+}
+
+/** 커서가 구절 표기 안쪽이면 그 표기 끝으로 */
+function outsideRef(text: string, caret: number): number {
+  const at = Math.min(Math.max(caret, 0), text.length);
+  for (const m of text.matchAll(REF_RE)) {
+    const end = m.index + m[0].length;
+    if (m.index < at && at < end) return end;
+  }
+  return at;
+}
+
+/**
+ * 커서 자리에 구절을 넣는다(tapVerse 가 부른다).
  * 커서 바로 앞이 같은 장의 구절이고 누른 절이 그 바로 앞·뒤 절이면 범위로 늘린다("16:1" + 2절 → "16:1-2").
  * 이미 그 범위 안의 절이면 그대로 둔다.
  */
