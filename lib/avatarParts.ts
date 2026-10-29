@@ -20,7 +20,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     label: "머리",
     optional: true,
     options: [
-      // 단발~옆머리와 캡모자는 길갈에서 그려 붙인 머리(lib/avatar.ts HAIR)
+      // 단발~땋은 머리와 캡모자는 길갈에서 그려 붙인 머리(lib/avatar.ts HAIR)
       { id: "bob", label: "단발" },
       { id: "bangs", label: "앞머리 단발" },
       { id: "long", label: "긴 생머리" },
@@ -29,13 +29,6 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "pigtails", label: "양갈래" },
       { id: "bun", label: "올림머리" },
       { id: "braid", label: "땋은 머리" },
-      { id: "short", label: "짧은 머리" },
-      { id: "sidepart", label: "가르마" },
-      { id: "dandy", label: "댄디컷" },
-      { id: "slick", label: "올백" },
-      { id: "quiff", label: "리젠트" },
-      { id: "buzz", label: "버즈컷" },
-      { id: "sides", label: "옆머리" },
       { id: "shag", label: "덥수룩" },
       { id: "curls", label: "두 고리" },
       { id: "ringlets", label: "꼬불꼬불" },
@@ -52,6 +45,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "bow", label: "리본" },
       { id: "garland", label: "화관" },
       { id: "cap", label: "캡모자" },
+      { id: "tiltcap", label: "삐딱 캡" },
       { id: "beanie", label: "비니" },
       { id: "sunhat", label: "챙모자" },
       { id: "headphones", label: "헤드폰" },
