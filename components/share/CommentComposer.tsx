@@ -6,7 +6,8 @@ import { createCommentAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
-import { insertVerse, referencedVerses } from "@/lib/share/verseRef";
+import { formatVerseRef, insertVerse, referencedVerses, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
+import { VerseSheet } from "./VerseRefText";
 
 const ERRORS: Record<string, string> = {
   invalid: "내용을 적어 주세요.",
@@ -162,12 +163,14 @@ export function CommentComposer({
   );
 }
 
-const TEXTAREA =
-  "mt-2 w-full resize-none rounded-[12px] bg-bg p-3 text-[14.5px] leading-[1.65] text-text outline-none placeholder:text-mid focus-visible:outline-2 focus-visible:outline-main";
+// 입력칸과 그 뒤에 겹쳐 그리는 강조 글자는 글꼴·여백·줄바꿈이 똑같아야 글자 위치가 맞는다
+const FIELD_TEXT = "p-3 text-[14.5px] leading-[1.65] break-keep [overflow-wrap:anywhere] whitespace-pre-wrap";
 
 /**
  * 화면 아래에 붙는 입력창. 열려 있는 동안 본문의 절을 누르면 "15:3" 이 커서 자리에 들어가고,
  * 바로 이어지는 절을 누르면 "15:3-4" 로 늘어난다(lib/share/verseRef). 고른 절은 본문에 옅게 표시한다.
+ * 들어간 구절은 입력칸 위 칩으로도 보이고(누르면 그 절 본문 시트), 입력칸 안에서도 배경색으로 강조한다 —
+ * 입력칸은 일반 textarea 그대로 두고 같은 글을 뒤에 겹쳐 구절 부분만 칠한다(한글 입력에 영향 없음, 2026-10-29).
  */
 function DockForm({
   dayNo,
@@ -193,6 +196,13 @@ function DockForm({
   onClose: () => void;
 }) {
   const areaRef = useRef<HTMLTextAreaElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const [sheet, setSheet] = useState<VerseRef | null>(null);
+  // 시트가 떠 있을 때 Esc 는 시트만 닫는다
+  const sheetOpen = useRef(false);
+  useEffect(() => {
+    sheetOpen.current = sheet !== null;
+  }, [sheet]);
   // 절을 누르면 textarea 가 포커스를 잃으므로 마지막 커서 자리를 기억해 둔다
   const caret = useRef<number | null>(null);
 
@@ -203,7 +213,7 @@ function DockForm({
   useEffect(() => {
     const root = document.getElementById(READER_ROOT_ID);
     root?.setAttribute("data-quoting", "");
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !sheetOpen.current && onClose();
     const onTap = (e: MouseEvent) => {
       const row = (e.target as HTMLElement).closest<HTMLElement>("[data-verse]");
       if (!row) return;
@@ -223,6 +233,9 @@ function DockForm({
       document.removeEventListener("click", onTap);
     };
   }, [chapter, maxLength, onClose, setText]);
+
+  // 글에 들어간 구절(순서대로, 같은 표기는 한 번)
+  const refs = [...new Map(splitVerseRefs(text).flatMap((s) => (s.ref ? [[formatVerseRef(s.ref), s.ref] as const] : []))).values()];
 
   // 글에 적힌 이 장의 절을 본문에 표시 — 고른 절이 어디인지 보이게
   useEffect(() => {
@@ -249,20 +262,60 @@ function DockForm({
           <CloseIcon className="size-5" />
         </button>
       </div>
-      <textarea
-        ref={areaRef}
-        id={`dock-${dayNo}`}
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          caret.current = e.target.selectionStart;
-        }}
-        onSelect={(e) => (caret.current = e.currentTarget.selectionStart)}
-        maxLength={maxLength}
-        rows={3}
-        placeholder="한 문장이어도 좋아요"
-        className={TEXTAREA}
-      />
+      {refs.length > 0 && (
+        <ul aria-label="고른 구절" className="mt-2 flex flex-wrap gap-1.5">
+          {refs.map((r) => (
+            <li key={formatVerseRef(r)} className="animate-[rise_.25s_ease-out]">
+              <button
+                type="button"
+                onClick={() => setSheet(r)}
+                aria-haspopup="dialog"
+                aria-label={`여호수아 ${formatVerseRef(r)} 본문 보기`}
+                className="inline-flex h-8 items-center gap-1 rounded-chip bg-soft px-3 text-caption font-bold text-main"
+              >
+                {formatVerseRef(r)}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="size-3.5 text-mute" aria-hidden>
+                  <path d="M4 12s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" />
+                  <circle cx="12" cy="12" r="2.2" />
+                </svg>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="relative mt-2 overflow-hidden rounded-[12px] bg-bg">
+        {/* 강조용 뒷면: 글자는 투명, 구절 부분만 배경색 — 위 textarea 글자와 위치가 겹친다 */}
+        <div ref={backdropRef} aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden text-transparent ${FIELD_TEXT}`}>
+          {splitVerseRefs(text).map((s, i) =>
+            s.ref ? (
+              <mark key={i} className="rounded-[4px] bg-water/45 text-transparent">
+                {s.text}
+              </mark>
+            ) : (
+              <span key={i}>{s.text}</span>
+            ),
+          )}
+          {/* 끝 줄바꿈도 같은 높이가 되게 */}
+          {"​"}
+        </div>
+        <textarea
+          ref={areaRef}
+          id={`dock-${dayNo}`}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            caret.current = e.target.selectionStart;
+          }}
+          onSelect={(e) => (caret.current = e.currentTarget.selectionStart)}
+          onScroll={(e) => {
+            if (backdropRef.current) backdropRef.current.scrollTop = e.currentTarget.scrollTop;
+          }}
+          maxLength={maxLength}
+          rows={3}
+          placeholder="한 문장이어도 좋아요"
+          className={`relative block w-full resize-none bg-transparent text-text outline-none placeholder:text-mid focus-visible:outline-2 focus-visible:outline-main ${FIELD_TEXT}`}
+        />
+      </div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <span className="text-caption whitespace-nowrap text-mid tabular-nums" aria-live="polite">
           {text.length} / {maxLength}
@@ -276,6 +329,7 @@ function DockForm({
           {error}
         </p>
       )}
+      {sheet && <VerseSheet verseRef={sheet} onClose={() => setSheet(null)} />}
     </form>
   );
 }

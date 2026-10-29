@@ -42,7 +42,8 @@ const MESSAGES: Record<Exclude<VersesResult["status"], "ok">, string> = {
   unavailable: "본문을 준비하고 있어요.",
 };
 
-function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose: () => void }) {
+/** 구절 본문 시트 — 나눔 카드의 구절 표기, 입력창의 고른 구절 칩이 함께 쓴다 */
+export function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose: () => void }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const [result, setResult] = useState<VersesResult | null>(null);
