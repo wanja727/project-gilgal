@@ -59,19 +59,7 @@ const GLASSES = {
  * Marbles 머리(top)에 없는 긴 머리·묶은 머리. 다른 머리처럼 구슬 바깥을 감싸는 잉크 선만 쓴다(면 채움 없음).
  * top 변형 목록에 넣으면 꾸미지 않은 사람의 머리가 다시 뽑혀 바뀌므로 별도 부위(hair)로 두고,
  * 꾸미기에서는 "머리" 탭 안에 함께 보인다(고르면 top 은 끈다).
- * cap 은 Marbles 의 캡이 모자로 잘 읽히지 않아 다시 그린 것 — 꾸미기에서 고른 사람만 이 그림을 쓰고,
- * seed 로 캡이 뽑힌 사람은 원래 그림 그대로다.
  */
-const paper = { type: "color", name: "background" };
-const CAP_DOME = "M18 33C18 17 33 8 50 8s32 9 32 25q-32-5-64 0z";
-const CAP_BRIM = "M15 33q35-6.5 70 0q-1 5-8 7q-27 7.5-54 0q-7-2-8-7z";
-/** 캡모자: 정수리는 바탕색으로 막아 구슬이 비치지 않게, 챙은 잉크로 채워 모자로 읽히게(선글라스처럼 채운 부품) */
-const CAP = [
-  el("path", { d: CAP_DOME, fill: paper, stroke: ink, "stroke-width": "2.6", "stroke-linejoin": "round" }),
-  line("M50 9q-9 9-11 23M50 9q9 9 11 23", 1.8),
-  el("path", { d: CAP_BRIM, fill: ink, stroke: ink, "stroke-width": "2", "stroke-linejoin": "round" }),
-  dot(50, 7.5, 2.6),
-];
 const HAIR = {
   bob: [line("M15 80C4 62 6 30 30 17c12-6 28-6 40 0 24 13 26 45 15 63M15 80q4 2.4 8-.8M85 80q-4 2.4-8-.8"), line("M58 15.5q-7 10-24 14", 2.4)],
   bangs: [line("M15 80C4 62 6 30 30 17c12-6 28-6 40 0 24 13 26 45 15 63M15 80q4 2.4 8-.8M85 80q-4 2.4-8-.8"), line("M21 37q29-16 58 0", 2.4)],
@@ -87,9 +75,22 @@ const HAIR = {
   ],
   bun: [line("M15 48C13 28 30 17 50 17s37 11 35 31"), el("circle", { cx: "50", cy: "9.5", r: "6.5", fill: "none", stroke: ink, "stroke-width": "2.6" })],
   braid: [line("M14 54C11 30 29 15 50 15s37 14 37 29"), line("M87 44c5.5 2 5.5 7 0 9 5.5 2 5.5 7 0 9 5.5 2 5.5 7 0 9m0 0l1 4.5")],
-  cap: CAP,
-  tiltcap: [{ name: "g", type: "element", attributes: { transform: "rotate(-9 50 30)" }, children: CAP }],
 };
+
+/**
+ * 캡모자: Marbles 의 캡(top.cap)이 모자로 잘 읽히지 않아 그림만 바꿔 끼운다(변형 이름·뽑힐 확률은 그대로).
+ * 정수리는 바탕색으로 막아 구슬이 비치지 않게, 챙은 잉크로 채워 모자로 읽히게(선글라스처럼 채운 부품).
+ */
+const paper = { type: "color", name: "background" };
+// 정수리는 머리(구슬 중심 50,56 반지름 36)를 2.5 만큼 띄워 감싸는 원호, 띠는 머리 폭에 맞춘다 — 머리에 얹힌 느낌
+const CAP_DOME = "M17.1 36A38.5 38.5 0 0 1 82.9 36q-32.9-5.5-65.8 0z";
+const CAP_BRIM = "M15 36q35-6 70 0q-1 3.5-8 5q-27 5-54 0q-7-1.5-8-5z";
+const CAP = [
+  el("path", { d: CAP_DOME, fill: paper, stroke: ink, "stroke-width": "2.6", "stroke-linejoin": "round" }),
+  line("M50 18.5q-9 7-11 14.5M50 18.5q9 7 11 14.5", 1.8),
+  el("path", { d: CAP_BRIM, fill: ink, stroke: ink, "stroke-width": "2", "stroke-linejoin": "round" }),
+  dot(50, 16.5, 2.4),
+];
 
 /** 꾸미기에서 이 머리를 고르면 Marbles top 대신 hair 부위로 그린다 */
 export const GILGAL_HAIR = new Set(Object.keys(HAIR));
@@ -127,6 +128,10 @@ function gilgalMarbles(steadyEyes: boolean) {
     canvas: { elements: Json[] };
   };
   if (steadyEyes) delete def.components.eyes.rotate;
+  // top 은 캔버스에서 translate(2) 로 놓이므로 되돌려 가운데에 맞춘다
+  (def.components.top.variants as Json).cap = {
+    elements: [{ name: "g", type: "element", attributes: { transform: "translate(-2)" }, children: CAP }],
+  };
   const at = (name: string) => def.canvas.elements.findIndex((e) => e.name === name);
   def.components.hair = { width: 100, height: 100, probability: 0, variants: toVariants(HAIR) };
   def.canvas.elements.splice(at("top") + 1, 0, { name: "hair", type: "component" });

@@ -45,7 +45,6 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "bow", label: "리본" },
       { id: "garland", label: "화관" },
       { id: "cap", label: "캡모자" },
-      { id: "tiltcap", label: "삐딱 캡" },
       { id: "beanie", label: "비니" },
       { id: "sunhat", label: "챙모자" },
       { id: "headphones", label: "헤드폰" },

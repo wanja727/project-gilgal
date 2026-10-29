@@ -15,7 +15,7 @@ describe("avatar", () => {
     const set = new Set(Array.from({ length: 50 }, (_, i) => avatarSvg(`seed-${i}`)));
     expect(set.size).toBe(50);
   });
-  it("꾸미지 않은 사람은 안경·얼굴 부위를 붙이기 전 Marbles 그림 그대로", () => {
+  it("꾸미지 않은 사람은 Marbles 그림 그대로(다시 그린 캡모자만 다름) — 길갈 부위를 붙여도 뽑기가 흔들리지 않는다", () => {
     const stock = new Style(marblesDefinition);
     const palette = {
       backgroundColor: ["#f6f8fb"],
@@ -26,6 +26,7 @@ describe("avatar", () => {
     };
     for (let i = 0; i < 100; i++) {
       const seed = randomAvatarSeed();
+      if (resolveAvatarParts(seed, null).top === "cap") continue;
       expect(avatarSvg(seed)).toBe(new Avatar(stock, { seed, ...palette, borderRadius: 50 }).toString());
     }
   });
