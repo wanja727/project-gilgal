@@ -11,7 +11,7 @@ export async function saveAvatarAction(input: { seed: string | null; parts: unkn
   if (result.status === "saved") {
     revalidatePath("/");
     revalidatePath("/journey");
-    revalidatePath("/me");
+    revalidatePath("/me", "layout");
   }
   return result;
 }

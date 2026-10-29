@@ -1,7 +1,7 @@
-import { AvatarEditor } from "@/components/AvatarEditor";
-import { ButtonLink, Card, CardHead, PageTitle } from "@/components/ui";
+import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
+import { ButtonLink, Card, CardHead, ChevronRight, PageTitle } from "@/components/ui";
 import { signOut } from "@/lib/auth";
-import { resolveAvatarParts } from "@/lib/avatar";
 import { BRAND } from "@/lib/brand";
 import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
@@ -48,11 +48,18 @@ export default async function MePage() {
         )}
       </Card>
 
-      <Card aria-labelledby="me-avatar">
-        <CardHead id="me-avatar" title="나의 아바타 꾸미기" />
-        <div className="mt-4">
-          <AvatarEditor seed={member.avatarSeed} parts={resolveAvatarParts(member.avatarSeed, member.avatarParts)} />
-        </div>
+      <Card className="!p-0">
+        <Link href="/me/avatar" className="flex items-center gap-4 px-5 py-4">
+          <Avatar avatarKey={member.avatarKey} size={56} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-title font-bold text-main">나의 아바타</span>
+            <span className="mt-0.5 block text-caption text-mute">나를 닮게 꾸며 보세요</span>
+          </span>
+          <span className="flex items-center gap-0.5 text-small font-semibold text-mute">
+            꾸미기
+            <ChevronRight />
+          </span>
+        </Link>
       </Card>
 
       <Card aria-labelledby="me-info">
