@@ -160,6 +160,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         after={after}
         today={today}
         avatarKey={member.avatarKey}
+        commentMaxLength={COMMENT_MAX_LENGTH}
       />
 
       <section id="share" aria-labelledby="share-title" className="scroll-mt-4 px-gutter pt-2 pb-7">

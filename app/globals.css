@@ -116,6 +116,18 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   font-weight: var(--reader-weight, 400);
   line-height: var(--reader-leading, 2.05);
 }
+/* 나눔 입력창이 열려 있으면(DockComposer) 절을 눌러 구절 번호를 넣을 수 있다 — 누를 수 있다는 표시 + 입력창에 가리지 않게 아래 여백 */
+#reader-root[data-quoting] {
+  padding-bottom: 260px;
+}
+#reader-root[data-quoting] [data-verse] {
+  cursor: pointer;
+}
+#reader-root[data-quoting] .reader-num {
+  color: var(--color-main);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
 /* 절 번호: 본문 첫 줄과 같은 줄 높이로 세로 가운데를 맞춘다 */
 .reader-num {
   line-height: calc(var(--verse-size, var(--text-verse)) * var(--reader-leading, 2.05));

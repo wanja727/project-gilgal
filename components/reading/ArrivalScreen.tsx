@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { JourneyMap } from "@/components/map/JourneyMap";
-import { buttonClass, CloseIcon } from "@/components/ui";
+import { buttonClass } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
 import { goal, journeyProgress } from "@/lib/journey/guide";
@@ -99,15 +99,6 @@ export function ArrivalScreen({
       tabIndex={-1}
       className="fixed inset-0 z-50 mx-auto flex max-w-md animate-[rise_.35s_ease-out] flex-col overflow-y-auto bg-bg outline-none"
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="닫기"
-        className="absolute top-[max(env(safe-area-inset-top),18px)] right-[26px] z-[2] grid size-11 place-items-center rounded-full bg-surface text-main shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-      >
-        <CloseIcon />
-      </button>
-
       <div className="mx-gutter mt-[max(env(safe-area-inset-top),12px)] h-[300px] shrink-0 overflow-hidden rounded-[28px] bg-surface">
         <JourneyMap
           view={view}
@@ -150,6 +141,8 @@ export function ArrivalScreen({
         className="rise-in grid gap-2 px-5 pt-[18px] pb-[max(env(safe-area-inset-bottom),40px)]"
         style={{ animationDelay: "2.1s" }}
       >
+        {/* 나눔이 먼저(읽은 직후 마음이 남아 있을 때), 다음 걸음은 그다음. 지도 위 닫기(X) 대신 맨 아래 "홈으로" —
+            본문으로 돌아가는 길은 "나눔 남기기"가, 그냥 닫기는 Esc 가 맡는다(2026-10-29) */}
         {p.finished ? (
           <>
             <Link href="/finale" className={buttonClass("main")}>
@@ -157,21 +150,19 @@ export function ArrivalScreen({
             </Link>
             {shareButton("line")}
           </>
-        ) : p.next ? (
-          <>
-            <Link href={`/day/${p.next.day}`} className={buttonClass("main")}>
-              {p.next.day}장 이어 읽기
-            </Link>
-            {shareButton("line")}
-          </>
         ) : (
           <>
             {shareButton("main")}
-            <Link href="/" className={buttonClass("line")}>
-              홈으로
-            </Link>
+            {p.next && (
+              <Link href={`/day/${p.next.day}`} className={buttonClass("line")}>
+                {p.next.day}장 이어 읽기
+              </Link>
+            )}
           </>
         )}
+        <Link href="/" className="mx-auto flex min-h-11 items-center px-4 text-small font-semibold text-mute">
+          홈으로
+        </Link>
       </div>
       </div>
     </div>
