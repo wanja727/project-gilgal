@@ -37,10 +37,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={serif.variable}>
-      <body className="min-h-dvh">
+      {/* 테스트 안내 띠 높이 — 화면 위에 붙는 다른 바(본문 상단 바)가 그 아래에 붙도록 */}
+      <body className="min-h-dvh" style={isTimeOverridden() ? ({ "--test-banner-h": "30px" } as React.CSSProperties) : undefined}>
         {/* 날짜를 바꿔 보는 중이면(개발·오픈 전 운영 테스트) 모든 화면 위에 알린다 — 실제 날짜로 착각하지 않게 */}
         {isTimeOverridden() && (
-          <p role="status" className="sticky top-0 z-[60] bg-main px-4 py-1.5 text-center text-caption font-semibold text-white">
+          <p role="status" className="sticky top-0 z-[60] flex h-[30px] items-center justify-center bg-main px-4 text-caption font-semibold text-white">
             테스트 모드 · {formatDate(todayKst(), true)}로 보는 중
           </p>
         )}

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChapterReader } from "@/components/ChapterReader";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { READER_ROOT_ID, ReaderSettingsButton } from "@/components/reading/ReaderSettingsButton";
+import { StickyBar } from "@/components/reading/StickyBar";
 import { CommentCard } from "@/components/share/CommentCard";
 import { CommentComposer } from "@/components/share/CommentComposer";
 import { ButtonLink, CardHead, ChevronLeft, EmptyState } from "@/components/ui";
@@ -43,15 +44,25 @@ function ReaderRoot({ settings, children }: { settings: ReaderSettings; children
   );
 }
 
+/** 본문 화면에는 하단 탭이 없어 "오늘" 버튼이 나가는 길 — 글자를 붙여 알아보기 쉽게, 바는 위로 올리면 다시 보인다 */
 function ReadingBar({ title, settings }: { title: string; settings: ReaderSettings }) {
   return (
-    <div className="flex items-center justify-between px-3 pt-[max(env(safe-area-inset-top),6px)] text-main">
-      <Link href="/" aria-label="오늘로 돌아가기" className="grid size-11 place-items-center rounded-full">
-        <ChevronLeft />
-      </Link>
-      <span className="text-[14px] font-semibold">{title}</span>
-      <ReaderSettingsButton initial={settings} />
-    </div>
+    <StickyBar>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center px-3 pt-[max(env(safe-area-inset-top),6px)] pb-1 text-main">
+        <Link
+          href="/"
+          aria-label="오늘로 돌아가기"
+          className="flex h-10 w-fit items-center gap-0.5 rounded-chip bg-surface pr-3.5 pl-2 text-small font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+        >
+          <ChevronLeft className="size-[18px]" />
+          오늘
+        </Link>
+        <span className="text-[14px] font-semibold">{title}</span>
+        <span className="justify-self-end">
+          <ReaderSettingsButton initial={settings} />
+        </span>
+      </div>
+    </StickyBar>
   );
 }
 
