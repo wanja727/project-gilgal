@@ -248,6 +248,22 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   }
 }
 
+/* 눌러서 찾아간 카드를 한 번 반짝여 알린다(홈 셀 이름 → 셀 카드) */
+@keyframes flash-ring {
+  0% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  25% {
+    box-shadow: 0 0 0 3px var(--color-main);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+.flash-ring {
+  animation: flash-ring 1.1s var(--ease-journey) 2;
+}
+
 /* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {
