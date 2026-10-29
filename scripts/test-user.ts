@@ -5,6 +5,8 @@
  *                                        # 테스트 사용자 + 세션 생성, 브라우저 쿠키 값을 출력
  *   pnpm test-user crowd <명수> --upto <장> [--lag] [--cell 셀이름] [--campaign joshua-2026]
  *                                        # 같은 셀의 테스트 동행자 여러 명 + 1~upto장 읽기 기록(순위·셀 카드 확인용)
+ *   pnpm test-user notes <장> [--campaign joshua-2026]
+ *                                        # 그 장을 읽은 테스트 동행자들에게 예시 한마디(ADR-028)를 남긴다(홈 말풍선 확인용)
  *   pnpm test-user list                  # 테스트 계정·기록 행 수
  *   pnpm test-user delete                # 테스트 계정과 그 기록 모두 삭제
  *
@@ -23,9 +25,23 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { accounts, cells, profiles, readingProgress, sessions, users } from "../lib/db/schema";
+import { accounts, cells, profiles, readingProgress, sessions, trailNotes, users } from "../lib/db/schema";
 import { campaignSlug } from "../lib/journey/campaign";
 import { JOURNEY_DAYS } from "../lib/journey/days";
+
+/** notes 예시 한마디 — 어느 장에서나 어울리게 */
+const SAMPLE_NOTES = [
+  "먼저 와 있어요! 천천히 오세요",
+  "여기까지 오느라 수고했어요",
+  "같이 걸으니 힘이 나요 🙌",
+  "오늘 말씀 꼭 읽어 보세요!",
+  "다리 아파도 조금만 더!",
+  "기다릴게요, 함께 가요",
+  "생각보다 금방 와요ㅎㅎ",
+  "여기 경치 좋아요",
+  "먼저 간 길, 안전해요",
+  "우리 같이 도착해요!",
+];
 
 const CROWD_NAMES = [
   "김하은", "박준서", "이수아", "최민재", "한소율", "오지훈", "윤서연", "장예준", "서지민", "문태호",
@@ -152,6 +168,27 @@ async function main() {
       return;
     }
 
+    if (command === "notes") {
+      const dayNo = Number(flags[0]);
+      if (!Number.isInteger(dayNo) || dayNo < 1 || dayNo > 24) throw new Error("사용법: pnpm test-user notes <장 1~24>");
+      const ids = await testUserIds();
+      const arrived = ids.length
+        ? await db
+            .select({ userId: readingProgress.userId })
+            .from(readingProgress)
+            .where(and(inArray(readingProgress.userId, ids), eq(readingProgress.campaign, campaignSlug()), eq(readingProgress.dayNo, dayNo)))
+        : [];
+      for (const [i, { userId }] of arrived.entries()) {
+        const content = SAMPLE_NOTES[i % SAMPLE_NOTES.length];
+        await db
+          .insert(trailNotes)
+          .values({ campaign: campaignSlug(), dayNo, userId, content })
+          .onConflictDoUpdate({ target: [trailNotes.campaign, trailNotes.dayNo, trailNotes.userId], set: { content } });
+      }
+      console.log(`${dayNo}장 한마디 ${arrived.length}개 (그 장을 읽은 테스트 계정, 캠페인 ${campaignSlug()})`);
+      return;
+    }
+
     if (command === "list") {
       const ids = await testUserIds();
       const progress = ids.length
@@ -173,7 +210,7 @@ async function main() {
       return;
     }
 
-    throw new Error("사용법: pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | list | delete");
+    throw new Error("사용법: pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | notes <장> | list | delete");
   } finally {
     await client.end();
   }
