@@ -6,6 +6,9 @@ import type { CellMember } from "@/lib/data/progress";
  * 우리 셀: 기준 장까지 온 셀원은 선명하게, 아직인 셀원은 흐리게. 이름은 모두 성까지 보인다(2026-10-26).
  * (2026-10-26 운영자 변경 — 이전엔 아직인 셀원은 이름 없이 흐린 아바타만. 같은 셀끼리 서로 알아보고 격려하게)
  */
+/** 홈 오른쪽 위 셀 이름(CellChip)이 이 카드로 스크롤한다 */
+export const CELL_CARD_ID = "cell";
+
 export function CellCard({
   cellName,
   members,
@@ -20,7 +23,7 @@ export function CellCard({
 }) {
   const arrived = members.filter((m) => m.arrived).length;
   return (
-    <Card aria-labelledby="cell-title">
+    <Card id={CELL_CARD_ID} aria-labelledby="cell-title" className="scroll-mt-4">
       <CardHead
         id="cell-title"
         title={cellName}

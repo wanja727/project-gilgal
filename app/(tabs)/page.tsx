@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/Avatar";
 import { ArrivalBoard } from "@/components/home/ArrivalBoard";
 import { CellCard } from "@/components/home/CellCard";
+import { CellChip } from "@/components/home/CellChip";
 import { ChapterPath } from "@/components/home/ChapterPath";
 import { SharePreview } from "@/components/home/SharePreview";
 import Link from "next/link";
@@ -63,7 +64,7 @@ export default async function Home() {
       <header className="flex items-center justify-between px-5 pt-4">
         <span className="font-serif text-[20px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</span>
         <span className="flex items-center gap-2">
-          <span className="rounded-chip bg-surface px-2.5 py-1.5 text-[12.5px] font-semibold text-mute">{member.cellName}</span>
+          {member.cellName && <CellChip cellName={member.cellName} />}
           {/* 내 아바타를 누르면 꾸미기로 (2026-10-29) */}
           <Link href="/me/avatar" aria-label="아바타 꾸미기" className="-m-1 rounded-full p-1">
             <Avatar avatarKey={member.avatarKey} size={34} />
