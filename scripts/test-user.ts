@@ -164,7 +164,11 @@ async function main() {
           }
         });
       }
-      console.log(`테스트 동행자 ${n}명 생성 (1~${upto}장${lag ? ", 일부는 뒤처짐" : ""}, 캠페인 ${campaignSlug()})`);
+      console.log(
+        upto > 0
+          ? `테스트 동행자 ${n}명 생성 (1~${upto}장${lag ? ", 일부는 뒤처짐" : ""}, 캠페인 ${campaignSlug()})`
+          : `테스트 동행자 ${n}명 생성 — 읽은 장 없음(--upto <장> 을 주면 1~그 장까지 읽은 상태로 만든다)`,
+      );
       return;
     }
 
@@ -185,7 +189,11 @@ async function main() {
           .values({ campaign: campaignSlug(), dayNo, userId, content })
           .onConflictDoUpdate({ target: [trailNotes.campaign, trailNotes.dayNo, trailNotes.userId], set: { content } });
       }
-      console.log(`${dayNo}장 한마디 ${arrived.length}개 (그 장을 읽은 테스트 계정, 캠페인 ${campaignSlug()})`);
+      console.log(
+        arrived.length
+          ? `${dayNo}장 한마디 ${arrived.length}개 (그 장을 읽은 테스트 계정, 캠페인 ${campaignSlug()})`
+          : `${dayNo}장을 읽은 테스트 계정이 없어 한마디를 넣지 못했어요 — 먼저 crowd <명수> --upto ${dayNo} 이상으로 만들어 주세요 (캠페인 ${campaignSlug()})`,
+      );
       return;
     }
 
