@@ -3,7 +3,7 @@
 import { CELL_CARD_ID } from "./CellCard";
 
 /**
- * 홈 오른쪽 위 셀 이름: 누르면 아래 셀 카드로 스크롤하고, 도착하면 카드 안쪽을 옅게 두 번 물들여 어디인지 알린다(2026-10-29).
+ * 홈 오른쪽 위 셀 이름: 누르면 아래 셀 카드로 스크롤하고, 도착하면 카드가 한 번 살짝 떠올랐다 내려앉아 어디인지 알린다(2026-10-29).
  * 셀 전용 화면은 두지 않는다 — 셀원·도착 여부는 셀 카드에 이미 있다.
  * 전역 scroll-behavior 를 켜면 페이지 이동 스크롤까지 부드러워져 여기서만 smooth 로 움직인다.
  */
@@ -17,10 +17,10 @@ export function CellChip({ cellName }: { cellName: string }) {
         e.preventDefault();
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const flash = () => {
-          card.classList.remove("flash-fill");
+          card.classList.remove("flash-lift");
           void card.offsetWidth; // 연달아 눌러도 처음부터 다시 반짝이게
-          card.classList.add("flash-fill");
-          card.addEventListener("animationend", () => card.classList.remove("flash-fill"), { once: true });
+          card.classList.add("flash-lift");
+          card.addEventListener("animationend", () => card.classList.remove("flash-lift"), { once: true });
         };
         // 스크롤이 끝난 뒤에 반짝인다 — 이미 그 자리(페이지 끝 등)면 바로, scrollend 를 모르는 브라우저는 시간으로
         const max = document.documentElement.scrollHeight - window.innerHeight;
