@@ -75,9 +75,18 @@ export function CompleteDock({
           </p>
         )}
         {done ? (
-          <Link href={after.href} className={buttonClass("line")}>
-            <span aria-hidden>✓</span> {day.chapter}장 읽음 · {after.label}
-          </Link>
+          // 상태(읽었음)와 동작(다음 장으로)을 한 버튼에 섞지 않는다(2026-10-29)
+          <>
+            <p className="mb-2.5 flex items-center justify-center gap-1.5 text-small font-semibold text-mute">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-main" aria-hidden>
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+              </svg>
+              {day.chapter}장을 읽었어요
+            </p>
+            <Link href={after.href} className={buttonClass("line")}>
+              {after.label}
+            </Link>
+          </>
         ) : (
           <button type="button" onClick={onComplete} disabled={pending} className={buttonClass("main")}>
             {pending ? "기록하는 중…" : `${day.chapter}장 읽기 완료`}
