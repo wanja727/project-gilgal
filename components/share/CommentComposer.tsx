@@ -6,7 +6,7 @@ import { createCommentAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
-import { formatVerseRef, insertVerse, referencedVerses, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
+import { formatVerseRef, insertVerse, referencedVerses, removeVerse, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
 import { VerseSheet } from "./VerseRefText";
 
 const ERRORS: Record<string, string> = {
@@ -168,7 +168,7 @@ const FIELD_TEXT = "p-3 text-[14.5px] leading-[1.65] break-keep [overflow-wrap:a
 
 /**
  * 화면 아래에 붙는 입력창. 열려 있는 동안 본문의 절을 누르면 "15:3" 이 커서 자리에 들어가고,
- * 바로 이어지는 절을 누르면 "15:3-4" 로 늘어난다(lib/share/verseRef). 고른 절은 본문에 옅게 표시한다.
+ * 바로 이어지는 절을 누르면 "15:3-4" 로 늘어나고, 고른 절을 다시 누르면 빠진다(lib/share/verseRef). 고른 절은 본문에 옅게 표시한다.
  * 들어간 구절은 입력칸 위 칩으로도 보이고(누르면 그 절 본문 시트), 입력칸 안에서도 배경색으로 강조한다 —
  * 입력칸은 일반 textarea 그대로 두고 같은 글을 뒤에 겹쳐 구절 부분만 칠한다(한글 입력에 영향 없음, 2026-10-29).
  */
@@ -219,6 +219,12 @@ function DockForm({
       if (!row) return;
       const verse = Number(row.dataset.verse);
       setText((t) => {
+        // 이미 고른 절을 다시 누르면 선택 취소
+        if (referencedVerses(t, chapter).has(verse)) {
+          const next = removeVerse(t, chapter, verse);
+          caret.current = Math.min(caret.current ?? next.length, next.length);
+          return next;
+        }
         const r = insertVerse(t, caret.current ?? t.length, chapter, verse, maxLength);
         caret.current = r.caret;
         return r.text;
@@ -256,7 +262,7 @@ function DockForm({
           <label htmlFor={`dock-${dayNo}`} className="block text-small font-semibold text-main">
             {chapter}장을 읽고 마음에 남은 것은?
           </label>
-          <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절 번호가 들어가요</p>
+          <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절이 들어가고, 다시 누르면 빠져요</p>
         </div>
         <button type="button" onClick={onClose} aria-label="나눔 쓰기 닫기" className="-mr-2 grid size-11 shrink-0 place-items-center text-mute">
           <CloseIcon className="size-5" />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { insertVerse, referencedVerses, splitVerseRefs } from "./verseRef";
+import { insertVerse, referencedVerses, removeVerse, splitVerseRefs } from "./verseRef";
 
 describe("나눔 속 구절 표기", () => {
   it("장:절·장:절-절 을 찾는다", () => {
@@ -36,6 +36,19 @@ describe("입력창에서 절 누르기", () => {
     expect(tap("16:1 ", 5)).toBe("16:1 16:5 ");
     expect(tap("16:1-3 ", 2)).toBe("16:1-3 ");
     expect(tap("15:4 ", 5)).toBe("15:4 16:5 ");
+  });
+  it("고른 절을 다시 누르면 그 절만 뺀다", () => {
+    expect(removeVerse("좋았던 16:3 말씀", 16, 3)).toBe("좋았던 말씀");
+    expect(removeVerse("16:3 말씀", 16, 3)).toBe("말씀");
+    expect(removeVerse("말씀 16:3", 16, 3)).toBe("말씀 ");
+    expect(removeVerse("16:1-3 좋아요", 16, 3)).toBe("16:1-2 좋아요");
+    expect(removeVerse("16:1-3 좋아요", 16, 1)).toBe("16:2-3 좋아요");
+    expect(removeVerse("16:1-3 좋아요", 16, 2)).toBe("16:1 16:3 좋아요");
+    expect(removeVerse("16:1-2", 16, 2)).toBe("16:1");
+    expect(removeVerse("15:3 16:3", 16, 3)).toBe("15:3 ");
+  });
+  it("빠졌던 가운데 절을 다시 고르면 하나의 범위로 합친다", () => {
+    expect(tap("16:4 16:6 ", 5)).toBe("16:4-6 ");
   });
   it("커서가 가운데면 그 자리에", () => {
     const r = insertVerse("앞 뒤", 1, 16, 2, 1000);

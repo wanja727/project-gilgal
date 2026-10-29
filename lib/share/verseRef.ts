@@ -88,7 +88,56 @@ export function insertVerse(
   return clamp(head, after, maxLength);
 }
 
+/**
+ * 이미 고른 절을 다시 누르면 그 절만 뺀다. 범위 끝 절이면 범위를 줄이고("16:1-3" − 3절 → "16:1-2"),
+ * 가운데 절이면 둘로 나누고("16:1-3" − 2절 → "16:1 16:3"), 한 절짜리면 표기를 지운다(앞뒤 띄어쓰기 한 칸 정리).
+ */
+export function removeVerse(text: string, chapter: number, verse: number): string {
+  const parts = splitVerseRefs(text);
+  let out = "";
+  let dropSpace = false;
+  for (const s of parts) {
+    if (!s.ref) {
+      out += dropSpace ? s.text.replace(/^[ 	]/, "") : s.text;
+      dropSpace = false;
+      continue;
+    }
+    const { from, to } = s.ref;
+    if (s.ref.chapter !== chapter || verse < from || verse > to) {
+      out += s.text;
+      continue;
+    }
+    const left = verse > from ? formatVerseRef({ chapter, from, to: verse - 1 }) : "";
+    const right = verse < to ? formatVerseRef({ chapter, from: verse + 1, to }) : "";
+    const rest = [left, right].filter(Boolean).join(" ");
+    out += rest;
+    // 표기가 통째로 빠지면 앞(이미 띄어쓴 경우)이나 뒤의 띄어쓰기 한 칸을 같이 뺀다
+    dropSpace = !rest && (out === "" || /\s$/.test(out));
+  }
+  return out;
+}
+
+/** 띄어쓰기만 사이에 두고 이어지는 같은 장 구절을 하나로("16:4 16:5-6" → "16:4-6") */
+function mergeAdjacent(text: string): string {
+  const re = /(?<![\d:])(\d{1,2}):(\d{1,3})(?:-(\d{1,3}))?[ 	]+(\d{1,2}):(\d{1,3})(?:-(\d{1,3}))?(?![\d:])/g;
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(re, (all, c1, a1, b1, c2, a2, b2) => {
+      const r1 = { chapter: Number(c1), from: Number(a1), to: Number(b1 ?? a1) };
+      const r2 = { chapter: Number(c2), from: Number(a2), to: Number(b2 ?? a2) };
+      if (r1.chapter !== r2.chapter || r2.from !== r1.to + 1) return all;
+      const merged = { chapter: r1.chapter, from: r1.from, to: r2.to };
+      return isValidVerseRef(merged) ? formatVerseRef(merged) : all;
+    });
+  } while (text !== prev);
+  return text;
+}
+
 function clamp(head: string, after: string, maxLength: number) {
-  const text = (head + after).slice(0, maxLength);
-  return { text, caret: Math.min(head.length, text.length) };
+  const joined = (head + after).slice(0, maxLength);
+  const text = mergeAdjacent(joined);
+  // 합쳐서 줄어든 만큼 커서를 당긴다(합쳐지는 건 커서 바로 앞 구절뿐)
+  const caret = Math.max(0, Math.min(head.length, joined.length) - (joined.length - text.length));
+  return { text, caret };
 }
