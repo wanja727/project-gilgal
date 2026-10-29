@@ -55,6 +55,31 @@ const GLASSES = {
   ],
 };
 
+/**
+ * Marbles 머리(top)에 없는 긴 머리·묶은 머리. 다른 머리처럼 구슬 바깥을 감싸는 잉크 선만 쓴다(면 채움 없음).
+ * top 변형 목록에 넣으면 꾸미지 않은 사람의 머리가 다시 뽑혀 바뀌므로 별도 부위(hair)로 두고,
+ * 꾸미기에서는 "머리" 탭 안에 함께 보인다(고르면 top 은 끈다).
+ */
+const HAIR = {
+  bob: [line("M15 80C4 62 6 30 30 17c12-6 28-6 40 0 24 13 26 45 15 63M15 80q4 2.4 8-.8M85 80q-4 2.4-8-.8"), line("M58 15.5q-7 10-24 14", 2.4)],
+  bangs: [line("M15 80C4 62 6 30 30 17c12-6 28-6 40 0 24 13 26 45 15 63M15 80q4 2.4 8-.8M85 80q-4 2.4-8-.8"), line("M21 37q29-16 58 0", 2.4)],
+  long: [line("M22 90C8 76 5 40 26 20c14-11 34-11 48 0 21 20 18 56 4 70"), line("M50 11.5q-1.5 6-7 9.5", 2.4)],
+  wavy: [
+    line("M22 90c-6-4-1-9-7-14s-1-10-6-15c-4-6 0-12-2-18C9 28 28 12 50 12s41 16 40 31c-2 6 2 12-2 18-5 5 0 10-6 15s-1 10-7 14"),
+    line("M50 12.5q-1.5 6-7 9.5", 2.4),
+  ],
+  ponytail: [line("M13 52C11 30 28 15 50 15s39 15 37 37"), line("M83 26c10-2 13 9 9 20-2.5 6-2.5 11 .5 15"), dot(82, 26.5, 3.2)],
+  pigtails: [
+    line("M14 50C12 28 30 15 50 15s38 13 36 35"),
+    line("M14 42C2 42 1 62 8 72c2-10 4-18 8-23M86 42c12 0 13 20 6 30-2-10-4-18-8-23"),
+  ],
+  bun: [line("M15 48C13 28 30 17 50 17s37 11 35 31"), el("circle", { cx: "50", cy: "9.5", r: "6.5", fill: "none", stroke: ink, "stroke-width": "2.6" })],
+  braid: [line("M14 54C11 30 29 15 50 15s37 14 37 29"), line("M87 44c5.5 2 5.5 7 0 9 5.5 2 5.5 7 0 9 5.5 2 5.5 7 0 9m0 0l1 4.5")],
+};
+
+/** 꾸미기에서 이 머리를 고르면 Marbles top 대신 hair 부위로 그린다 */
+export const GILGAL_HAIR = new Set(Object.keys(HAIR));
+
 const MUSTACHE = el("path", {
   d: "M50 57.2c-3.2-2.6-8.6-3-12 .4-1.7 1.7-4.4 1.5-5.4-.6 0 4 4.4 6.1 8.6 4.6 3.3-1.2 6-2.1 8.8-2.1 2.8 0 5.5.9 8.8 2.1 4.2 1.5 8.6-.6 8.6-4.6-1 2.1-3.7 2.3-5.4.6-3.4-3.4-8.8-3-12-.4z",
   fill: ink,
@@ -88,9 +113,11 @@ function gilgalMarbles(steadyEyes: boolean) {
     canvas: { elements: Json[] };
   };
   if (steadyEyes) delete def.components.eyes.rotate;
+  const at = (name: string) => def.canvas.elements.findIndex((e) => e.name === name);
+  def.components.hair = { width: 100, height: 100, probability: 0, variants: toVariants(HAIR) };
+  def.canvas.elements.splice(at("top") + 1, 0, { name: "hair", type: "component" });
   def.components.glasses = { width: 100, height: 100, probability: 0, variants: toVariants(GLASSES) };
   def.components.face = { width: 100, height: 100, probability: 0, variants: toVariants(FACE) };
-  const at = (name: string) => def.canvas.elements.findIndex((e) => e.name === name);
   def.canvas.elements.splice(at("mouth"), 0, { name: "face", type: "component" });
   def.canvas.elements.splice(at("mouth") + 1, 0, { name: "glasses", type: "component" });
   return def;
@@ -120,6 +147,7 @@ function partOptions(parts: AvatarParts): Json {
   const o: Json = { sphereColor: [MARBLES_PALETTE.sphereColor[parts.color]] };
   for (const { id } of AVATAR_PARTS) {
     if (parts[id] === NONE) o[`${id}Probability`] = 0;
+    else if (id === "top" && GILGAL_HAIR.has(parts.top)) Object.assign(o, { topProbability: 0, hairVariant: parts.top, hairProbability: 100 });
     else Object.assign(o, { [`${id}Variant`]: parts[id], [`${id}Probability`]: 100 });
   }
   return o;

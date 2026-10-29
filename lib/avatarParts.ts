@@ -20,8 +20,17 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     label: "머리",
     optional: true,
     options: [
+      // 단발~땋은 머리는 길갈에서 그려 붙인 머리(lib/avatar.ts HAIR)
+      { id: "bob", label: "단발" },
+      { id: "bangs", label: "앞머리 단발" },
+      { id: "long", label: "긴 생머리" },
+      { id: "wavy", label: "긴 웨이브" },
+      { id: "ponytail", label: "포니테일" },
+      { id: "pigtails", label: "양갈래" },
+      { id: "bun", label: "올림머리" },
+      { id: "braid", label: "땋은 머리" },
       { id: "shag", label: "덥수룩" },
-      { id: "curls", label: "양 갈래" },
+      { id: "curls", label: "두 고리" },
       { id: "ringlets", label: "꼬불꼬불" },
       { id: "afro", label: "뽀글" },
       { id: "crimp", label: "부스스" },
