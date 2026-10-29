@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getVersesAction, type VersesResult } from "@/app/actions/bible";
 import { buttonClass } from "@/components/ui";
+import { parseReaderSettings, READER_COOKIE, readerCssVars } from "@/lib/reading/settings";
 import { formatVerseRef, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
 
 /** 나눔 내용 — "16:1-2" 같은 구절 표기를 누르면 그 절 본문을 시트로 보여 준다(2026-10-29) */
@@ -42,10 +43,29 @@ const MESSAGES: Record<Exclude<VersesResult["status"], "ok">, string> = {
   unavailable: "본문을 준비하고 있어요.",
 };
 
+/**
+ * 본문 화면에서 고른 읽기 설정(글자 크기·글꼴·굵기·줄 간격)을 시트 본문에도 — 쿠키(ADR-026)를 읽어 같은 CSS 변수로.
+ * 시트는 누른 뒤에만 그려지므로(서버 렌더 없음) 여기서 document.cookie 를 읽어도 어긋나지 않는다.
+ */
+function readerVarsFromCookie(): React.CSSProperties {
+  const raw = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith(`${READER_COOKIE}=`))
+    ?.slice(READER_COOKIE.length + 1);
+  let value: string | undefined;
+  try {
+    value = raw ? decodeURIComponent(raw) : undefined;
+  } catch {
+    value = undefined;
+  }
+  return readerCssVars(parseReaderSettings(value)) as React.CSSProperties;
+}
+
 /** 구절 본문 시트 — 나눔 카드의 구절 표기, 입력창의 고른 구절 칩이 함께 쓴다 */
 export function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose: () => void }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const [readerVars] = useState(readerVarsFromCookie);
   const [result, setResult] = useState<VersesResult | null>(null);
 
   useEffect(() => {
@@ -91,10 +111,10 @@ export function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose:
             <p className="py-4 text-small text-mute">본문을 불러오는 중…</p>
           ) : result.status === "ok" ? (
             <>
-              <ol className="font-serif text-[16.5px] leading-[1.9] text-text">
+              <ol style={readerVars} className="reader-text text-text">
                 {result.verses.map((v) => (
                   <li key={v.number} className="mb-2 grid grid-cols-[24px_1fr]">
-                    <span className="font-sans text-[11px] leading-[31px] font-bold text-mid">{v.number}</span>
+                    <span className="reader-num font-sans text-[11px] font-bold text-mid">{v.number}</span>
                     <span>{v.text}</span>
                   </li>
                 ))}
