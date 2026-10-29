@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { insertVerse, referencedVerses, removeVerse, splitVerseRefs, tapVerse } from "./verseRef";
+import { insertVerse, normalizeRefs, referencedVerses, removeVerse, splitVerseRefs, tapVerse } from "./verseRef";
 
 describe("나눔 속 구절 표기", () => {
   it("장:절·장:절-절 을 찾는다", () => {
@@ -47,8 +47,11 @@ describe("입력창에서 절 누르기", () => {
     expect(removeVerse("16:1-2", 16, 2)).toBe("16:1");
     expect(removeVerse("15:3 16:3", 16, 3)).toBe("15:3 ");
   });
-  it("빠졌던 가운데 절을 다시 고르면 하나의 범위로 합친다", () => {
-    expect(tap("16:4 16:6 ", 5)).toBe("16:4-6 ");
+  it("이어진 절은 순서·위치와 상관없이 하나의 범위로", () => {
+    expect(tapVerse("16:4 16:6 ", 10, 16, 5, 1000).text).toBe("16:4-6 ");
+    expect(normalizeRefs("16:5 16:7-8 16:9-10 16:6", 16)).toBe("16:5-10");
+    expect(normalizeRefs("16:5 감동 16:7 그리고 16:6", 16)).toBe("16:5-7 감동 그리고");
+    expect(normalizeRefs("16:9 15:2 16:3", 16)).toBe("16:9 15:2 16:3");
   });
   it("커서가 가운데면 그 자리에", () => {
     const r = insertVerse("앞 뒤", 1, 16, 2, 1000);
@@ -79,6 +82,13 @@ describe("절을 여러 번 눌렀다 뺐다 해도 표기가 깨지지 않는�
 
         const tokens = text.split(/\s+/).filter(Boolean);
         for (const t of tokens) expect(t, `seed ${seed} step ${i}: "${text}"`).toMatch(/^16:\d+(-\d+)?$/);
+        // 이어진 절은 늘 한 범위: 표기를 절 순서로 늘어놓으면 서로 붙어 있는 표기가 없다
+        const ranges = splitVerseRefs(text)
+          .flatMap((s) => (s.ref ? [s.ref] : []))
+          .sort((a, b) => a.from - b.from);
+        for (let k = 1; k < ranges.length; k++) {
+          expect(ranges[k].from, `seed ${seed} step ${i}: "${text}"`).toBeGreaterThan(ranges[k - 1].to + 1);
+        }
         expect([...referencedVerses(text, 16)].sort((a, b) => a - b), `seed ${seed} step ${i}: "${text}"`).toEqual(
           [...picked].sort((a, b) => a - b),
         );

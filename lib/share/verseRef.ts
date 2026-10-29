@@ -67,11 +67,12 @@ export function tapVerse(
   verse: number,
   maxLength: number,
 ): { text: string; caret: number } {
-  if (referencedVerses(text, chapter).has(verse)) {
-    const next = removeVerse(text, chapter, verse);
-    return { text: next, caret: outsideRef(next, Math.min(caret, next.length)) };
-  }
-  return insertVerse(text, outsideRef(text, caret), chapter, verse, maxLength);
+  const r = referencedVerses(text, chapter).has(verse)
+    ? { text: removeVerse(text, chapter, verse), caret }
+    : insertVerse(text, outsideRef(text, caret), chapter, verse, maxLength);
+  const next = normalizeRefs(r.text, chapter);
+  // 정리하며 글이 짧아졌을 수 있다 — 커서가 표기 안쪽에 남지 않게
+  return { text: next, caret: outsideRef(next, Math.min(r.caret, next.length)) };
 }
 
 /** 커서가 구절 표기 안쪽이면 그 표기 끝으로 */
@@ -145,27 +146,40 @@ export function removeVerse(text: string, chapter: number, verse: number): strin
   return out;
 }
 
-/** 띄어쓰기만 사이에 두고 이어지는 같은 장 구절을 하나로("16:4 16:5-6" → "16:4-6") */
-function mergeAdjacent(text: string): string {
-  const re = /(?<![\d:])(\d{1,2}):(\d{1,3})(?:-(\d{1,3}))?[ 	]+(\d{1,2}):(\d{1,3})(?:-(\d{1,3}))?(?![\d:])/g;
-  let prev: string;
-  do {
-    prev = text;
-    text = text.replace(re, (all, c1, a1, b1, c2, a2, b2) => {
-      const r1 = { chapter: Number(c1), from: Number(a1), to: Number(b1 ?? a1) };
-      const r2 = { chapter: Number(c2), from: Number(a2), to: Number(b2 ?? a2) };
-      if (r1.chapter !== r2.chapter || r2.from !== r1.to + 1) return all;
-      const merged = { chapter: r1.chapter, from: r1.from, to: r2.to };
-      return isValidVerseRef(merged) ? formatVerseRef(merged) : all;
-    });
-  } while (text !== prev);
-  return text;
+/**
+ * 이 장에서 고른 절을 이어진 덩어리마다 한 범위로 정리한다 — 누른 순서·위치와 상관없이 "16:5 16:7-8 16:6" → "16:5-8".
+ * 각 범위는 글에서 그 범위의 절이 처음 나온 자리에 두고, 같은 범위의 다른 표기는 지운다(앞뒤 띄어쓰기 한 칸 정리).
+ */
+export function normalizeRefs(text: string, chapter: number): string {
+  const verses = [...referencedVerses(text, chapter)].sort((a, b) => a - b);
+  const runs: VerseRef[] = [];
+  for (const v of verses) {
+    const last = runs.at(-1);
+    // 한 표기는 MAX_RANGE 절까지 — 그보다 길게 이어지면 나눈다
+    if (last && v === last.to + 1 && v - last.from < MAX_RANGE) last.to = v;
+    else runs.push({ chapter, from: v, to: v });
+  }
+  const placed = new Set<VerseRef>();
+  let out = "";
+  let dropSpace = false;
+  for (const s of splitVerseRefs(text)) {
+    if (!s.ref || s.ref.chapter !== chapter) {
+      out += dropSpace && !s.ref ? s.text.replace(/^[ 	]/, "") : s.text;
+      dropSpace = false;
+      continue;
+    }
+    const { from, to } = s.ref;
+    const mine = runs.filter((r) => r.from <= to && r.to >= from && !placed.has(r));
+    mine.forEach((r) => placed.add(r));
+    const rest = mine.map(formatVerseRef).join(" ");
+    out += rest;
+    dropSpace = !rest && (out === "" || /\s$/.test(out));
+  }
+  // 맨 끝 표기가 지워졌으면 그 앞 띄어쓰기도
+  return dropSpace ? out.replace(/[ 	]$/, "") : out;
 }
 
 function clamp(head: string, after: string, maxLength: number) {
-  const joined = (head + after).slice(0, maxLength);
-  const text = mergeAdjacent(joined);
-  // 합쳐서 줄어든 만큼 커서를 당긴다(합쳐지는 건 커서 바로 앞 구절뿐)
-  const caret = Math.max(0, Math.min(head.length, joined.length) - (joined.length - text.length));
-  return { text, caret };
+  const text = (head + after).slice(0, maxLength);
+  return { text, caret: Math.min(head.length, text.length) };
 }
