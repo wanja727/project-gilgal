@@ -160,7 +160,6 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         after={after}
         today={today}
         avatarKey={member.avatarKey}
-        commentMaxLength={COMMENT_MAX_LENGTH}
       />
 
       <section id="share" aria-labelledby="share-title" className="scroll-mt-4 px-gutter pt-2 pb-7">
@@ -186,7 +185,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
             }
           />
         </div>
-        <CommentComposer dayNo={day.day} maxLength={COMMENT_MAX_LENGTH} />
+        <CommentComposer dayNo={day.day} chapter={day.chapter} maxLength={COMMENT_MAX_LENGTH} />
         {shared.length === 0 ? (
           <p className="px-2 py-6 text-center text-small text-mute">아직 나눔이 없어요. 첫 나눔을 남겨 보세요.</p>
         ) : (

@@ -123,6 +123,12 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 #reader-root[data-quoting] [data-verse] {
   cursor: pointer;
 }
+/* 쓰는 중인 글에 적힌 절 */
+#reader-root[data-quoting] [data-verse][data-picked] {
+  background: var(--color-soft);
+  border-radius: 10px;
+  box-shadow: 0 0 0 6px var(--color-soft);
+}
 #reader-root[data-quoting] .reader-num {
   color: var(--color-main);
   text-decoration: underline dotted;
@@ -137,6 +143,10 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   outline: 2px solid var(--color-main);
   outline-offset: 2px;
   border-radius: 8px;
+}
+/* 열릴 때 코드로 포커스를 옮기는 시트·대화상자(tabindex=-1)에는 윤곽선을 그리지 않는다 */
+[tabindex="-1"]:focus-visible {
+  outline: none;
 }
 
 /* ─── 지도 SVG ─── */

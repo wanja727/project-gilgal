@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { deleteCommentAction, editCommentAction, setHiddenAction, setLikeAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
 import type { SharedComment } from "@/lib/data/comments";
+import { VerseRefText } from "./VerseRefText";
 
 /** 나눔 한 개: 작성자 · 내용 · 공감 · (내 나눔이면) 수정/삭제 · (운영자면) 숨김/복구 */
 export function CommentCard({
@@ -117,7 +118,7 @@ export function CommentCard({
           </div>
         </div>
       ) : (
-        <p className="mt-2.5 text-[14.5px] leading-[1.65] whitespace-pre-line text-text">{comment.content}</p>
+        <VerseRefText content={comment.content} className="mt-2.5 text-[14.5px] leading-[1.65] whitespace-pre-line text-text" />
       )}
 
       <footer className="mt-2.5 flex items-center justify-between">
