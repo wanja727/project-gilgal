@@ -12,7 +12,7 @@ import { COMMENT_MAX_LENGTH, type CommentSort, countComments, listComments, toSh
 import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { formatDate } from "@/lib/format";
-import { JOSHUA_2026 } from "@/lib/journey/campaign";
+import { campaignSlug, JOSHUA_2026 } from "@/lib/journey/campaign";
 import { ACTS, type JourneyDay } from "@/lib/journey/days";
 import { cropAround, SITES } from "@/lib/journey/locations";
 import type { MapView } from "@/lib/journey/mapState";
@@ -185,7 +185,13 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
             }
           />
         </div>
-        <CommentComposer dayNo={day.day} chapter={day.chapter} maxLength={COMMENT_MAX_LENGTH} />
+        <CommentComposer
+          dayNo={day.day}
+          chapter={day.chapter}
+          maxLength={COMMENT_MAX_LENGTH}
+          avatarKey={member.avatarKey}
+          draftKey={`${campaignSlug()}:${member.avatarSeed}:${day.day}`}
+        />
         {shared.length === 0 ? (
           <p className="px-2 py-6 text-center text-small text-mute">아직 나눔이 없어요. 첫 나눔을 남겨 보세요.</p>
         ) : (

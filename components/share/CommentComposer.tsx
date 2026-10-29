@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { createCommentAction } from "@/app/actions/comments";
+import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
 import { insertVerse, referencedVerses } from "@/lib/share/verseRef";
@@ -21,16 +22,63 @@ export function openComposer() {
 }
 
 /**
- * 나눔 쓰기 — 성경 해설이 아니라 읽고 마음에 남은 것을 나누는 자리.
- * 본문 아래 칸은 누르면 화면 아래에 붙는 입력창을 여는 자리이고, 실제로 쓰는 곳은 입력창 하나다(2026-10-29).
- * 나눔은 보통 본문을 다시 보며 쓰므로 본문은 그대로 스크롤되고 입력창만 아래에 머문다.
- * 쓰던 글은 입력창을 닫았다 열어도 남는다.
+ * 쓰던 나눔 임시저장 — 남기기 전에 화면이 닫혀도 다시 들어오면 이어 쓴다(카카오톡 대화방 입력창처럼, 2026-10-29).
+ * 이 기기 브라우저에만 남는다(localStorage). 남기면 지우고, 오래된 글(30일)은 버린다. 저장소를 못 쓰면 조용히 넘어간다.
  */
-export function CommentComposer({ dayNo, chapter, maxLength }: { dayNo: number; chapter: number; maxLength: number }) {
+const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const noSubscribe = () => () => {};
+
+function loadDraft(key: string): string {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return "";
+    const { text, at } = JSON.parse(raw) as { text?: unknown; at?: unknown };
+    if (typeof text !== "string" || typeof at !== "number" || Date.now() - at > DRAFT_TTL_MS) return "";
+    return text;
+  } catch {
+    return "";
+  }
+}
+
+function saveDraft(key: string, text: string) {
+  try {
+    if (text.trim()) localStorage.setItem(key, JSON.stringify({ text, at: Date.now() }));
+    else localStorage.removeItem(key);
+  } catch {
+    /* 저장소를 못 쓰는 브라우저 — 임시저장 없이 */
+  }
+}
+
+/**
+ * 나눔 쓰기 — 성경 해설이 아니라 읽고 마음에 남은 것을 나누는 자리.
+ * 실제로 쓰는 곳은 화면 아래에 붙는 입력창 하나다. 나눔은 보통 본문을 다시 보며 쓰므로 본문은 그대로 스크롤되고
+ * 입력창만 아래에 머문다(2026-10-29). 본문 아래 자리는 입력창과 똑같이 생기면 같은 칸이 하나 더 뜨는 것처럼 보여서
+ * "누르면 쓰기 창이 열리는 한 줄"로 둔다.
+ * draftKey: 임시저장 자리(캠페인·아바타 seed·장). 같은 기기를 다른 사람이 써도 섞이지 않게 사람별로 나눈다.
+ */
+export function CommentComposer({
+  dayNo,
+  chapter,
+  maxLength,
+  avatarKey,
+  draftKey,
+}: {
+  dayNo: number;
+  chapter: number;
+  maxLength: number;
+  avatarKey: string;
+  draftKey: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [focusOnOpen, setFocusOnOpen] = useState(false);
-  const [text, setText] = useState("");
+  const storageKey = `gilgal:draft:${draftKey}`;
+  const [text, setText] = useState(() => (typeof window === "undefined" ? "" : loadDraft(storageKey)));
+  // 서버 렌더에는 임시저장이 없으므로, 화면이 붙기(hydration) 전까지는 쓰던 글을 보여 주지 않는다 — 어긋남 방지
+  const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
+  const shown = hydrated ? text.trim() : "";
+
+  useEffect(() => saveDraft(storageKey, text), [storageKey, text]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -55,6 +103,7 @@ export function CommentComposer({ dayNo, chapter, maxLength }: { dayNo: number; 
         const r = await createCommentAction(dayNo, text);
         if (r.status === "ok") {
           setText("");
+          saveDraft(storageKey, "");
           setOpen(false);
           router.refresh();
           // 방금 남긴 나눔이 최신순 맨 위에 — 이어서 다른 동행자 나눔을 읽게 목록으로 내려간다
@@ -75,15 +124,24 @@ export function CommentComposer({ dayNo, chapter, maxLength }: { dayNo: number; 
           setOpen(true);
         }}
         aria-haspopup="dialog"
-        className="mt-2 block w-full rounded-[20px] bg-surface p-4 text-left"
+        className="mt-2 flex w-full items-center gap-3 rounded-[20px] bg-surface py-3 pr-3 pl-3.5 text-left"
       >
-        <span className="text-small font-semibold text-main">{chapter}장을 읽고 마음에 남은 것을 나눠 주세요</span>
-        <span
-          className={`mt-2 line-clamp-3 block min-h-[78px] rounded-[12px] bg-bg p-3 text-[14.5px] leading-[1.65] whitespace-pre-line ${
-            text ? "text-text" : "text-mid"
-          }`}
-        >
-          {text || "한 문장이어도 좋아요"}
+        <Avatar avatarKey={avatarKey} size={34} ring={false} />
+        <span className="min-w-0 flex-1">
+          {shown ? (
+            <>
+              <span className="block text-caption font-semibold text-main">쓰던 나눔 이어 쓰기</span>
+              <span className="mt-0.5 block truncate text-sub text-mute">{shown}</span>
+            </>
+          ) : (
+            <span className="block text-sub text-mute">{chapter}장을 읽고 마음에 남은 것을 나눠 주세요</span>
+          )}
+        </span>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-soft text-main" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[18px]">
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+            <path d="M13.5 6.5l4 4" />
+          </svg>
         </span>
       </button>
       {open && (
