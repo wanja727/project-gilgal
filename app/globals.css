@@ -276,6 +276,22 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: flash-lift 0.9s;
 }
 
+/* 한마디 말풍선이 "톡" 하고 떠오른다(ADR-028) */
+@keyframes bubble-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {

@@ -18,7 +18,8 @@ import { addDays, type IsoDate, isPrelaunchTest, nowKst } from "@/lib/time";
  * - 운영 캠페인: 테스트 계정을 뺀다. 단 오픈 전 운영 테스트 모드(ADR-024)에서는 실제 테스터와
  *   테스트 계정을 함께 센다 — 셀 화면에 동행자가 보이는지 운영 서버에서 확인할 수 있게.
  */
-function communityMember() {
+/** 공동체 집계·목록에 들어가는 사람(테스트 캠페인·오픈 전 테스트면 그에 맞게) */
+export function communityMember() {
   const onboarded = and(isNotNull(profiles.realName), isNotNull(profiles.cellId));
   if (campaignSlug() === "joshua-2026-test") return and(eq(profiles.isTest, true), onboarded);
   if (isPrelaunchTest(process.env, new Date())) return onboarded;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { JourneyMap } from "@/components/map/JourneyMap";
+import { NoteComposer } from "@/components/notes/NoteComposer";
 import { buttonClass } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
@@ -133,6 +134,10 @@ export function ArrivalScreen({
             </div>
           ))}
         </dl>
+        {/* 뒤에 올 동행자에게 한마디(ADR-028) — 한 줄이라 본문을 다시 볼 필요 없이 여기서 바로 */}
+        <div className="rise-in mt-4 rounded-card bg-surface p-4" style={{ animationDelay: "2.05s" }}>
+          <NoteComposer dayNo={day.day} avatarKey={avatarKey} />
+        </div>
       </div>
 
       {/* 떠오르기 전(8px 아래)의 버튼이 화면 높이를 넘어 스크롤바가 잠깐 생기지 않게 바깥에서 자른다 */}

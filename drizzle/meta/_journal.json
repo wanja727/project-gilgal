@@ -22,6 +22,13 @@
       "when": 1792836272428,
       "tag": "0002_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793284755832,
+      "tag": "0003_trail_note",
+      "breakpoints": true
     }
   ]
 }

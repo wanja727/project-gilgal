@@ -13,8 +13,10 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
+import { TRAIL_NOTE_MAX_LENGTH } from "@/lib/share/note";
 
 /**
  * 길갈 DB 스키마 (architecture 9절).
@@ -265,4 +267,38 @@ export const readingCommentLikes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (l) => [primaryKey({ columns: [l.commentId, l.userId] }), index("reading_comment_like_user_idx").on(l.userId)],
+).enableRLS();
+
+// ─── 앞서 간 동행자의 한마디 (ADR-028) ─────────────────────────────────────
+
+
+/**
+ * 장을 읽고 도착한 사람이 "뒤에 올 동행자에게" 남기는 한 줄 — 홈에서 아바타 말풍선으로, 이름 없이 보인다.
+ * 나눔(묵상)과 성격이 달라 테이블을 나눈다. 한 사람이 장마다 하나(고치면 덮어쓴다).
+ */
+export const trailNotes = pgTable(
+  "trail_note",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    campaign: text("campaign").notNull(),
+    dayNo: smallint("day_no").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    hiddenAt: timestamp("hidden_at", { withTimezone: true }),
+    hiddenBy: text("hidden_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (n) => [
+    uniqueIndex("trail_note_campaign_day_user_uq").on(n.campaign, n.dayNo, n.userId),
+    index("trail_note_campaign_day_created_idx").on(n.campaign, n.dayNo, n.createdAt),
+    index("trail_note_user_idx").on(n.userId),
+    check("trail_note_day_no_chk", sql`${n.dayNo} BETWEEN 1 AND 24`),
+    check(
+      "trail_note_content_chk",
+      sql`char_length(btrim(${n.content})) BETWEEN 1 AND ${sql.raw(String(TRAIL_NOTE_MAX_LENGTH))}`,
+    ),
+  ],
 ).enableRLS();
