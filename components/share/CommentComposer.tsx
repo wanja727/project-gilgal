@@ -146,8 +146,12 @@ export function CommentComposer({
         </span>
       </button>
       {open && (
-        <DockForm
-          dayNo={dayNo}
+        <ComposerDock
+          id={`dock-${dayNo}`}
+          title={`${chapter}장을 읽고 마음에 남은 것은?`}
+          submitLabel="나눔 남기기"
+          pendingLabel="남기는 중…"
+          quoting
           chapter={chapter}
           maxLength={maxLength}
           text={text}
@@ -166,14 +170,21 @@ export function CommentComposer({
 // 입력칸과 그 뒤에 겹쳐 그리는 강조 글자는 글꼴·여백·줄바꿈이 똑같아야 글자 위치가 맞는다
 const FIELD_TEXT = "p-3 text-[14.5px] leading-[1.65] break-keep [overflow-wrap:anywhere] whitespace-pre-wrap";
 
+const DOCK_EVENT = "gilgal:dock-open";
+
 /**
- * 화면 아래에 붙는 입력창. 열려 있는 동안 본문의 절을 누르면 "15:3" 이 커서 자리에 들어가고,
+ * 화면 아래에 붙는 입력창 — 새 나눔과 나눔 고치기가 함께 쓴다(2026-10-29). 한 번에 하나만 열린다.
+ * quoting: 본문이 있는 화면(장 본문)에서만 절 누르기로 구절을 넣는다. 열려 있는 동안 본문의 절을 누르면 "15:3" 이 커서 자리에 들어가고,
  * 바로 이어지는 절을 누르면 "15:3-4" 로 늘어나고, 고른 절을 다시 누르면 빠진다(lib/share/verseRef). 고른 절은 본문에 옅게 표시한다.
  * 들어간 구절은 입력칸 위 칩으로도 보이고(누르면 그 절 본문 시트), 입력칸 안에서도 배경색으로 강조한다 —
  * 입력칸은 일반 textarea 그대로 두고 같은 글을 뒤에 겹쳐 구절 부분만 칠한다(한글 입력에 영향 없음, 2026-10-29).
  */
-function DockForm({
-  dayNo,
+export function ComposerDock({
+  id,
+  title,
+  submitLabel,
+  pendingLabel = "저장하는 중…",
+  quoting = false,
   chapter,
   maxLength,
   text,
@@ -184,7 +195,11 @@ function DockForm({
   onSubmit,
   onClose,
 }: {
-  dayNo: number;
+  id: string;
+  title: string;
+  submitLabel: string;
+  pendingLabel?: string;
+  quoting?: boolean;
   chapter: number;
   maxLength: number;
   text: string;
@@ -210,7 +225,21 @@ function DockForm({
     if (autoFocus) areaRef.current?.focus({ preventScroll: true });
   }, [autoFocus]);
 
+  // 다른 입력창(새 나눔 ↔ 나눔 고치기)이 열리면 이 창은 닫는다
   useEffect(() => {
+    const token = {};
+    const onOther = (e: Event) => (e as CustomEvent).detail !== token && onClose();
+    window.dispatchEvent(new CustomEvent(DOCK_EVENT, { detail: token }));
+    window.addEventListener(DOCK_EVENT, onOther);
+    return () => window.removeEventListener(DOCK_EVENT, onOther);
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!quoting) {
+      const onKey = (e: KeyboardEvent) => e.key === "Escape" && !sheetOpen.current && onClose();
+      document.addEventListener("keydown", onKey);
+      return () => document.removeEventListener("keydown", onKey);
+    }
     const root = document.getElementById(READER_ROOT_ID);
     root?.setAttribute("data-quoting", "");
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !sheetOpen.current && onClose();
@@ -232,33 +261,34 @@ function DockForm({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("click", onTap);
     };
-  }, [chapter, maxLength, onClose, setText]);
+  }, [quoting, chapter, maxLength, onClose, setText]);
 
   // 글에 들어간 구절(순서대로, 같은 표기는 한 번)
   const refs = [...new Map(splitVerseRefs(text).flatMap((s) => (s.ref ? [[formatVerseRef(s.ref), s.ref] as const] : []))).values()];
 
   // 글에 적힌 이 장의 절을 본문에 표시 — 고른 절이 어디인지 보이게
   useEffect(() => {
+    if (!quoting) return;
     const picked = referencedVerses(text, chapter);
     document.querySelectorAll<HTMLElement>("[data-verse]").forEach((el) => {
       el.toggleAttribute("data-picked", picked.has(Number(el.dataset.verse)));
     });
-  }, [text, chapter]);
+  }, [quoting, text, chapter]);
 
   return (
     <form
       onSubmit={onSubmit}
-      aria-label={`${chapter}장 나눔 쓰기`}
+      aria-label={title}
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md animate-[rise_.3s_var(--ease-sheet)] rounded-t-[24px] bg-surface px-4 pt-3 pb-[max(env(safe-area-inset-bottom),14px)] shadow-[0_-6px_24px_rgba(0,0,0,0.1)]"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="pt-1.5">
-          <label htmlFor={`dock-${dayNo}`} className="block text-small font-semibold text-main">
-            {chapter}장을 읽고 마음에 남은 것은?
+          <label htmlFor={id} className="block text-small font-semibold text-main">
+            {title}
           </label>
-          <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절이 들어가고, 다시 누르면 빠져요</p>
+          {quoting && <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절이 들어가고, 다시 누르면 빠져요</p>}
         </div>
-        <button type="button" onClick={onClose} aria-label="나눔 쓰기 닫기" className="-mr-2 grid size-11 shrink-0 place-items-center text-mute">
+        <button type="button" onClick={onClose} aria-label={`${title} 닫기`} className="-mr-2 grid size-11 shrink-0 place-items-center text-mute">
           <CloseIcon className="size-5" />
         </button>
       </div>
@@ -300,7 +330,7 @@ function DockForm({
         </div>
         <textarea
           ref={areaRef}
-          id={`dock-${dayNo}`}
+          id={id}
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -321,7 +351,7 @@ function DockForm({
           {text.length} / {maxLength}
         </span>
         <button type="submit" disabled={pending || !text.trim()} className={buttonClass("main", "h-11 !w-auto shrink-0 px-5 text-body")}>
-          {pending ? "남기는 중…" : "나눔 남기기"}
+          {pending ? pendingLabel : submitLabel}
         </button>
       </div>
       {error && (

@@ -210,7 +210,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         {shared.length === 0 ? (
           <p className="px-2 py-6 text-center text-small text-mute">아직 나눔이 없어요. 첫 나눔을 남겨 보세요.</p>
         ) : (
-          shared.map((c) => <CommentCard key={c.id} comment={c} isAdmin={member.isAdmin} maxLength={COMMENT_MAX_LENGTH} />)
+          shared.map((c) => <CommentCard key={c.id} comment={c} isAdmin={member.isAdmin} maxLength={COMMENT_MAX_LENGTH} quoting />)
         )}
       </section>
 

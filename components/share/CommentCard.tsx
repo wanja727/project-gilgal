@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { deleteCommentAction, editCommentAction, setHiddenAction, setLikeAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
 import type { SharedComment } from "@/lib/data/comments";
+import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { ComposerDock } from "./CommentComposer";
 import { VerseRefText } from "./VerseRefText";
 
 /** 나눔 한 개: 작성자 · 내용 · 공감 · (내 나눔이면) 수정/삭제 · (운영자면) 숨김/복구 */
@@ -14,12 +16,15 @@ export function CommentCard({
   isAdmin,
   maxLength,
   chapterLink,
+  quoting = false,
 }: {
   comment: SharedComment;
   isAdmin: boolean;
   maxLength: number;
   /** 나눔 탭에서 어느 장의 나눔인지 보여 줄 때 */
   chapterLink?: { href: string; label: string };
+  /** 장 본문 화면이면 고칠 때도 절 누르기로 구절을 넣는다 */
+  quoting?: boolean;
 }) {
   const router = useRouter();
   const [liked, setLiked] = useState(comment.likedByMe);
@@ -28,6 +33,10 @@ export function CommentCard({
   const [draft, setDraft] = useState(comment.content);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const closeEdit = useCallback(() => {
+    setEditing(false);
+    setError(null);
+  }, []);
 
   const toggleLike = () => {
     const next = !liked;
@@ -90,35 +99,28 @@ export function CommentCard({
         </p>
       )}
 
-      {editing ? (
-        <div className="mt-2.5">
-          <label className="sr-only" htmlFor={`edit-${comment.id}`}>
-            나눔 고치기
-          </label>
-          <textarea
-            id={`edit-${comment.id}`}
-            value={draft}
-            maxLength={maxLength}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={4}
-            className="w-full resize-none rounded-[12px] bg-bg p-3 text-[14.5px] leading-[1.65] text-text outline-none focus-visible:outline-2 focus-visible:outline-main"
-          />
-          <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={() => setEditing(false)} className="min-h-11 px-3 text-small text-mute">
-              취소
-            </button>
-            <button
-              type="button"
-              disabled={pending || !draft.trim()}
-              onClick={() => run(() => editCommentAction(comment.id, draft, comment.dayNo), () => setEditing(false))}
-              className="min-h-11 rounded-[12px] bg-main px-4 text-small font-bold text-white disabled:opacity-50"
-            >
-              저장
-            </button>
-          </div>
-        </div>
-      ) : (
-        <VerseRefText content={comment.content} className="mt-2.5 text-[14.5px] leading-[1.65] whitespace-pre-line text-text" />
+      <VerseRefText content={comment.content} className="mt-2.5 text-[14.5px] leading-[1.65] whitespace-pre-line text-text" />
+
+      {/* 고치기는 새 나눔과 같은 하단 입력창에서(구절 넣기·칩 포함, 2026-10-29) */}
+      {editing && (
+        <ComposerDock
+          id={`edit-${comment.id}`}
+          title="나눔 고치기"
+          submitLabel="고친 나눔 저장"
+          quoting={quoting}
+          chapter={JOURNEY_DAYS[comment.dayNo - 1].chapter}
+          maxLength={maxLength}
+          text={draft}
+          setText={setDraft}
+          autoFocus
+          pending={pending}
+          error={error}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (draft.trim()) run(() => editCommentAction(comment.id, draft, comment.dayNo), () => setEditing(false));
+          }}
+          onClose={closeEdit}
+        />
       )}
 
       <footer className="mt-2.5 flex items-center justify-between">
@@ -141,7 +143,14 @@ export function CommentCard({
         <div className="flex items-center text-caption text-mute">
           {comment.mine && !editing && (
             <>
-              <button type="button" onClick={() => setEditing(true)} className="min-h-11 px-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(comment.content);
+                  setEditing(true);
+                }}
+                className="min-h-11 px-2.5"
+              >
                 수정
               </button>
               <button
@@ -168,7 +177,7 @@ export function CommentCard({
           )}
         </div>
       </footer>
-      {error && (
+      {error && !editing && (
         <p role="alert" className="mt-1 text-caption text-main">
           {error}
         </p>
