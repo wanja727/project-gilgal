@@ -101,7 +101,7 @@
 [모바일 브라우저] ──HTTPS──> [Vercel: Next.js (icn1)]
                                 ├─ RSC 페이지: auth() → getViewer() → DB 조회 → HTML
                                 ├─ Server Actions: 읽기 완료 / 온보딩 / 댓글 / 공감 (userId=세션)
-                                ├─ Route Handler: /api/auth/*, /api/avatar/[seed]
+                                ├─ Route Handler: /api/auth/*, /api/avatar/[key]
                                 └─ lib/db (drizzle + postgres.js, prepare:false)
                                         │ DATABASE_URL (트랜잭션 풀러 :6543)
                                         ▼
@@ -124,7 +124,7 @@ app/
   finale/page.tsx            완주 회고 (Phase 3, 11/27 배포)
   admin/                     댓글 숨김/복구 (셀 편성은 DB 직접 수정)
   api/auth/[...nextauth]/route.ts
-  api/avatar/[seed]/route.ts DiceBear SVG
+  api/avatar/[key]/route.ts DiceBear SVG (key = seed 또는 seed~부품)
 lib/
   brand.ts                   SERVICE_NAME, SERVICE_SUBTITLE, 브랜딩 문구
   time.ts                    nowKst(), todayKst() (+ 개발용 오버라이드)
@@ -407,8 +407,11 @@ type JourneyDay = {
 
 - `@dicebear/core`(v10) + `@dicebear/styles/marbles.json` 을 서버에서 사용해 SVG 생성(ADR-007). 외부 API 호출 없음.
 - seed: `profile.avatar_seed`(가입 시 랜덤, 고정). userId/이름/카카오 ID를 seed로 쓰지 않는다.
-- `GET /api/avatar/[seed]` → `image/svg+xml`, `Cache-Control: public, max-age=31536000, immutable`. 목록에서는 `<img>` 로 사용.
-- `Avatar` 컴포넌트는 `{ seed, style, options }` 를 받아 향후 꾸미기(`avatar_options`) 확장 시 인터페이스 변경 없음.
+- ~~`GET /api/avatar/[seed]`~~ **[변경 2026-10-29]** `GET /api/avatar/[key]` → `image/svg+xml`, `Cache-Control: public, max-age=31536000, immutable`. 목록에서는 `<img>` 로 사용.
+- **[변경 2026-10-29] 꾸미기(ADR-027)**: `profile.avatar_options`(jsonb) 에 고른 부품 `{ top, eyes, mouth, nose, glasses, face, color }` 를 저장한다. 부품 목록·검증은 `lib/avatarParts.ts`(클라이언트 공용), 그리기는 `lib/avatar.ts`.
+  - 아바타 키 = `seed` 또는 `seed~머리.눈.입.코.안경.얼굴.색`. 데이터 계층이 `avatarKeyOf(seed, options)` 로 만들어 화면에 보내고, `Avatar`·지도는 키만 받는다(`avatarKey`). 꾸미지 않은 사람은 키 = seed, 그림도 이전과 같다(테스트로 확인).
+  - 안경·얼굴(볼터치·주근깨·점·콧수염·턱수염)은 Marbles 에 없어 정의(CC0)를 복사해 같은 선 굵기·잉크색으로 그려 붙였다. 기본 확률 0.
+  - `/me` 꾸미기 화면: 부위 탭 → "지금 모양에서 그 부위만 바꾼" 보기 칸 → 저장. 섞기(부품+무늬), 색 탭의 "구슬 무늬 바꾸기"(seed 만).
 
 ### 8.4 참여 시각화 — **[변경 2026-10-24] 오픈 포함, ADR-022**
 
@@ -529,7 +532,7 @@ interface BibleTextProvider {
 | `/` 홈 나눔 미리보기 | [변경 2026-10-26] 깃발 장의 최근 나눔 3개(없으면 여러 장 최근 나눔) → 장 본문 아래 나눔 / 모든 나눔 | 1 |
 | `/overview` (탭: 개관) | 여호수아 개관(표어·배경·네 부분·수 1:8) — 교회 제공 글, 내용은 `lib/journey/overview.ts` | 1 |
 | `/share` (모든 나눔, [변경 2026-10-26] 하단 탭에서 제외) | 공개된 장들의 최근 나눔 | 1 |
-| `/me` (탭: 나) | 나의 여정 숫자 · 아바타 섞기 · 로그아웃 | 1 |
+| `/me` (탭: 나) | 나의 여정 숫자 · 아바타 꾸미기(ADR-027) · 로그아웃 | 1 |
 | `/finale` | 24일 회고 (완주 전에는 남은 길 안내) | 1 |
 | ~~`/community`~~ | 홈 카드로 대체 | — |
 | ~~`/admin`~~ | 나눔의 숨기기/복구 버튼으로 대체 | — |
@@ -791,3 +794,9 @@ CREATE TABLE comment_reaction (
 - **배경**: 운영자 요청 — 글자 크기 외에 굵게·배경색 등 기본 기능, 사용자별로 유지.
 - **대안**: DB(profile) 저장 — 기기를 바꿔도 따라오지만 마이그레이션·서버 액션이 필요하고, 휴대폰마다 화면·환경이 달라 기기별 설정이 오히려 자연스럽다. localStorage — 서버가 읽지 못해 열 때 기본값으로 번쩍인다.
 - **결과**: 다른 기기·브라우저에서는 다시 설정해야 한다. 쿠키가 모든 요청에 실려 가지만 100바이트 남짓이다. 이전 글자 크기 설정은 이어받지 않는다(기본 17.5).
+
+### ADR-027 아바타 꾸미기 — Marbles 부품 고르기 + 길갈 부품 — 채택 (2026-10-29)
+- **결정**: 아바타 스타일은 Marbles 그대로 두고, 그 안의 부품(머리·모자 20, 눈 9, 입 11, 코 2)과 구슬 색 6을 사용자가 직접 고르게 한다. Marbles 에 없는 안경 4종·얼굴 특징 5종은 정의를 복사해 같은 선 굵기·잉크색으로 그려 붙인다. 고른 값은 기존 `profile.avatar_options`(jsonb) 에 저장 — 스키마 변경 없음. 이미지 주소는 부품을 담은 아바타 키(`/api/avatar/seed~…`)라 DB 조회 없이 영구 캐시를 유지한다. ADR-020(섞기)을 확장한다.
+- **배경**: 운영자 요청 — 섞기만으로는 자기와 닮게 꾸미기 어렵다. 기존 스타일은 해치지 않기.
+- **대안**: 사람형 스타일(notionists·micah·avataaars) — 피부색·헤어를 더 닮게 할 수 있지만 남색 구슬 톤과 지도·카드의 인상이 모두 바뀐다. 이미지 주소를 seed 그대로 두고 서버가 DB 에서 부품을 읽기 — 영구 캐시가 깨지고 아바타 하나마다 조회가 생긴다.
+- **결과**: 피부색·얼굴형은 표현하지 않는다(특징을 골라 "그 사람다움"을 드러내는 수준). 키에 부품이 드러나지만 seed 와 마찬가지로 이름과 연결되지 않는다. 부품 id·순서를 바꾸면 저장된 키가 깨지므로 뒤에 추가만 한다. 추후 포인트·여정 이정표로 여는 장식 부품은 `avatar_unlock`·`point_ledger` 테이블을 더해 확장한다(닮게 꾸미는 기본 부품은 계속 무료).

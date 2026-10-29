@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/lib/auth";
+import { type AvatarParts, encodeAvatarKey, parseAvatarParts } from "@/lib/avatarParts";
 import { db } from "@/lib/db";
 import { cells, profiles } from "@/lib/db/schema";
 
@@ -19,6 +20,10 @@ export type Viewer = {
   isAdmin: boolean;
   isTest: boolean;
   avatarSeed: string;
+  /** 꾸미기로 고른 부품(없으면 null — seed 가 정한 모양) */
+  avatarParts: AvatarParts | null;
+  /** 화면에 쓰는 아바타 키(seed + 고른 부품, lib/avatarParts.ts) */
+  avatarKey: string;
 };
 
 export type Member = Viewer & { realName: string; cellId: number };
@@ -36,6 +41,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       isAdmin: profiles.isAdmin,
       isTest: profiles.isTest,
       avatarSeed: profiles.avatarSeed,
+      avatarOptions: profiles.avatarOptions,
     })
     .from(profiles)
     .leftJoin(cells, eq(cells.id, profiles.cellId))
@@ -43,7 +49,15 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   // 세션은 있는데 프로필이 없는 경우(로그인 이벤트 실패 등) — 로그인부터 다시
   if (!row) return null;
 
-  return { userId, ...row, onboarded: row.realName !== null && row.cellId !== null };
+  const { avatarOptions, ...rest } = row;
+  const avatarParts = parseAvatarParts(avatarOptions);
+  return {
+    userId,
+    ...rest,
+    avatarParts,
+    avatarKey: encodeAvatarKey(row.avatarSeed, avatarParts),
+    onboarded: row.realName !== null && row.cellId !== null,
+  };
 });
 
 /** 로그인 필수 페이지 */

@@ -64,7 +64,7 @@ export default async function Home() {
         <span className="font-serif text-[20px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</span>
         <span className="flex items-center gap-2">
           <span className="rounded-chip bg-surface px-2.5 py-1.5 text-[12.5px] font-semibold text-mute">{member.cellName}</span>
-          <Avatar seed={member.avatarSeed} size={34} />
+          <Avatar avatarKey={member.avatarKey} size={34} />
         </span>
       </header>
 
@@ -104,7 +104,7 @@ export default async function Home() {
             right={<MoreLink href="/journey">지도</MoreLink>}
           />
         </div>
-        <ChapterPath statuses={statuses} position={p.position} flag={flagLabel} avatarSeed={member.avatarSeed} />
+        <ChapterPath statuses={statuses} position={p.position} flag={flagLabel} avatarKey={member.avatarKey} />
         <div className="mx-2 mt-1.5 flex items-center gap-3.5 rounded-tile bg-bg p-4">
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface text-main">
             <FlagIcon />
@@ -131,7 +131,7 @@ export default async function Home() {
         <ArrivalBoard
           board={board}
           title={p.phase === "reading" ? `오늘 ${p.flag.day}장까지 읽은 사람` : `${p.flag.day}장까지 읽은 사람`}
-          avatarSeed={member.avatarSeed}
+          avatarKey={member.avatarKey}
           position={p.position}
           remaining={p.unread.length}
         />

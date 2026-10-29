@@ -10,13 +10,13 @@ import { formatKstTime, ordinalEn } from "@/lib/format";
 export function ArrivalBoard({
   board,
   title,
-  avatarSeed,
+  avatarKey,
   position,
   remaining,
 }: {
   board: Board;
   title: string;
-  avatarSeed: string;
+  avatarKey: string;
   position: number;
   /** 깃발까지 남은 장 */
   remaining: number;
@@ -33,7 +33,7 @@ export function ArrivalBoard({
           {board.podium.map((a, i) => (
             <li key={i} className="grid grid-cols-[34px_40px_1fr_auto] items-center gap-3 py-[9px]">
               <span className="text-small font-extrabold tracking-[-0.01em] text-main">{ordinalEn(i + 1)}</span>
-              <Avatar seed={a.avatarSeed} size={40} />
+              <Avatar avatarKey={a.avatarKey} size={40} />
               <span className="min-w-0 text-body font-semibold text-main">
                 {a.name}
                 {a.cellName && <small className="mt-0.5 block text-caption font-medium text-mute">{a.cellName}</small>}
@@ -47,8 +47,8 @@ export function ArrivalBoard({
       {rest > 0 && (
         <div className="mt-1.5 flex items-center gap-2.5 border-t border-soft pt-3.5 pb-0.5">
           <span className="flex" aria-hidden>
-            {board.restAvatars.map((seed, i) => (
-              <Avatar key={i} seed={seed} size={28} className={i ? "-ml-2" : ""} />
+            {board.restAvatars.map((avatarKey, i) => (
+              <Avatar key={i} avatarKey={avatarKey} size={28} className={i ? "-ml-2" : ""} />
             ))}
           </span>
           <span className="text-small text-mute">4번째부터 {rest}명이 도착했어요</span>
@@ -58,7 +58,7 @@ export function ArrivalBoard({
       {board.mine ? (
         <div className="-mx-2.5 mt-3 grid grid-cols-[34px_40px_1fr_auto] items-center gap-3 rounded-btn bg-soft px-2.5 py-3">
           <span className="text-small font-extrabold text-main">{ordinalEn(board.mine.rank)}</span>
-          <Avatar seed={avatarSeed} size={40} />
+          <Avatar avatarKey={avatarKey} size={40} />
           <span className="text-body font-semibold text-main">
             나<small className="mt-0.5 block text-caption font-medium text-mute">{board.mine.rank}번째로 도착</small>
           </span>
@@ -67,7 +67,7 @@ export function ArrivalBoard({
       ) : (
         <div className="-mx-2.5 mt-3 grid grid-cols-[34px_40px_1fr_auto] items-center gap-3 rounded-btn bg-bg px-2.5 py-3">
           <span className="text-small font-extrabold text-mid">나</span>
-          <Avatar seed={avatarSeed} size={40} dim />
+          <Avatar avatarKey={avatarKey} size={40} dim />
           <span className="text-body font-semibold text-main">
             아직 가는 중
             <small className="mt-0.5 block text-caption font-medium text-mute">

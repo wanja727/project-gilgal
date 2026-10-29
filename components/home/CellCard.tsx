@@ -34,7 +34,7 @@ export function CellCard({
               key={i}
               className={`flex w-full flex-col items-center gap-[5px] text-[11px] ${clear ? "font-semibold text-main" : "text-mute"}`}
             >
-              <Avatar seed={m.avatarSeed} size={38} dim={!clear} />
+              <Avatar avatarKey={m.avatarKey} size={38} dim={!clear} />
               <span className="max-w-full truncate">
                 {m.isMe ? "나" : m.name ? m.name : <span className="sr-only">{showCount ? "아직 가는 중인 셀원" : "셀원"}</span>}
               </span>

@@ -1,6 +1,7 @@
-import { AvatarShuffler } from "@/components/AvatarShuffler";
+import { AvatarEditor } from "@/components/AvatarEditor";
 import { ButtonLink, Card, CardHead, PageTitle } from "@/components/ui";
 import { signOut } from "@/lib/auth";
+import { resolveAvatarParts } from "@/lib/avatar";
 import { BRAND } from "@/lib/brand";
 import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
@@ -10,7 +11,7 @@ import { todayKst } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
-/** 나 탭: 내 정보 · 나의 여정 숫자 · 아바타 섞기 · 로그아웃 */
+/** 나 탭: 내 정보 · 나의 여정 숫자 · 아바타 꾸미기 · 로그아웃 */
 export default async function MePage() {
   const member = await requireMember();
   const today = todayKst();
@@ -48,9 +49,9 @@ export default async function MePage() {
       </Card>
 
       <Card aria-labelledby="me-avatar">
-        <CardHead id="me-avatar" title="나의 아바타" />
+        <CardHead id="me-avatar" title="나의 아바타 꾸미기" />
         <div className="mt-4">
-          <AvatarShuffler seed={member.avatarSeed} />
+          <AvatarEditor seed={member.avatarSeed} parts={resolveAvatarParts(member.avatarSeed, member.avatarParts)} />
         </div>
       </Card>
 

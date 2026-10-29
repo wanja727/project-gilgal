@@ -159,7 +159,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         initiallyDone={done.has(day.day)}
         after={after}
         today={today}
-        avatarSeed={member.avatarSeed}
+        avatarKey={member.avatarKey}
       />
 
       <section id="share" aria-labelledby="share-title" className="scroll-mt-4 px-gutter pt-2 pb-7">

@@ -31,7 +31,7 @@ export default async function FinalePage() {
       </div>
 
       <div className="mx-gutter overflow-hidden rounded-[28px] bg-surface">
-        <JourneyMap view={view} avatarSeed={member.avatarSeed} ariaLabel="지금까지 걸어온 여정 전체 지도" className="!h-auto" />
+        <JourneyMap view={view} avatarKey={member.avatarKey} ariaLabel="지금까지 걸어온 여정 전체 지도" className="!h-auto" />
       </div>
       <p className="pt-2 text-center text-[11px] text-mid">{BRAND.mapCaption}</p>
 

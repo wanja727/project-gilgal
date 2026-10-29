@@ -53,12 +53,12 @@ export type ChapterPathProps = {
   statuses: ChapterStatus[];
   position: number;
   flag: { day: number; label: string; sub: string } | null;
-  avatarSeed: string;
+  avatarKey: string;
 };
 
 const STATUS_LABEL: Record<ChapterStatus, string> = { done: "읽음", open: "읽을 차례", locked: "아직 열리지 않음" };
 
-export function ChapterPath({ statuses, position, flag, avatarSeed }: ChapterPathProps) {
+export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPathProps) {
   const router = useRouter();
   const [openDay, setOpenDay] = useState<number | null>(null);
   const select = (day: number) => {
@@ -157,7 +157,7 @@ export function ChapterPath({ statuses, position, flag, avatarSeed }: ChapterPat
         style={{ left: `${(me.x / W) * 100}%`, top: `${(me.y / H) * 100}%` }}
         aria-hidden
       >
-        <Avatar seed={avatarSeed} size={36} ring={false} />
+        <Avatar avatarKey={avatarKey} size={36} ring={false} />
       </div>
 
       {openDay !== null && (

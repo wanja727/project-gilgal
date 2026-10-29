@@ -1,5 +1,6 @@
 import "server-only";
 import { and, asc, count, countDistinct, eq, gte, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
+import { avatarKeyOf } from "@/lib/avatarParts";
 import { db } from "@/lib/db";
 import { cells, profiles, readingProgress } from "@/lib/db/schema";
 import { campaignSlug } from "@/lib/journey/campaign";
@@ -112,7 +113,7 @@ export async function getCommunityToday(today: IsoDate): Promise<CommunityToday>
 
 // ─── 오늘 장 도착 순서 (확정 결정 3) ─────────────────────────────────────
 
-export type Arrival = { name: string; cellName: string | null; avatarSeed: string; at: Date };
+export type Arrival = { name: string; cellName: string | null; avatarKey: string; at: Date };
 
 export type ArrivalBoard = {
   dayNo: number;
@@ -141,6 +142,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
         name: profiles.realName,
         cellName: cells.name,
         avatarSeed: profiles.avatarSeed,
+        avatarOptions: profiles.avatarOptions,
         at: readingProgress.completedAt,
       })
       .from(readingProgress)
@@ -183,8 +185,13 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
   return {
     dayNo,
     total: totalRow[0].n,
-    podium: rows.slice(0, 3).map((r) => ({ ...r, name: r.name ?? "" })),
-    restAvatars: rows.slice(3).map((r) => r.avatarSeed),
+    podium: rows.slice(0, 3).map((r) => ({
+      name: r.name ?? "",
+      cellName: r.cellName,
+      avatarKey: avatarKeyOf(r.avatarSeed, r.avatarOptions),
+      at: r.at,
+    })),
+    restAvatars: rows.slice(3).map((r) => avatarKeyOf(r.avatarSeed, r.avatarOptions)),
     mine,
   };
 }
@@ -193,7 +200,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
 
 export type CellMember = {
   isMe: boolean;
-  avatarSeed: string;
+  avatarKey: string;
   /** 셀원 모두 이름을 보낸다 — 아직인 셀원은 흐린 아바타 + 이름(2026-10-26 운영자 변경, 이전엔 도착한 셀원만) */
   name: string | null;
   arrived: boolean;
@@ -210,6 +217,7 @@ export async function getCellMembers(cellId: number, userId: string, criterionDa
       userId: profiles.userId,
       name: profiles.realName,
       avatarSeed: profiles.avatarSeed,
+      avatarOptions: profiles.avatarOptions,
       done: sql<number>`count(${readingProgress.id})::int`,
       lastAt: sql<Date | null>`max(${readingProgress.completedAt})`,
     })
@@ -223,17 +231,17 @@ export async function getCellMembers(cellId: number, userId: string, criterionDa
       ),
     )
     .where(and(eq(profiles.cellId, cellId), or(communityMember(), eq(profiles.userId, userId))))
-    .groupBy(profiles.userId, profiles.realName, profiles.avatarSeed);
+    .groupBy(profiles.userId, profiles.realName, profiles.avatarSeed, profiles.avatarOptions);
 
   const members = rows.map((r) => {
     const arrived = criterionDays.length > 0 && r.done >= criterionDays.length;
     const isMe = r.userId === userId;
     return {
-      member: { isMe, avatarSeed: r.avatarSeed, name: r.name, arrived },
+      member: { isMe, avatarKey: avatarKeyOf(r.avatarSeed, r.avatarOptions), name: r.name, arrived },
       lastAt: r.lastAt ? new Date(r.lastAt).getTime() : Infinity,
     };
   });
-  // 도착한 사람(도착 순) → 아직인 사람. 아직인 사람끼리는 이름 대신 아바타 seed 순으로 섞어 둔다
+  // 도착한 사람(도착 순) → 아직인 사람. 아직인 사람끼리는 이름 대신 아바타 키 순으로 섞어 둔다
   members.sort((a, b) =>
     a.member.arrived !== b.member.arrived
       ? a.member.arrived
@@ -241,7 +249,7 @@ export async function getCellMembers(cellId: number, userId: string, criterionDa
         : 1
       : a.member.arrived
         ? a.lastAt - b.lastAt
-        : a.member.avatarSeed.localeCompare(b.member.avatarSeed),
+        : a.member.avatarKey.localeCompare(b.member.avatarKey),
   );
   return members.map((m) => m.member);
 }

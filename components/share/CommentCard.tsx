@@ -68,7 +68,7 @@ export function CommentCard({
   return (
     <article className="mt-2 rounded-[20px] bg-surface p-4">
       <header className="flex items-center gap-2.5">
-        <Avatar seed={comment.author.avatarSeed} size={32} />
+        <Avatar avatarKey={comment.author.avatarKey} size={32} />
         <div className="min-w-0 flex-1 text-[14px] font-semibold text-main">
           {comment.author.name}
           <small className="mt-0.5 block text-caption font-medium text-mute">

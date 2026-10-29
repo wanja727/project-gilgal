@@ -43,7 +43,7 @@ export function SharePreview({
           {comments.map((c) => (
             <li key={c.id} className="border-t border-soft first:border-t-0">
               <Link href={`/day/${c.dayNo}#share`} className="flex items-start gap-3 py-3.5">
-                <Avatar seed={c.author.avatarSeed} size={30} />
+                <Avatar avatarKey={c.author.avatarKey} size={30} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 text-small font-semibold text-main">
                     <span className="truncate">{c.author.name}</span>

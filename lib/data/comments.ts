@@ -1,5 +1,6 @@
 import "server-only";
 import { and, count, desc, eq, gte, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { avatarKeyOf } from "@/lib/avatarParts";
 import { db } from "@/lib/db";
 import { cells, COMMENT_MAX_LENGTH, profiles, readingCommentLikes, readingComments } from "@/lib/db/schema";
 import { campaignSlug } from "@/lib/journey/campaign";
@@ -31,7 +32,7 @@ export type CommentView = {
   /** 운영자 숨김 (작성자·운영자에게만 내려간다) */
   hidden: boolean;
   mine: boolean;
-  author: { name: string; cellName: string | null; avatarSeed: string };
+  author: { name: string; cellName: string | null; avatarKey: string };
   likeCount: number;
   likedByMe: boolean;
 };
@@ -65,6 +66,7 @@ async function selectComments(viewer: Viewer, where: ReturnType<typeof and>, sor
       name: profiles.realName,
       cellName: cells.name,
       avatarSeed: profiles.avatarSeed,
+      avatarOptions: profiles.avatarOptions,
       likeCount,
       likedByMe: likedBy(viewer.userId),
     })
@@ -87,7 +89,7 @@ async function selectComments(viewer: Viewer, where: ReturnType<typeof and>, sor
       edited: r.editedAt !== null,
       hidden: r.hiddenAt !== null,
       mine: r.userId === viewer.userId,
-      author: { name: r.name ?? "", cellName: r.cellName, avatarSeed: r.avatarSeed },
+      author: { name: r.name ?? "", cellName: r.cellName, avatarKey: avatarKeyOf(r.avatarSeed, r.avatarOptions) },
       likeCount: r.likeCount,
       likedByMe: r.likedByMe,
     }),

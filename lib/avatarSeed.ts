@@ -18,6 +18,7 @@ export function randomAvatarSeed(): string {
  */
 export const AVATAR_RENDER_VERSION = "navy1";
 
-export function avatarUrl(seed: string): string {
-  return `/api/avatar/${encodeURIComponent(seed)}?v=${AVATAR_RENDER_VERSION}`;
+/** 아바타 키(seed 또는 seed~부품, lib/avatarParts.ts) → 이미지 주소 */
+export function avatarUrl(avatarKey: string): string {
+  return `/api/avatar/${encodeURIComponent(avatarKey)}?v=${AVATAR_RENDER_VERSION}`;
 }

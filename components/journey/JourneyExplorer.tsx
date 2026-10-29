@@ -26,7 +26,7 @@ export function JourneyExplorer({
   position,
   flagDay,
   flagLabel,
-  avatarSeed,
+  avatarKey,
   initialChapter,
 }: {
   view: MapView;
@@ -34,7 +34,7 @@ export function JourneyExplorer({
   position: number;
   flagDay: number | null;
   flagLabel: string | null;
-  avatarSeed: string;
+  avatarKey: string;
   initialChapter: number;
 }) {
   const [mode, setMode] = useState<ViewMode>("map");
@@ -88,7 +88,7 @@ export function JourneyExplorer({
           <div className="mx-gutter mt-3 h-[clamp(240px,calc(100dvh-470px),440px)] overflow-hidden rounded-map bg-surface">
             <JourneyMap
               view={view}
-              avatarSeed={avatarSeed}
+              avatarKey={avatarKey}
               flagLabel={flagLabel}
               selected={site}
               crop={EXPLORER_CROP}
@@ -107,7 +107,7 @@ export function JourneyExplorer({
           <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
         </div>
       ) : (
-        <ChapterList statuses={statuses} position={position} flagDay={flagDay} avatarSeed={avatarSeed} />
+        <ChapterList statuses={statuses} position={position} flagDay={flagDay} avatarKey={avatarKey} />
       )}
     </>
   );
@@ -241,12 +241,12 @@ function ChapterList({
   statuses,
   position,
   flagDay,
-  avatarSeed,
+  avatarKey,
 }: {
   statuses: ChapterStatus[];
   position: number;
   flagDay: number | null;
-  avatarSeed: string;
+  avatarKey: string;
 }) {
   return (
     <div className="pb-5">
@@ -286,7 +286,7 @@ function ChapterList({
                       </span>
                       {d.day === position ? (
                         <span className="flex items-center gap-1.5 rounded-chip bg-soft py-0.5 pr-2.5 pl-0.5 text-[11.5px] font-bold text-main">
-                          <Avatar seed={avatarSeed} size={20} ring={false} />나
+                          <Avatar avatarKey={avatarKey} size={20} ring={false} />나
                         </span>
                       ) : d.day === flagDay ? (
                         <span className="rounded-chip bg-main px-2.5 py-1 text-[11.5px] font-bold text-white">오늘</span>

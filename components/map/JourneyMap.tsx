@@ -23,7 +23,7 @@ import { SiteGlyphPaths } from "./SiteGlyph";
 export type JourneyMapProps = {
   view: MapView;
   /** 내 아바타 (view.me 지점 옆, 위에 "내 위치" 이름표) */
-  avatarSeed?: string;
+  avatarKey?: string;
   /** 깃발 위 이름표 (예: "오늘 10장"). 없으면 깃발만 */
   flagLabel?: string | null;
   /** 선택한 장소 테두리 */
@@ -84,7 +84,7 @@ function labelPosition(id: SiteId) {
 
 export function JourneyMap({
   view,
-  avatarSeed,
+  avatarKey,
   flagLabel = null,
   selected = null,
   focus = null,
@@ -120,7 +120,7 @@ export function JourneyMap({
   const fadeFrom = arrival ? strong?.from : leg?.prev;
   const fading = fadeFrom && !filled.has(fadeFrom) ? fadeFrom : null;
   const fadeKey = leg?.key ?? "arrival";
-  const meAtFlag = !!avatarSeed && view.me !== null && view.me === view.flag;
+  const meAtFlag = !!avatarKey && view.me !== null && view.me === view.flag;
   return (
     <svg
       viewBox={crop ?? `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
@@ -305,13 +305,13 @@ export function JourneyMap({
       )}
 
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
-      {!focused && view.me && avatarSeed && (
+      {!focused && view.me && avatarKey && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
           <MovingAvatar d={curve(strong.from, strong.to, 1)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
-            <AvatarMark seed={avatarSeed} tag={meAtFlag ? null : tagSide(view.me)} />
+            <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} />
           </MovingAvatar>
         ) : (
-          <MapAvatar site={view.me} seed={avatarSeed} tag={!meAtFlag} />
+          <MapAvatar site={view.me} avatarKey={avatarKey} tag={!meAtFlag} />
         )
       )}
     </svg>
@@ -422,22 +422,22 @@ function tagSide(site: SiteId): "above" | "below" {
   return avatarOffset(site).y > 0 ? "below" : "above";
 }
 
-function MapAvatar({ site, seed, tag }: { site: SiteId; seed: string; tag: boolean }) {
+function MapAvatar({ site, avatarKey, tag }: { site: SiteId; avatarKey: string; tag: boolean }) {
   const s = SITES[site];
   const off = avatarOffset(site);
   return (
     <g transform={`translate(${s.x + off.x} ${s.y + off.y})`}>
-      <AvatarMark seed={seed} tag={tag ? tagSide(site) : null} />
+      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(site) : null} />
     </g>
   );
 }
 
 /** (0,0) 을 중심으로 그린 아바타와 이름표 */
-function AvatarMark({ seed, tag }: { seed: string; tag: "above" | "below" | null }) {
+function AvatarMark({ avatarKey, tag }: { avatarKey: string; tag: "above" | "below" | null }) {
   return (
     <g aria-hidden>
       <circle r={AVATAR_R + 2.5} fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="2" />
-      <image href={avatarUrl(seed)} x={-AVATAR_R} y={-AVATAR_R} width={AVATAR_R * 2} height={AVATAR_R * 2} />
+      <image href={avatarUrl(avatarKey)} x={-AVATAR_R} y={-AVATAR_R} width={AVATAR_R * 2} height={AVATAR_R * 2} />
       {tag && <Tag x={0} y={tag === "below" ? AVATAR_R + 20 : -AVATAR_R - 5} text={MY_PLACE} tone="solid" clamp={false} />}
     </g>
   );

@@ -20,7 +20,7 @@ export function ArrivalScreen({
   completed,
   arrival,
   today,
-  avatarSeed,
+  avatarKey,
   onClose,
   onShare,
 }: {
@@ -28,7 +28,7 @@ export function ArrivalScreen({
   completed: number[];
   arrival: { rank: number; total: number } | null;
   today: string;
-  avatarSeed: string;
+  avatarKey: string;
   onClose: () => void;
   onShare: () => void;
 }) {
@@ -111,7 +111,7 @@ export function ArrivalScreen({
       <div className="mx-gutter mt-[max(env(safe-area-inset-top),12px)] h-[300px] shrink-0 overflow-hidden rounded-[28px] bg-surface">
         <JourneyMap
           view={view}
-          avatarSeed={avatarSeed}
+          avatarKey={avatarKey}
           crop={cropAroundLeg(previousSite(day.day), day.site)}
           arrival={{ crossJordan: day.day === 3, from: previousSite(day.day) }}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}

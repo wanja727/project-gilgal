@@ -17,14 +17,14 @@ export function CompleteDock({
   initiallyDone,
   after,
   today,
-  avatarSeed,
+  avatarKey,
 }: {
   day: JourneyDay;
   initiallyDone: boolean;
   /** 이미 읽은 장일 때 버튼: 다음에 읽을 장 또는 홈 */
   after: { label: string; href: string };
   today: string;
-  avatarSeed: string;
+  avatarKey: string;
 }) {
   const router = useRouter();
   const [done, setDone] = useState(initiallyDone);
@@ -91,7 +91,7 @@ export function CompleteDock({
           completed={arrived.completed}
           arrival={arrived.arrival}
           today={today}
-          avatarSeed={avatarSeed}
+          avatarKey={avatarKey}
           onClose={close}
           onShare={share}
         />

@@ -26,7 +26,7 @@ export default async function JourneyPage() {
       position={p.position}
       flagDay={p.flag?.day ?? null}
       flagLabel={flagCaption(p)}
-      avatarSeed={member.avatarSeed}
+      avatarKey={member.avatarKey}
       initialChapter={initialChapter}
     />
   );
