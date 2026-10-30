@@ -277,22 +277,21 @@ function Progress({ d, draw }: { d: string; draw?: { delay: number; duration: nu
 }
 
 /**
- * 깃발 천의 물결 — 위·아래 가장자리 곡선의 제어점과 꼬리 끝을 조금씩 옮긴 세 모양.
- * 같은 명령 구조라 SMIL <animate> 로 모양 사이를 부드럽게 오간다(CSS d 애니메이션은 Safari 미지원).
- * 깃대 쪽(x+1)은 고정이라 천만 바람에 날린다.
+ * 깃발 천의 물결(2026-10-30 다듬음) — 깃대에서 꼬리 쪽으로 잔물결 하나가 천천히 지나간다.
+ * 위·아래 가장자리를 같은 만큼 함께 움직여 천의 폭이 늘 같다 — 처음엔 두 가장자리가 따로 움직여
+ * 천이 꿈틀거리듯 오므라들고 늘어나 보였다. 깃대 쪽은 움직이지 않고, 꼬리로 갈수록 조금 더 흔들린다.
+ * 같은 명령 구조라 SMIL <animate> 로 모양 사이를 오간다(CSS d 애니메이션은 Safari 미지원).
  */
-const FLAG_WAVES: [number, number, number, number, number, number, number, number, number, number][] = [
-  // 위 곡선 c1y, c2y, 끝y · 꼬리 홈 x · 아래 끝 x/y · 아래 곡선 c1y, c2y · 위 끝 x · 꼬리 홈 y
-  [-2, 4, 2, 24, 28, 16, 18, 12, 28, 9],
-  [3, -2, 1, 25, 28, 15, 12, 18, 28, 8.5],
-  [-1, 1, 3, 23, 27, 17, 15, 16, 27, 10],
-];
-function flagPath(x: number, top: number, w: (typeof FLAG_WAVES)[number]) {
-  const [c1, c2, end, notchX, bx, by, d1, d2, ex, notchY] = w;
+const FLAG_AMP = 1.8;
+const FLAG_PHASES = 8;
+function flagPath(x: number, top: number, phase: number) {
+  // 깃대(0)에서 꼬리(28)로 갈수록 커지는 잔물결
+  const dy = (px: number) => Math.round((px / 28) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 32 - phase) * 10) / 10;
+  const [a, b, c, n] = [dy(10), dy(18), dy(28), dy(24)];
   return (
-    `M${x + 1},${top} C${x + 10},${top + c1} ${x + 18},${top + c2} ${x + ex},${top + end} ` +
-    `L${x + notchX},${top + notchY} L${x + bx},${top + by} ` +
-    `C${x + 18},${top + d1} ${x + 10},${top + d2} ${x + 1},${top + 15}Z`
+    `M${x + 1},${top} C${x + 10},${top - 1 + a} ${x + 18},${top + 1 + b} ${x + 28},${top + 1 + c} ` +
+    `L${x + 24},${top + 8.5 + n} L${x + 28},${top + 16 + c} ` +
+    `C${x + 18},${top + 15 + b} ${x + 10},${top + 13 + a} ${x + 1},${top + 15}Z`
   );
 }
 
@@ -312,21 +311,13 @@ function PathFlag({ x, y, label, sub }: { x: number; y: number; label: string; s
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     () => false,
   );
-  const [a, b, c] = FLAG_WAVES.map((w) => flagPath(x, top, w));
+  const frames = Array.from({ length: FLAG_PHASES + 1 }, (_, i) => flagPath(x, top, (2 * Math.PI * i) / FLAG_PHASES));
   return (
     <g aria-hidden>
       <line x1={x} y1={y - 14} x2={x} y2={top} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
-      <path d={a} fill="var(--color-main)">
+      <path d={frames[0]} fill="var(--color-main)">
         {!still && (
-          <animate
-            attributeName="d"
-            dur="2.4s"
-            repeatCount="indefinite"
-            values={`${a};${b};${c};${a}`}
-            calcMode="spline"
-            keyTimes="0;0.35;0.7;1"
-            keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"
-          />
+          <animate attributeName="d" dur="3.2s" repeatCount="indefinite" values={frames.join(";")} />
         )}
       </path>
       <text x={tx} y={top + 10} textAnchor={left ? "end" : "start"} fontSize="11.5" fontWeight="700" fill="var(--color-main)">
