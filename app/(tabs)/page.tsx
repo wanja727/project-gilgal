@@ -27,8 +27,8 @@ import { nowKst, todayKst } from "@/lib/time";
 export const dynamic = "force-dynamic";
 
 const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
-/** 홈 나눔 미리보기 개수 */
-const SHARE_PREVIEW = 3;
+/** 홈 나눔 미리보기에서 돌아가며 보여 줄 최근 나눔 수(한 번에 보이는 건 3개) */
+const SHARE_PREVIEW = 12;
 
 /** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 + 나눔 미리보기 (기간 상태별 분기, architecture 7절) */
 export default async function Home() {
@@ -50,10 +50,10 @@ export default async function Home() {
     getCellMembers(member.cellId, member.userId, criterion),
     p.flag ? null : getCommunityToday(today),
     p.flag
-      ? listComments(member, p.flag.day, "latest", SHARE_PREVIEW + 3)
+      ? listComments(member, p.flag.day, "latest", SHARE_PREVIEW + 6)
       : p.phase === "before"
         ? null
-        : listRecentComments(member, today, SHARE_PREVIEW + 3),
+        : listRecentComments(member, today, SHARE_PREVIEW + 6),
     p.flag ? countComments(p.flag.day) : 0,
     noteDay ? listTrailNotes(member, noteDay) : null,
     noteDay && !noteAhead ? getMyTrailNote(member.userId, noteDay) : null,

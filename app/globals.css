@@ -489,6 +489,41 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   }
 }
 
+/* 홈 나눔 미리보기(2026-10-30): 맨 위 칸은 접혀 올라가고, 아래에서 다음 나눔이 펼쳐지며 올라온다 */
+.feed-in,
+.feed-out {
+  display: grid;
+}
+.feed-in {
+  animation: feed-in 0.45s var(--ease-sheet) both;
+}
+.feed-out {
+  animation: feed-out 0.45s var(--ease-sheet) both;
+}
+@keyframes feed-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes feed-out {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
 /* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {
