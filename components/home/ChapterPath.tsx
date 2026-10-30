@@ -285,13 +285,14 @@ function Progress({ d, draw }: { d: string; draw?: { delay: number; duration: nu
 const FLAG_AMP = 3.4;
 const FLAG_PHASES = 12;
 function flagPath(x: number, top: number, phase: number) {
-  // 깃대(0)에서 꼬리(28)로 갈수록 커지는 잔물결
-  const dy = (px: number) => Math.round((px / 28) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 34 - phase) * 10) / 10;
-  const [a, b, c, n] = [dy(10), dy(18), dy(28), dy(24)];
+  // 깃대(0)에서 꼬리(24)로 갈수록 커지는 잔물결.
+  // 천 길이는 24(세로 15의 약 1.5배) — 28이면 옆 이름표·짧은 깃대에 비해 길어 보였다(2026-10-30)
+  const dy = (px: number) => Math.round((px / 24) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 29 - phase) * 10) / 10;
+  const [a, b, c, n] = [dy(9), dy(16), dy(24), dy(20.5)];
   return (
-    `M${x + 1},${top} C${x + 10},${top - 1 + a} ${x + 18},${top + 1 + b} ${x + 28},${top + 1 + c} ` +
-    `L${x + 24},${top + 8.5 + n} L${x + 28},${top + 16 + c} ` +
-    `C${x + 18},${top + 15 + b} ${x + 10},${top + 13 + a} ${x + 1},${top + 15}Z`
+    `M${x + 1},${top} C${x + 9},${top - 1 + a} ${x + 16},${top + 1 + b} ${x + 24},${top + 1 + c} ` +
+    `L${x + 20.5},${top + 8.5 + n} L${x + 24},${top + 16 + c} ` +
+    `C${x + 16},${top + 15 + b} ${x + 9},${top + 13 + a} ${x + 1},${top + 15}Z`
   );
 }
 
@@ -304,7 +305,7 @@ const subscribeMotion = (cb: () => void) => {
 function PathFlag({ x, y, label, sub }: { x: number; y: number; label: string; sub: string }) {
   const top = y - 54;
   const left = x > 200;
-  const tx = left ? x - 8 : x + 34;
+  const tx = left ? x - 8 : x + 30;
   // SMIL 은 CSS 의 "동작 줄이기" 규칙이 닿지 않아 직접 확인한다
   const still = useSyncExternalStore(
     subscribeMotion,
