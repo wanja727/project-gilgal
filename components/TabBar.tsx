@@ -23,6 +23,11 @@ const TABS = [
   },
 ];
 
+/** 지금 주소가 몇 번째 탭인지(-1: 탭 밖, 예: /share) — 탭 전환 방향을 정할 때 */
+export function tabIndexOf(pathname: string) {
+  return TABS.findIndex((t) => (t.href === "/" ? pathname === "/" : pathname.startsWith(t.href)));
+}
+
 /** 하단 탭 (오늘 · 여정 · 개관 · 나). 나눔은 탭 대신 홈 미리보기·본문 아래에서(2026-10-26). 본문 읽기·로그인·온보딩 화면에는 없다 */
 export function TabBar() {
   const pathname = usePathname();

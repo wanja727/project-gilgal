@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { createCommentAction } from "@/app/actions/comments";
+import { markJustPosted } from "@/lib/share/justPosted";
 import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
@@ -106,6 +107,7 @@ export function CommentComposer({
           setText("");
           saveDraft(storageKey, "");
           setOpen(false);
+          markJustPosted();
           router.refresh();
           // 방금 남긴 나눔이 최신순 맨 위에 — 이어서 다른 동행자 나눔을 읽게 목록으로 내려간다
           requestAnimationFrame(() => document.getElementById("share")?.scrollIntoView({ behavior: "smooth" }));

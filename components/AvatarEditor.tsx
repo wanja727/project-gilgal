@@ -25,6 +25,9 @@ const TABS: { id: Tab; label: string }[] = [...AVATAR_PARTS.map((p) => ({ id: p.
  * 저장 전이면 원래 아바타가 그대로 남는다. 보기 칸은 "지금 모양에서 그 부위만 바꾼 모습"이라 고르기 전에 결과를 본다.
  * 섞기는 부위·무늬를 모두 새로 뽑고, 색 탭의 "무늬 바꾸기"는 고른 부위는 두고 구슬 무늬(seed)만 바꾼다.
  */
+/** 저장 축하 반짝이가 퍼지는 방향(도) */
+const SPARKS = [0, 45, 90, 135, 180, 225, 270, 315];
+
 export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: string; parts: AvatarParts }) {
   const router = useRouter();
   const [seed, setSeed] = useState(savedSeed);
@@ -32,18 +35,22 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
   const [tab, setTab] = useState<Tab>("top");
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // 저장하면 1 이상(축하 연출), 다시 고르기 시작하면 0
+  const [cheer, setCheer] = useState(0);
 
   const dirty = seed !== savedSeed || encodeAvatarKey(seed, parts) !== encodeAvatarKey(savedSeed, savedParts);
   const keyWith = (change: Partial<AvatarParts>) => encodeAvatarKey(seed, { ...parts, ...change });
 
   const change = (next: Partial<AvatarParts>) => {
     setMessage(null);
+    setCheer(0);
     setParts((p) => ({ ...p, ...next }));
   };
   const reset = () => {
     setSeed(savedSeed);
     setParts(savedParts);
     setMessage(null);
+    setCheer(0);
   };
 
   const save = () => {
@@ -52,6 +59,7 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
         const result = await saveAvatarAction({ seed: seed === savedSeed ? null : seed, parts });
         if (result.status === "saved") {
           setMessage("새 아바타로 바꿨어요");
+          setCheer((n) => n + 1);
           router.refresh();
         } else if (result.status === "taken") {
           // 랜덤 seed 가 우연히 겹친 경우 — 무늬만 다른 후보로 바꿔 준다
@@ -87,11 +95,26 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
   return (
     <div>
       <div className="flex items-center gap-4">
-        <Avatar
-          avatarKey={encodeAvatarKey(seed, parts)}
-          size={72}
-          className={dirty ? "shadow-[0_0_0_2px_var(--color-surface),0_0_0_4px_var(--color-main)]" : ""}
-        />
+        {/* 고를 때마다 살짝 톡, 저장하면 통 튀며 반짝(2026-10-30) */}
+        <span className="relative shrink-0">
+          <span
+            key={cheer ? `cheer-${cheer}` : encodeAvatarKey(seed, parts)}
+            className={`block rounded-full ${cheer ? "avatar-cheer" : "avatar-tweak"}`}
+          >
+            <Avatar
+              avatarKey={encodeAvatarKey(seed, parts)}
+              size={72}
+              className={dirty ? "shadow-[0_0_0_2px_var(--color-surface),0_0_0_4px_var(--color-main)]" : ""}
+            />
+          </span>
+          {cheer > 0 && (
+            <span key={cheer} aria-hidden className="pointer-events-none absolute inset-0">
+              {SPARKS.map((deg, i) => (
+                <span key={deg} className="avatar-spark" style={{ "--a": `${deg}deg`, "--i": i } as React.CSSProperties} />
+              ))}
+            </span>
+          )}
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-body font-semibold text-main">{dirty ? "이 모양은 어때요?" : "지금 아바타"}</p>
           <p className="mt-0.5 text-caption text-mute">
@@ -110,6 +133,7 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
           type="button"
           onClick={() => {
             setMessage(null);
+            setCheer(0);
             setSeed(randomAvatarSeed());
             setParts(randomAvatarParts());
           }}

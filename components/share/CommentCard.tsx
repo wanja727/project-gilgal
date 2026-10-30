@@ -7,6 +7,7 @@ import { deleteCommentAction, editCommentAction, setHiddenAction, setLikeAction 
 import { Avatar } from "@/components/Avatar";
 import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { isJustPosted } from "@/lib/share/justPosted";
 import { ComposerDock } from "./CommentComposer";
 import { VerseRefText } from "./VerseRefText";
 
@@ -33,6 +34,8 @@ export function CommentCard({
   const [draft, setDraft] = useState(comment.content);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // 방금 남긴 내 나눔이면 목록에 내려앉는 연출 — 처음 그릴 때 한 번만 정한다
+  const [arriving] = useState(() => comment.mine && isJustPosted());
   const closeEdit = useCallback(() => {
     setEditing(false);
     setError(null);
@@ -76,7 +79,7 @@ export function CommentCard({
   };
 
   return (
-    <article className="mt-2 rounded-[20px] bg-surface p-4">
+    <article className={`mt-2 rounded-[20px] bg-surface p-4 ${arriving ? "share-arrive" : ""}`}>
       <header className="flex items-center gap-2.5">
         <Avatar avatarKey={comment.author.avatarKey} size={32} />
         <div className="min-w-0 flex-1 text-[14px] font-semibold text-main">
