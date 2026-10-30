@@ -12,7 +12,10 @@ export function NoteBubble({
   className = "",
   style,
   children,
+  layout = "stack",
 }: {
+  /** stack: 말풍선 아래 아바타(도착 화면) · row: 아바타 옆 말풍선(홈 넘김 목록) */
+  layout?: "stack" | "row";
   avatarKey: string;
   content: string;
   mine?: boolean;
@@ -23,6 +26,22 @@ export function NoteBubble({
   /** 아바타 아래 덧붙임(운영자 숨기기 버튼 등) */
   children?: React.ReactNode;
 }) {
+  if (layout === "row") {
+    return (
+      <figure className={`flex items-end gap-3 ${hidden ? "opacity-45" : ""} ${className}`} style={style}>
+        <figcaption className="flex w-10 shrink-0 flex-col items-center gap-0.5">
+          <Avatar avatarKey={avatarKey} size={40} />
+          {mine && <span className="text-[11px] font-semibold text-mute">나</span>}
+          {hidden && <span className="text-[11px] text-mute">숨김</span>}
+        </figcaption>
+        {/* 꼬리 쪽 모서리를 덜 둥글게 — 옆 아바타가 하는 말로 읽히게 */}
+        <blockquote className="relative mb-1 min-w-0 rounded-[16px] rounded-bl-[5px] bg-bg px-3.5 py-2.5 text-[13.5px] leading-[1.5] font-medium break-keep [overflow-wrap:anywhere] text-text">
+          {content}
+        </blockquote>
+        {children}
+      </figure>
+    );
+  }
   return (
     <figure className={`flex max-w-[168px] min-w-[96px] shrink-0 flex-col items-center ${hidden ? "opacity-45" : ""} ${className}`} style={style}>
       <blockquote className="relative w-fit max-w-full rounded-[16px] bg-bg px-3 py-2.5 text-center text-[13px] leading-[1.45] font-medium text-text">

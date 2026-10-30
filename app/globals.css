@@ -292,6 +292,46 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   }
 }
 
+/*
+ * 홈 한마디 넘김(ADR-028): 다음 세 사람이 옆에서 한 줄씩 "착착착" 들어오고, 말풍선은 한 박자 늦게 "뿅".
+ * --dir: 1 이면 오른쪽에서(다음), -1 이면 왼쪽에서(이전). --d: 줄마다 늦추는 시간.
+ */
+@keyframes note-row-in {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 1) * 48px));
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(calc(var(--dir, 1) * -3px));
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.note-row-in {
+  animation: note-row-in 0.42s var(--ease-sheet) var(--d, 0ms) both;
+}
+.note-row-in > blockquote {
+  transform-origin: left bottom;
+  animation: bubble-pop 0.42s var(--ease-sheet) calc(var(--d, 0ms) + 110ms) both;
+}
+/* 나가는 세 사람은 함께 미끄러져 사라진다 — 손으로 끌던 자리(--from)에서 이어서 */
+@keyframes note-page-out {
+  from {
+    opacity: 1;
+    transform: translateX(var(--from, 0px));
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 1) * -72px));
+  }
+}
+.note-page-out {
+  animation: note-page-out 0.24s ease-in both;
+}
+
 /* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {
