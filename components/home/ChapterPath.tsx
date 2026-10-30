@@ -282,11 +282,11 @@ function Progress({ d, draw }: { d: string; draw?: { delay: number; duration: nu
  * 천이 꿈틀거리듯 오므라들고 늘어나 보였다. 깃대 쪽은 움직이지 않고, 꼬리로 갈수록 조금 더 흔들린다.
  * 같은 명령 구조라 SMIL <animate> 로 모양 사이를 오간다(CSS d 애니메이션은 Safari 미지원).
  */
-const FLAG_AMP = 1.8;
-const FLAG_PHASES = 8;
+const FLAG_AMP = 3.4;
+const FLAG_PHASES = 12;
 function flagPath(x: number, top: number, phase: number) {
   // 깃대(0)에서 꼬리(28)로 갈수록 커지는 잔물결
-  const dy = (px: number) => Math.round((px / 28) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 32 - phase) * 10) / 10;
+  const dy = (px: number) => Math.round((px / 28) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 34 - phase) * 10) / 10;
   const [a, b, c, n] = [dy(10), dy(18), dy(28), dy(24)];
   return (
     `M${x + 1},${top} C${x + 10},${top - 1 + a} ${x + 18},${top + 1 + b} ${x + 28},${top + 1 + c} ` +
@@ -317,7 +317,7 @@ function PathFlag({ x, y, label, sub }: { x: number; y: number; label: string; s
       <line x1={x} y1={y - 14} x2={x} y2={top} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
       <path d={frames[0]} fill="var(--color-main)">
         {!still && (
-          <animate attributeName="d" dur="3.2s" repeatCount="indefinite" values={frames.join(";")} />
+          <animate attributeName="d" dur="2.6s" repeatCount="indefinite" values={frames.join(";")} />
         )}
       </path>
       <text x={tx} y={top + 10} textAnchor={left ? "end" : "start"} fontSize="11.5" fontWeight="700" fill="var(--color-main)">
