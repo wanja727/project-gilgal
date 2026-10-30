@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { JourneyMap } from "@/components/map/JourneyMap";
+import { CountUp } from "@/components/motion/CountUp";
 import { NoteComposer } from "@/components/notes/NoteComposer";
 import { buttonClass } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
@@ -75,14 +76,15 @@ export function ArrivalScreen({
   // 순위 카드가 없을 때는 아래 숫자 카드(나의 여정·남은 길)가 같은 말을 하므로 남은 길 문장은 뺀다
   const desc = [day.completion.body, arrival ? suffix : null].filter(Boolean).join(" ");
 
-  const stats: [string, string][] = arrival
+  // [이름, 숫자, 뒤에 붙는 말] — 숫자는 카드가 떠오른 뒤 올라간다
+  const stats: [string, number, string][] = arrival
     ? [
-        ["도착한 순서", `${arrival.rank}번째`],
-        [p.phase === "reading" ? "오늘 함께 도착" : "함께 도착", `${arrival.total}명`],
+        ["도착한 순서", arrival.rank, "번째"],
+        [p.phase === "reading" ? "오늘 함께 도착" : "함께 도착", arrival.total, "명"],
       ]
     : [
-        ["나의 여정", `${completed.length} / ${JOSHUA_2026.totalDays}`],
-        p.flag ? ["깃발까지", `${p.unread.length}장`] : ["아직 걷지 않은 길", `${p.unread.length}개`],
+        ["나의 여정", completed.length, ` / ${JOSHUA_2026.totalDays}`],
+        p.flag ? ["깃발까지", p.unread.length, "장"] : ["아직 걷지 않은 길", p.unread.length, "개"],
       ];
 
   const shareButton = (variant: "main" | "line") => (
@@ -127,10 +129,13 @@ export function ArrivalScreen({
           </p>
         )}
         <dl className="rise-in mt-5 grid grid-cols-2 gap-2" style={{ animationDelay: "2s" }}>
-          {stats.map(([k, v]) => (
+          {stats.map(([k, n, unit], i) => (
             <div key={k} className="rounded-btn bg-surface px-4 py-3.5">
               <dt className="text-caption text-mute">{k}</dt>
-              <dd className="mt-0.5 text-[19px] font-bold tracking-[-0.03em] text-main">{v}</dd>
+              <dd className="mt-0.5 text-[19px] font-bold tracking-[-0.03em] text-main">
+                <CountUp value={n} delay={2150 + i * 120} duration={700} />
+                {unit}
+              </dd>
             </div>
           ))}
         </dl>

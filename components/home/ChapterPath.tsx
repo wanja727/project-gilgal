@@ -5,7 +5,14 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import type { ChapterStatus } from "@/lib/journey/mapState";
-import { PATH_SEEN_COOKIE, PATH_SEEN_MAX_AGE, type PathMotion } from "@/lib/journey/pathMotion";
+import {
+  introMs,
+  PATH_SEEN_COOKIE,
+  PATH_SEEN_MAX_AGE,
+  type PathMotion,
+  START_MS,
+  stepMs,
+} from "@/lib/journey/pathMotion";
 import { ChapterSheet } from "./ChapterSheet";
 
 /**
@@ -63,17 +70,6 @@ export type ChapterPathProps = {
 
 const STATUS_LABEL: Record<ChapterStatus, string> = { done: "읽음", open: "읽을 차례", locked: "아직 열리지 않음" };
 
-/** 화면이 자리 잡은 뒤 시작 */
-const START_MS = 450;
-
-/** 걸어가기: 한 칸에 걸리는 시간 — 많이 밀렸으면 빠르게 */
-function stepMs(n: number) {
-  return n <= 4 ? 560 : Math.max(240, 2200 / n);
-}
-/** 처음 그리기: 걸은 길 전체를 그리는 시간 */
-function introMs(position: number) {
-  return Math.min(1500, 300 + position * 80);
-}
 
 export function ChapterPath({ statuses, position, flag, avatarKey, motion = { kind: "none" }, seen }: ChapterPathProps) {
   const router = useRouter();

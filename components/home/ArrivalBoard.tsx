@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/Avatar";
+import { CountUp } from "@/components/motion/CountUp";
 import { Card, CardHead } from "@/components/ui";
 import type { ArrivalBoard as Board } from "@/lib/data/progress";
 import { formatKstTime, ordinalEn } from "@/lib/format";
@@ -24,7 +25,7 @@ export function ArrivalBoard({
   const rest = board.total - board.podium.length;
   return (
     <Card aria-labelledby="arrival-title">
-      <CardHead id="arrival-title" title={title} right={<span className="text-small font-semibold text-mute">{board.total}명</span>} />
+      <CardHead id="arrival-title" title={title} right={<span className="text-small font-semibold text-mute"><CountUp value={board.total} delay={150} />명</span>} />
 
       {board.total === 0 ? (
         <p className="mt-4 text-small leading-6 text-mute">아직 도착한 동행자가 없어요. 오늘의 첫 걸음을 내디뎌 보세요.</p>

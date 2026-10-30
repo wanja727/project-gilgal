@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/Avatar";
+import { CountUp } from "@/components/motion/CountUp";
 import { ArrivalBoard } from "@/components/home/ArrivalBoard";
 import { CellCard } from "@/components/home/CellCard";
 import { CellChip } from "@/components/home/CellChip";
@@ -18,7 +19,7 @@ import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus } from "@/lib/journey/mapState";
-import { formatPathSeen, PATH_SEEN_COOKIE, pathMotion } from "@/lib/journey/pathMotion";
+import { formatPathSeen, PATH_SEEN_COOKIE, pathCount, pathMotion } from "@/lib/journey/pathMotion";
 import { OVERVIEW_INTRO } from "@/lib/journey/overview";
 import { nowKst, todayKst } from "@/lib/time";
 
@@ -120,7 +121,12 @@ export default async function Home() {
           <CardHead
             id="path-title"
             title="나의 여정"
-            sub={`${completed.length} / ${JOSHUA_2026.totalDays}`}
+            sub={
+              <>
+                <CountUp value={completed.length} {...pathCount(motion, p.position, completed.length)} /> /{" "}
+                {JOSHUA_2026.totalDays}
+              </>
+            }
             right={<MoreLink href="/journey">지도</MoreLink>}
           />
         </div>

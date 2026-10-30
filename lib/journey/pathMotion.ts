@@ -11,6 +11,18 @@ export const PATH_SEEN_COOKIE = "gilgal_path";
 /** 60일 — 여정 기간보다 넉넉하게 */
 export const PATH_SEEN_MAX_AGE = 60 * 24 * 60 * 60;
 
+/** 화면이 자리 잡은 뒤 시작 */
+export const START_MS = 450;
+
+/** 걸어가기: 한 칸에 걸리는 시간 — 많이 밀렸으면 빠르게 */
+export function stepMs(n: number) {
+  return n <= 4 ? 560 : Math.max(240, 2200 / n);
+}
+/** 처음 그리기: 걸은 길 전체를 그리는 시간 */
+export function introMs(position: number) {
+  return Math.min(1500, 300 + position * 80);
+}
+
 export type PathMotion = { kind: "none" } | { kind: "intro" } | { kind: "step"; from: number };
 
 type Seen = { seed: string; position: number; date: string };
@@ -32,4 +44,14 @@ export function pathMotion(value: string | undefined, seed: string, position: nu
   if (!seen || seen.seed !== seed) return { kind: "intro" };
   if (seen.position < position) return { kind: "step", from: seen.position };
   return seen.date === today ? { kind: "none" } : { kind: "intro" };
+}
+
+/** 진행도 카드의 "읽은 장 수"도 길과 같은 박자로 올라간다 — 어디서부터, 언제, 얼마 동안 */
+export function pathCount(motion: PathMotion, position: number, read: number) {
+  if (motion.kind === "intro") return { from: 0, delay: START_MS, duration: introMs(position) };
+  if (motion.kind === "step") {
+    const n = position - motion.from;
+    return { from: Math.max(read - n, 0), delay: START_MS, duration: n * stepMs(n) };
+  }
+  return { from: read, delay: 0, duration: 0 };
 }

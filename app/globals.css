@@ -360,6 +360,33 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: note-page-out 0.24s ease-in both;
 }
 
+/* 셀 카드(2026-10-30): 화면에 들어오면(InView) 막대가 도착 비율만큼 차오르고, 도착한 셀원이 차례로 톡 */
+.cell-bar {
+  width: 0;
+  transition: width 0.9s var(--ease-journey) 0.15s;
+}
+[data-inview] .cell-bar {
+  width: var(--pct);
+}
+[data-inview] .cell-pop {
+  display: block;
+  animation: cell-pop 0.42s var(--ease-sheet) var(--d, 0ms) both;
+}
+@keyframes cell-pop {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.4;
+  }
+  65% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 /* 화면 요소가 아래에서 떠오르는 연출 */
 @keyframes rise {
   from {

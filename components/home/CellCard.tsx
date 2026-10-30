@@ -1,4 +1,6 @@
 import { Avatar } from "@/components/Avatar";
+import { CountUp } from "@/components/motion/CountUp";
+import { InView } from "@/components/motion/InView";
 import { Card, CardHead } from "@/components/ui";
 import type { CellMember } from "@/lib/data/progress";
 
@@ -27,24 +29,49 @@ export function CellCard({
       <CardHead
         id="cell-title"
         title={cellName}
-        sub={showCount ? `${arrived} / ${members.length}` : `${members.length}명`}
+        sub={
+          showCount ? (
+            <>
+              <CountUp value={arrived} delay={150} /> / {members.length}
+            </>
+          ) : (
+            `${members.length}명`
+          )
+        }
       />
-      <ul className="mt-4 grid grid-cols-6 justify-items-center gap-x-1.5 gap-y-2.5">
-        {members.map((m, i) => {
-          const clear = m.arrived || !showCount;
-          return (
-            <li
-              key={i}
-              className={`flex w-full flex-col items-center gap-[5px] text-[11px] ${clear ? "font-semibold text-main" : "text-mute"}`}
-            >
-              <Avatar avatarKey={m.avatarKey} size={38} dim={!clear} />
-              <span className="max-w-full truncate">
-                {m.isMe ? "나" : m.name ? m.name : <span className="sr-only">{showCount ? "아직 가는 중인 셀원" : "셀원"}</span>}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      {/* 화면에 들어오면 막대가 차오르고, 도착한 셀원이 차례로 톡 떠오른다(2026-10-30) */}
+      <InView>
+        {showCount && members.length > 0 && (
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-soft" aria-hidden>
+            <div
+              className="cell-bar h-full rounded-full bg-main"
+              style={{ "--pct": `${(arrived / members.length) * 100}%` } as React.CSSProperties}
+            />
+          </div>
+        )}
+        <ul className="mt-4 grid grid-cols-6 justify-items-center gap-x-1.5 gap-y-2.5">
+          {members.map((m, i) => {
+            const clear = m.arrived || !showCount;
+            const order = showCount && m.arrived ? members.slice(0, i).filter((x) => x.arrived).length : -1;
+            return (
+              <li
+                key={i}
+                className={`flex w-full flex-col items-center gap-[5px] text-[11px] ${clear ? "font-semibold text-main" : "text-mute"}`}
+              >
+                <span
+                  className={order >= 0 ? "cell-pop rounded-full" : undefined}
+                  style={order >= 0 ? ({ "--d": `${200 + order * 70}ms` } as React.CSSProperties) : undefined}
+                >
+                  <Avatar avatarKey={m.avatarKey} size={38} dim={!clear} />
+                </span>
+                <span className="max-w-full truncate">
+                  {m.isMe ? "나" : m.name ? m.name : <span className="sr-only">{showCount ? "아직 가는 중인 셀원" : "셀원"}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </InView>
       <p className="mt-3.5 text-[12.5px] text-mute">{note}</p>
     </Card>
   );
