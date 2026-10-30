@@ -6,6 +6,7 @@ import { ChapterPath } from "@/components/home/ChapterPath";
 import { SharePreview } from "@/components/home/SharePreview";
 import { NoteComposer } from "@/components/notes/NoteComposer";
 import { TrailNotesCard } from "@/components/notes/TrailNotesCard";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { buttonClass, ButtonLink, Card, CardHead, ChevronRight, FlagIcon, MoreLink } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
@@ -17,6 +18,7 @@ import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus } from "@/lib/journey/mapState";
+import { formatPathSeen, PATH_SEEN_COOKIE, pathMotion } from "@/lib/journey/pathMotion";
 import { OVERVIEW_INTRO } from "@/lib/journey/overview";
 import { nowKst, todayKst } from "@/lib/time";
 
@@ -61,6 +63,10 @@ export default async function Home() {
   const hello = greeting(p, member.realName);
   const g = goal(p);
   const statuses = JOURNEY_DAYS.map((d) => chapterStatus(d, p.done, today));
+  // 진행도 연출: 이 기기에서 마지막으로 본 진행도와 비교해 걸어가기·처음 그리기를 정한다
+  const pathSeen = (await cookies()).get(PATH_SEEN_COOKIE)?.value;
+  const motion = pathMotion(pathSeen, member.avatarSeed, p.position, today);
+  const nextSeen = formatPathSeen({ seed: member.avatarSeed, position: p.position, date: today });
   const flagLabel = p.flag
     ? {
         day: p.flag.day,
@@ -118,7 +124,14 @@ export default async function Home() {
             right={<MoreLink href="/journey">지도</MoreLink>}
           />
         </div>
-        <ChapterPath statuses={statuses} position={p.position} flag={flagLabel} avatarKey={member.avatarKey} />
+        <ChapterPath
+          statuses={statuses}
+          position={p.position}
+          flag={flagLabel}
+          avatarKey={member.avatarKey}
+          motion={motion}
+          seen={nextSeen}
+        />
         <div className="mx-2 mt-1.5 flex items-center gap-3.5 rounded-tile bg-bg p-4">
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface text-main">
             <FlagIcon />

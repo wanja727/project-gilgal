@@ -205,6 +205,34 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: map-fade-out 0.8s 1.4s forwards;
 }
 
+/* 홈 진행도(2026-10-30): 걸은 길이 그려지고, 칸이 톡 채워지고, 아바타가 한 칸씩 통통 걷는다 */
+.path-draw {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+}
+.path-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pop 0.42s var(--ease-sheet) both;
+}
+.path-hop {
+  animation: path-hop 0.45s ease-out;
+}
+@keyframes path-hop {
+  0% {
+    transform: none;
+  }
+  40% {
+    transform: translateY(-11px) scale(1.04);
+  }
+  80% {
+    transform: translateY(1px) scale(0.98, 1.02);
+  }
+  100% {
+    transform: none;
+  }
+}
+
 @keyframes map-draw {
   to {
     stroke-dashoffset: 0;

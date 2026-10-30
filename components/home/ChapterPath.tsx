@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import type { ChapterStatus } from "@/lib/journey/mapState";
+import { PATH_SEEN_COOKIE, PATH_SEEN_MAX_AGE, type PathMotion } from "@/lib/journey/pathMotion";
 import { ChapterSheet } from "./ChapterSheet";
 
 /**
@@ -54,21 +55,75 @@ export type ChapterPathProps = {
   position: number;
   flag: { day: number; label: string; sub: string } | null;
   avatarKey: string;
+  /** 이번에 보여 줄 연출(서버가 쿠키로 정한다, lib/journey/pathMotion) */
+  motion?: PathMotion;
+  /** 보고 나서 쿠키에 남길 값 */
+  seen?: string;
 };
 
 const STATUS_LABEL: Record<ChapterStatus, string> = { done: "읽음", open: "읽을 차례", locked: "아직 열리지 않음" };
 
-export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPathProps) {
+/** 화면이 자리 잡은 뒤 시작 */
+const START_MS = 450;
+
+/** 걸어가기: 한 칸에 걸리는 시간 — 많이 밀렸으면 빠르게 */
+function stepMs(n: number) {
+  return n <= 4 ? 560 : Math.max(240, 2200 / n);
+}
+/** 처음 그리기: 걸은 길 전체를 그리는 시간 */
+function introMs(position: number) {
+  return Math.min(1500, 300 + position * 80);
+}
+
+export function ChapterPath({ statuses, position, flag, avatarKey, motion = { kind: "none" }, seen }: ChapterPathProps) {
   const router = useRouter();
   const [openDay, setOpenDay] = useState<number | null>(null);
   const select = (day: number) => {
     if (statuses[day - 1] === "locked") setOpenDay(day);
     else router.push(`/day/${day}`);
   };
-  const me = position > 0 ? pos(position) : START;
+  // 연출은 처음 그릴 때 정한 것만 — 새로고침(router.refresh)으로 props 가 바뀌어도 다시 하지 않는다
+  const [anim] = useState(motion);
+  const from = anim.kind === "step" ? anim.from : position;
+  const per = anim.kind === "step" ? stepMs(position - from) : 0;
+  const intro = anim.kind === "intro" ? introMs(position) : 0;
+  const [meDay, setMeDay] = useState(from);
+
+  useEffect(() => {
+    if (seen) document.cookie = `${PATH_SEEN_COOKIE}=${encodeURIComponent(seen)}; path=/; max-age=${PATH_SEEN_MAX_AGE}; samesite=lax`;
+  }, [seen]);
+
+  // 한 칸씩 걸어간다
+  useEffect(() => {
+    if (anim.kind !== "step") return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: number[] = [];
+    for (let d = from + 1; d <= position; d++) {
+      // 동작 줄이기면 한 번에 도착
+      const at = reduced ? 0 : START_MS + (d - from - 1) * per;
+      timers.push(window.setTimeout(() => setMeDay(d), at));
+    }
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [anim.kind, from, position, per]);
+
+  /** 칸이 "톡" 채워지는 때(ms). null 이면 처음부터 채워져 있다 */
+  const popAt = (day: number): number | null => {
+    if (statuses[day - 1] !== "done") return null;
+    if (anim.kind === "step") return day > from && day <= position ? START_MS + (day - from - 0.2) * per : null;
+    if (anim.kind === "intro") {
+      if (day > position) return START_MS + intro + 100;
+      return START_MS + (position > 1 ? ((day - 1) / (position - 1)) * intro : 0) + 60;
+    }
+    return null;
+  };
+  // 연출이 끝나는 때 — 깃발까지의 점선은 그 뒤에 나타난다
+  const settleAt = anim.kind === "step" ? START_MS + (position - from) * per : anim.kind === "intro" ? START_MS + intro : 0;
+
+  const me = meDay > 0 ? pos(meDay) : START;
   const flagPos = flag ? pos(flag.day) : null;
   const total = statuses.length;
   const read = statuses.filter((s) => s === "done").length;
+  const pathFrom = Math.max(from, 1);
 
   return (
     <div className="relative mt-1">
@@ -79,8 +134,21 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
         className="block h-auto w-full font-sans"
       >
         <path d={segment(1, total)} fill="none" stroke="var(--color-soft)" strokeWidth="6" strokeLinecap="round" />
-        {position > 1 && (
-          <path d={segment(1, position)} fill="none" stroke="var(--color-main)" strokeWidth="6" strokeLinecap="round" />
+        {anim.kind === "none" && position > 1 && <Progress d={segment(1, position)} />}
+        {anim.kind === "intro" && position > 1 && (
+          <Progress d={segment(1, position)} draw={{ delay: START_MS, duration: intro, ease: "var(--ease-journey)" }} />
+        )}
+        {anim.kind === "step" && (
+          <>
+            {pathFrom > 1 && <Progress d={segment(1, pathFrom)} />}
+            {position > pathFrom && (
+              <Progress
+                d={segment(pathFrom, position)}
+                // 아바타가 칸에 닿는 속도에 맞춰 일정하게
+                draw={{ delay: START_MS + (from === 0 ? per : 0), duration: (position - pathFrom - 0.2) * per, ease: "linear" }}
+              />
+            )}
+          </>
         )}
         {flag && flag.day > Math.max(position, 1) && (
           <path
@@ -90,6 +158,8 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
             strokeWidth="2"
             strokeDasharray="1 6"
             strokeLinecap="round"
+            className={settleAt ? "map-fade-in" : undefined}
+            style={settleAt ? { animationDelay: `${settleAt}ms` } : undefined}
           />
         )}
 
@@ -97,6 +167,9 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
           const p = pos(d.day);
           const st = statuses[i];
           const strong = d.day === flag?.day || d.day === position;
+          const pop = popAt(d.day);
+          // 톡 채워지기 전에는 실선 테두리만 — 그 위에 채운 원이 떠오른다
+          const filled = st === "done" && pop === null;
           return (
             <g
               key={d.day}
@@ -119,7 +192,7 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
                 cx={p.x}
                 cy={p.y}
                 r="14"
-                fill={st === "done" ? "var(--color-main)" : "var(--color-surface)"}
+                fill={filled ? "var(--color-main)" : "var(--color-surface)"}
                 stroke={st === "locked" ? "var(--color-line)" : "var(--color-main)"}
                 strokeWidth={st === "open" ? 1.8 : 1.4}
                 strokeDasharray={st === "open" ? "3.4 2.6" : undefined}
@@ -130,10 +203,18 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
                 textAnchor="middle"
                 fontSize="12"
                 fontWeight="700"
-                fill={st === "done" ? "#fff" : st === "open" ? "var(--color-main)" : "var(--color-mid)"}
+                fill={filled ? "#fff" : st === "locked" ? "var(--color-mid)" : "var(--color-main)"}
               >
                 {d.day}
               </text>
+              {pop !== null && (
+                <g className="path-pop" style={{ animationDelay: `${pop}ms` }} aria-hidden>
+                  <circle cx={p.x} cy={p.y} r="14" fill="var(--color-main)" />
+                  <text x={p.x} y={p.y + 4.2} textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
+                    {d.day}
+                  </text>
+                </g>
+              )}
               <text
                 x={p.x}
                 y={p.y + 33}
@@ -151,19 +232,51 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
         {flag && flagPos && <PathFlag x={flagPos.x} y={flagPos.y} label={flag.label} sub={flag.sub} />}
       </svg>
 
-      {/* 내 아바타 (칸 위에 겹쳐 놓고, 위치가 바뀌면 미끄러지듯 이동) */}
+      {/* 내 아바타 (칸 위에 겹쳐 놓고, 위치가 바뀌면 한 칸씩 통통 걸어간다) */}
       <div
-        className="pointer-events-none absolute z-[2] -mt-[18px] -ml-[18px] size-9 rounded-full shadow-[0_0_0_2.5px_var(--color-surface),0_0_0_4.5px_var(--color-main),0_6px_14px_-4px_rgba(0,0,0,0.3)] transition-[left,top] duration-700 ease-journey"
-        style={{ left: `${(me.x / W) * 100}%`, top: `${(me.y / H) * 100}%` }}
+        className="pointer-events-none absolute z-[2] -mt-[18px] -ml-[18px] size-9 transition-[left,top] duration-700 ease-journey"
+        style={{
+          left: `${(me.x / W) * 100}%`,
+          top: `${(me.y / H) * 100}%`,
+          ...(per ? { transitionDuration: `${per * 0.8}ms`, transitionTimingFunction: "ease-in-out" } : null),
+        }}
         aria-hidden
       >
-        <Avatar avatarKey={avatarKey} size={36} ring={false} />
+        <div
+          key={meDay}
+          className={`size-9 rounded-full shadow-[0_0_0_2.5px_var(--color-surface),0_0_0_4.5px_var(--color-main),0_6px_14px_-4px_rgba(0,0,0,0.3)] ${
+            anim.kind === "intro" ? "path-pop" : per && meDay !== from ? "path-hop" : ""
+          }`}
+          style={
+            anim.kind === "intro"
+              ? { animationDelay: `${START_MS + intro}ms` }
+              : per
+                ? { animationDuration: `${per * 0.8}ms` }
+                : undefined
+          }
+        >
+          <Avatar avatarKey={avatarKey} size={36} ring={false} />
+        </div>
       </div>
 
-      {openDay !== null && (
-        <ChapterSheet day={JOURNEY_DAYS[openDay - 1]} onClose={() => setOpenDay(null)} />
-      )}
+      {openDay !== null && <ChapterSheet day={JOURNEY_DAYS[openDay - 1]} onClose={() => setOpenDay(null)} />}
     </div>
+  );
+}
+
+/** 걸은 길(진한 선). draw 가 있으면 pathLength=1 기준으로 그려 나간다 */
+function Progress({ d, draw }: { d: string; draw?: { delay: number; duration: number; ease: string } }) {
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke="var(--color-main)"
+      strokeWidth="6"
+      strokeLinecap="round"
+      pathLength={draw ? 1 : undefined}
+      className={draw ? "path-draw" : undefined}
+      style={draw ? { animation: `map-draw ${Math.max(draw.duration, 1)}ms ${draw.ease} ${draw.delay}ms forwards` } : undefined}
+    />
   );
 }
 
