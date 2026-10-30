@@ -287,10 +287,11 @@ const FLAG_PHASES = 12;
 function flagPath(x: number, top: number, phase: number) {
   // 깃대(0)에서 꼬리(28)로 갈수록 커지는 잔물결
   const dy = (px: number) => Math.round((px / 28) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 34 - phase) * 10) / 10;
-  const [a, b, c, n] = [dy(10), dy(18), dy(28), dy(24)];
+  const [a, b, c] = [dy(10), dy(18), dy(28)];
+  // 끝은 갈라진 꼬리 없이 반듯하게 — 갈라진 홈이 움직이면 눈이 자꾸 그쪽으로 간다(2026-10-30)
   return (
     `M${x + 1},${top} C${x + 10},${top - 1 + a} ${x + 18},${top + 1 + b} ${x + 28},${top + 1 + c} ` +
-    `L${x + 24},${top + 8.5 + n} L${x + 28},${top + 16 + c} ` +
+    `L${x + 28},${top + 16 + c} ` +
     `C${x + 18},${top + 15 + b} ${x + 10},${top + 13 + a} ${x + 1},${top + 15}Z`
   );
 }
