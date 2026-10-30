@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import type { ChapterStatus } from "@/lib/journey/mapState";
@@ -167,17 +167,59 @@ export function ChapterPath({ statuses, position, flag, avatarKey }: ChapterPath
   );
 }
 
+/**
+ * 깃발 천의 물결 — 위·아래 가장자리 곡선의 제어점과 꼬리 끝을 조금씩 옮긴 세 모양.
+ * 같은 명령 구조라 SMIL <animate> 로 모양 사이를 부드럽게 오간다(CSS d 애니메이션은 Safari 미지원).
+ * 깃대 쪽(x+1)은 고정이라 천만 바람에 날린다.
+ */
+const FLAG_WAVES: [number, number, number, number, number, number, number, number, number, number][] = [
+  // 위 곡선 c1y, c2y, 끝y · 꼬리 홈 x · 아래 끝 x/y · 아래 곡선 c1y, c2y · 위 끝 x · 꼬리 홈 y
+  [-2, 4, 2, 24, 28, 16, 18, 12, 28, 9],
+  [3, -2, 1, 25, 28, 15, 12, 18, 28, 8.5],
+  [-1, 1, 3, 23, 27, 17, 15, 16, 27, 10],
+];
+function flagPath(x: number, top: number, w: (typeof FLAG_WAVES)[number]) {
+  const [c1, c2, end, notchX, bx, by, d1, d2, ex, notchY] = w;
+  return (
+    `M${x + 1},${top} C${x + 10},${top + c1} ${x + 18},${top + c2} ${x + ex},${top + end} ` +
+    `L${x + notchX},${top + notchY} L${x + bx},${top + by} ` +
+    `C${x + 18},${top + d1} ${x + 10},${top + d2} ${x + 1},${top + 15}Z`
+  );
+}
+
+const subscribeMotion = (cb: () => void) => {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+
 function PathFlag({ x, y, label, sub }: { x: number; y: number; label: string; sub: string }) {
   const top = y - 54;
   const left = x > 200;
   const tx = left ? x - 8 : x + 34;
+  // SMIL 은 CSS 의 "동작 줄이기" 규칙이 닿지 않아 직접 확인한다
+  const still = useSyncExternalStore(
+    subscribeMotion,
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+  const [a, b, c] = FLAG_WAVES.map((w) => flagPath(x, top, w));
   return (
     <g aria-hidden>
       <line x1={x} y1={y - 14} x2={x} y2={top} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
-      <path
-        d={`M${x + 1},${top} C${x + 10},${top - 2} ${x + 18},${top + 4} ${x + 28},${top + 2} L${x + 24},${top + 9} L${x + 28},${top + 16} C${x + 18},${top + 18} ${x + 10},${top + 12} ${x + 1},${top + 15}Z`}
-        fill="var(--color-main)"
-      />
+      <path d={a} fill="var(--color-main)">
+        {!still && (
+          <animate
+            attributeName="d"
+            dur="2.4s"
+            repeatCount="indefinite"
+            values={`${a};${b};${c};${a}`}
+            calcMode="spline"
+            keyTimes="0;0.35;0.7;1"
+            keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"
+          />
+        )}
+      </path>
       <text x={tx} y={top + 10} textAnchor={left ? "end" : "start"} fontSize="11.5" fontWeight="700" fill="var(--color-main)">
         {label}
       </text>
