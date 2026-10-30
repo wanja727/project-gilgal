@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import type { ChapterStatus } from "@/lib/journey/mapState";
@@ -277,17 +277,13 @@ function Progress({ d, draw }: { d: string; draw?: { delay: number; duration: nu
 }
 
 /**
- * 깃발 천의 물결(2026-10-30 다듬음) — 깃대에서 꼬리 쪽으로 잔물결 하나가 천천히 지나간다.
+ * 깃발 천의 물결 — 깃대에서 꼬리 쪽으로 물결이 지나간다.
  * 위·아래 가장자리를 같은 만큼 함께 움직여 천의 폭이 늘 같다 — 처음엔 두 가장자리가 따로 움직여
- * 천이 꿈틀거리듯 오므라들고 늘어나 보였다. 깃대 쪽은 움직이지 않고, 꼬리로 갈수록 조금 더 흔들린다.
- * 같은 명령 구조라 SMIL <animate> 로 모양 사이를 오간다(CSS d 애니메이션은 Safari 미지원).
+ * 천이 꿈틀거리듯 오므라들고 늘어나 보였다. 깃대 쪽은 움직이지 않고, 꼬리로 갈수록 더 흔들린다.
+ * 천 길이는 24(세로 15의 약 1.5배) — 28이면 옆 이름표·짧은 깃대에 비해 길어 보였다.
  */
-const FLAG_AMP = 3.4;
-const FLAG_PHASES = 12;
-function flagPath(x: number, top: number, phase: number) {
-  // 깃대(0)에서 꼬리(24)로 갈수록 커지는 잔물결.
-  // 천 길이는 24(세로 15의 약 1.5배) — 28이면 옆 이름표·짧은 깃대에 비해 길어 보였다(2026-10-30)
-  const dy = (px: number) => Math.round((px / 24) * FLAG_AMP * Math.sin((2 * Math.PI * px) / 29 - phase) * 10) / 10;
+function flagPath(x: number, top: number, phase: number, amp: number) {
+  const dy = (px: number) => Math.round((px / 24) * amp * Math.sin((2 * Math.PI * px) / 29 - phase) * 10) / 10;
   const [a, b, c, n] = [dy(9), dy(16), dy(24), dy(20.5)];
   return (
     `M${x + 1},${top} C${x + 9},${top - 1 + a} ${x + 16},${top + 1 + b} ${x + 24},${top + 1 + c} ` +
@@ -296,31 +292,79 @@ function flagPath(x: number, top: number, phase: number) {
   );
 }
 
-const subscribeMotion = (cb: () => void) => {
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
+/**
+ * 바람(2026-10-30): 늘 펄럭이면 읽는 동안 시야 한쪽이 계속 신경 쓰여서, 들어올 때 한 번 크게 펄럭이고
+ * 그 뒤로는 잔잔히 살랑이다가 8~12초마다 불규칙하게 바람이 분다. false 면 늘 바람이 부는 것처럼 계속 펄럭인다.
+ */
+const FLAG_GUSTS = true;
+const FLAG = {
+  /** 바람이 셀 때 / 잔잔할 때 꼬리 끝 흔들림 */
+  gustAmp: 3.4,
+  calmAmp: 0.7,
+  /** 물결 하나가 지나가는 시간(ms) — 바람이 셀수록 빠르게 */
+  gustPeriod: 1300,
+  calmPeriod: 3600,
+  /** 들어올 때 바람 / 이후 바람 길이, 바람 사이 쉬는 시간(ms) */
+  firstGust: 4200,
+  gust: [2600, 3800],
+  rest: [8000, 12000],
 };
+const between = ([lo, hi]: number[]) => lo + Math.random() * (hi - lo);
 
 function PathFlag({ x, y, label, sub }: { x: number; y: number; label: string; sub: string }) {
   const top = y - 54;
   const left = x > 200;
   const tx = left ? x - 8 : x + 30;
-  // SMIL 은 CSS 의 "동작 줄이기" 규칙이 닿지 않아 직접 확인한다
-  const still = useSyncExternalStore(
-    subscribeMotion,
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    () => false,
-  );
-  const frames = Array.from({ length: FLAG_PHASES + 1 }, (_, i) => flagPath(x, top, (2 * Math.PI * i) / FLAG_PHASES));
+  const clothRef = useRef<SVGPathElement>(null);
+
+  // SMIL 로는 바람 세기를 바꿀 수 없어 프레임마다 모양을 직접 그린다(작은 path 하나라 가볍다).
+  // 화면 밖이면 멈추고, "동작 줄이기"면 처음 모양 그대로 둔다
+  useEffect(() => {
+    const cloth = clothRef.current;
+    if (!cloth || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let last = performance.now();
+    let phase = 0;
+    let gustStart = last;
+    let gustLength = FLAG.firstGust;
+    let nextGust = gustStart + gustLength + between(FLAG.rest);
+
+    const tick = (now: number) => {
+      const dt = Math.min(now - last, 64);
+      last = now;
+      if (now >= nextGust) {
+        gustStart = now;
+        gustLength = between(FLAG.gust);
+        nextGust = now + gustLength + between(FLAG.rest);
+      }
+      // 바람 세기 0→1→0: 부드럽게 불었다 잦아든다
+      const t = (now - gustStart) / gustLength;
+      const wind = !FLAG_GUSTS ? 1 : t < 1 ? Math.sin(Math.PI * t) ** 2 : 0;
+      const amp = FLAG.calmAmp + (FLAG.gustAmp - FLAG.calmAmp) * wind;
+      const period = FLAG.calmPeriod + (FLAG.gustPeriod - FLAG.calmPeriod) * wind;
+      phase = (phase + (2 * Math.PI * dt) / period) % (2 * Math.PI);
+      cloth.setAttribute("d", flagPath(x, top, phase, amp));
+      frame = requestAnimationFrame(tick);
+    };
+
+    const io = new IntersectionObserver(([e]) => {
+      cancelAnimationFrame(frame);
+      if (e.isIntersecting) {
+        last = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    });
+    io.observe(cloth);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [x, top]);
+
   return (
     <g aria-hidden>
       <line x1={x} y1={y - 14} x2={x} y2={top} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
-      <path d={frames[0]} fill="var(--color-main)">
-        {!still && (
-          <animate attributeName="d" dur="2.6s" repeatCount="indefinite" values={frames.join(";")} />
-        )}
-      </path>
+      <path ref={clothRef} d={flagPath(x, top, 0, FLAG.calmAmp)} fill="var(--color-main)" />
       <text x={tx} y={top + 10} textAnchor={left ? "end" : "start"} fontSize="11.5" fontWeight="700" fill="var(--color-main)">
         {label}
       </text>
