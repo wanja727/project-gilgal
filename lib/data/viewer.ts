@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { type AvatarParts, encodeAvatarKey, parseAvatarParts } from "@/lib/avatarParts";
+import { getCompletedDays } from "@/lib/data/progress";
 import { db } from "@/lib/db";
 import { cells, profiles } from "@/lib/db/schema";
 
@@ -30,9 +31,11 @@ export type Viewer = {
 
 export type Member = Viewer & { realName: string; cellId: number };
 
+/** 로그인한 사용자 id — 세션 조회는 요청당 1회 */
+const sessionUserId = cache(async (): Promise<string | null> => (await auth())?.user?.id ?? null);
+
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const userId = await sessionUserId();
   if (!userId) return null;
 
   const [row] = await db
@@ -76,4 +79,16 @@ export async function requireMember(): Promise<Member> {
   const viewer = await requireViewer();
   if (!viewer.onboarded) redirect("/onboarding");
   return viewer as Member;
+}
+
+/**
+ * 로그인 + 온보딩 완료 + 내가 완료한 장(2026-11-01 성능).
+ * 세션으로 id 를 안 뒤 프로필 조회와 읽기 기록 조회를 동시에 보낸다 — 차례로 기다리던 DB 왕복이 하나 준다.
+ * 온보딩 전이면 읽기 기록은 버려지고 requireMember 가 온보딩으로 보낸다.
+ */
+export async function requireMemberWithProgress(): Promise<{ member: Member; completed: number[] }> {
+  const userId = await sessionUserId();
+  if (!userId) redirect("/login");
+  const [member, completed] = await Promise.all([requireMember(), getCompletedDays(userId)]);
+  return { member, completed };
 }

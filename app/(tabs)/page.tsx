@@ -10,8 +10,8 @@ import Link from "next/link";
 import { buttonClass, ButtonLink, Card, CardHead, ChevronRight, FlagIcon, MoreLink } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { countComments, listComments, listRecentComments, toShared } from "@/lib/data/comments";
-import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
-import { requireMember } from "@/lib/data/viewer";
+import { getArrivalBoard, getCellMembers, getCommunityToday } from "@/lib/data/progress";
+import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { sampleShares } from "@/lib/share/sample";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
@@ -33,9 +33,8 @@ const SHARE_POOL = 40;
 
 /** 홈 = 인사 + 'ㄹ'자 진행도 + 나눔 미리보기 + 오늘 장에 도착한 사람 + 우리 셀 (기간 상태별 분기, architecture 7절) */
 export default async function Home() {
-  const member = await requireMember();
+  const { member, completed } = await requireMemberWithProgress();
   const today = todayKst();
-  const completed = await getCompletedDays(member.userId);
   const p = journeyProgress(completed, today);
 
   // 셀 카드 기준: 깃발이 있으면 그 장, 보충 기간·종료 후에는 24장 전체, 기간 전에는 없음

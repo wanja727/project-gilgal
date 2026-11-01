@@ -138,8 +138,11 @@ export type ArrivalBoard = {
 export async function getArrivalBoard(dayNo: number, userId: string, restCount = 6): Promise<ArrivalBoard> {
   const campaign = campaignSlug();
   const ofDay = and(eq(readingProgress.campaign, campaign), eq(readingProgress.dayNo, dayNo));
+  const member = communityMember();
 
-  const [rows, totalRow, mineRow, participantsRow] = await Promise.all([
+  // DB 왕복을 줄인다(2026-11-01 성능): 예전엔 앞줄·인원·내 기록·전체 인원 4개를 보내고, 읽었으면 내 순위를 한 번 더 물었다.
+  // ① 앞줄 + 그 장을 읽은 인원(창 함수) ② 전체 인원 + 내 완료 시각 + 내 순위 — 두 개를 동시에
+  const [rows, [me]] = await Promise.all([
     db
       .select({
         name: profiles.realName,
@@ -147,49 +150,34 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
         avatarSeed: profiles.avatarSeed,
         avatarOptions: profiles.avatarOptions,
         at: readingProgress.completedAt,
+        total: sql<number>`(count(*) over ())::int`,
       })
       .from(readingProgress)
       .innerJoin(profiles, eq(profiles.userId, readingProgress.userId))
       .leftJoin(cells, eq(cells.id, profiles.cellId))
-      .where(and(ofDay, communityMember()))
+      .where(and(ofDay, member))
       .orderBy(asc(readingProgress.completedAt), asc(readingProgress.id))
       .limit(3 + restCount),
     db
-      .select({ n: count() })
-      .from(readingProgress)
-      .innerJoin(profiles, eq(profiles.userId, readingProgress.userId))
-      .where(and(ofDay, communityMember())),
-    db
-      .select({ id: readingProgress.id, at: readingProgress.completedAt })
-      .from(readingProgress)
-      .where(and(ofDay, eq(readingProgress.userId, userId))),
-    db.select({ n: count() }).from(profiles).where(communityMember()),
+      .select({
+        participants: sql<number>`(select count(*)::int from ${profiles} where ${member})`,
+        at: readingProgress.completedAt,
+        // 나보다 먼저(같은 시각이면 id 가 작은) 도착한 공동체 인원 + 1 — 예전 두 번째 질의와 같은 기준
+        rank: sql<number>`(
+          select count(*)::int + 1 from ${readingProgress} as earlier
+          inner join ${profiles} on ${profiles.userId} = earlier.user_id
+          where earlier.campaign = ${campaign} and earlier.day_no = ${dayNo} and ${member}
+            and (earlier.completed_at, earlier.id) < (${readingProgress.completedAt}, ${readingProgress.id})
+        )`,
+      })
+      .from(sql`(select 1) as one`)
+      .leftJoin(readingProgress, and(ofDay, eq(readingProgress.userId, userId))),
   ]);
-
-  let mine: ArrivalBoard["mine"] = null;
-  if (mineRow[0]) {
-    const { id, at } = mineRow[0];
-    const [before] = await db
-      .select({ n: count() })
-      .from(readingProgress)
-      .innerJoin(profiles, eq(profiles.userId, readingProgress.userId))
-      .where(
-        and(
-          ofDay,
-          communityMember(),
-          or(
-            lt(readingProgress.completedAt, at),
-            and(eq(readingProgress.completedAt, at), lt(readingProgress.id, id)),
-          ),
-        ),
-      );
-    mine = { rank: before.n + 1, at };
-  }
 
   return {
     dayNo,
-    total: totalRow[0].n,
-    participants: participantsRow[0].n,
+    total: rows[0]?.total ?? 0,
+    participants: me.participants,
     podium: rows.slice(0, 3).map((r) => ({
       name: r.name ?? "",
       cellName: r.cellName,
@@ -197,7 +185,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
       at: r.at,
     })),
     restAvatars: rows.slice(3).map((r) => avatarKeyOf(r.avatarSeed, r.avatarOptions)),
-    mine,
+    mine: me.at ? { rank: me.rank, at: me.at } : null,
   };
 }
 

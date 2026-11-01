@@ -1,6 +1,5 @@
 import { Card, CardHead, PageTitle } from "@/components/ui";
-import { getCompletedDays } from "@/lib/data/progress";
-import { requireMember } from "@/lib/data/viewer";
+import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { journeyProgress } from "@/lib/journey/guide";
 import {
@@ -28,8 +27,8 @@ const TONE: Record<OverviewSection["no"], string> = {
 
 /** 개관 탭: 여호수아서 배경과 네 부분 구성, 핵심 구절 */
 export default async function OverviewPage() {
-  const member = await requireMember();
-  const p = journeyProgress(await getCompletedDays(member.userId), todayKst());
+  const { completed } = await requireMemberWithProgress();
+  const p = journeyProgress(completed, todayKst());
   // 지금 읽을 장이 속한 부분을 표시한다(완주했거나 아직 열린 장이 없으면 표시 없음)
   const current = p.finished ? null : (p.next?.day ?? null);
   const total = JOSHUA_2026.totalDays;

@@ -3,8 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { ButtonLink, Card, CardHead, ChevronRight, PageTitle } from "@/components/ui";
 import { signOut } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
-import { getCompletedDays } from "@/lib/data/progress";
-import { requireMember } from "@/lib/data/viewer";
+import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { journeyProgress } from "@/lib/journey/guide";
 import { todayKst } from "@/lib/time";
@@ -13,9 +12,8 @@ export const dynamic = "force-dynamic";
 
 /** 나 탭: 내 정보 · 나의 여정 숫자 · 아바타 꾸미기 · 로그아웃 */
 export default async function MePage() {
-  const member = await requireMember();
+  const { member, completed } = await requireMemberWithProgress();
   const today = todayKst();
-  const completed = await getCompletedDays(member.userId);
   const p = journeyProgress(completed, today);
 
   const stats: [string, string][] = [

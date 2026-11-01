@@ -844,4 +844,5 @@ CREATE TABLE comment_reaction (
 - **결정**: `lib/db/index.ts` 를 postgres.js 에서 `pg` Pool + `@vercel/functions` 의 `attachDatabasePool` 로 바꾼다. 풀 max 5, 놀던 연결 5초 뒤 정리, 연결 10초·질의 15초(클라이언트 `query_timeout` + 서버 `statement_timeout`)에서 실패. 운영 스크립트(`scripts/`)는 postgres.js 그대로.
 - **배경**: 오픈 전날 운영(read-joshua.vercel.app)에서 로그인한 화면, 특히 쿼리를 가장 많이 동시에 보내는 홈이 첫 요청 뒤로 응답 없이 멈췄다. DB 는 정상(직접 질의 10ms, 잠금 없음)이었고, 같은 코드·DB 를 로컬 dev·로컬 프로덕션 빌드로 띄우면 20/20 정상 — Vercel Fluid compute 에서 인스턴스가 쉬었다 깨어나는 사이 붙잡고 있던 연결이 죽은 채 남아, 그 연결로 보낸 쿼리가 영원히 기다린 것으로 본다. postgres.js 에는 질의 시간 제한이 없어 한번 걸리면 그 인스턴스의 풀 전체가 묶였고, DB 쪽에도 질의 도중 멈춘 연결(`active`+`ClientRead`)이 쌓여 엉뚱한 요청에 statement timeout 오류가 전달됐다.
 - **대안**: postgres.js 에 idle_timeout 등만 추가(먼저 시도, 커밋 7774813) — 질의 도중 멈춤은 못 막는다. 요청마다 연결 생성 — 풀러 연결 비용이 매번 든다.
+- [추가 2026-11-01] 왕복 줄이기: 도착 보드 질의 5개 → 2개(앞줄+인원 창 함수 / 전체 인원+내 순위), 프로필·내 읽기 기록을 동시에(`requireMemberWithProgress` — 홈·여정·나·개관·본문). 홈 한 번에 DB 왕복 약 10 → 7, 차례로 기다리는 단계 4 → 3. 모두에게 같은 내용의 짧은 공유 캐시는 오픈 후 부하를 보고 정한다.
 - **결과**: Vercel 이 공식 지원하는 조합이라 멈추기 전 연결 정리가 보장된다. 그래도 응답이 없으면 15초 안에 오류로 끝나 인스턴스 전체가 묶이지 않는다. 의존성 `pg`, `@vercel/functions`, `@types/pg` 추가. drizzle 질의 코드는 그대로(`db.execute` 미사용).

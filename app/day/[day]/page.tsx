@@ -10,8 +10,7 @@ import { CommentComposer } from "@/components/share/CommentComposer";
 import { ButtonLink, CardHead, ChevronLeft, EmptyState } from "@/components/ui";
 import { getJoshuaChapter } from "@/lib/bible";
 import { COMMENT_MAX_LENGTH, type CommentSort, countComments, listComments, toShared } from "@/lib/data/comments";
-import { getCompletedDays } from "@/lib/data/progress";
-import { requireMember } from "@/lib/data/viewer";
+import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { formatDate } from "@/lib/format";
 import { campaignSlug, JOSHUA_2026 } from "@/lib/journey/campaign";
 import { ACTS, type JourneyDay } from "@/lib/journey/days";
@@ -103,7 +102,7 @@ function ChapterIntro({ day }: { day: JourneyDay }) {
 }
 
 export default async function DayPage({ params, searchParams }: PageProps<"/day/[day]">) {
-  const member = await requireMember();
+  const { member, completed } = await requireMemberWithProgress();
   const { day: dayParam } = await params;
   const { sort: sortParam } = await searchParams;
   const sort: CommentSort = sortParam === "likes" ? "likes" : "latest";
@@ -143,9 +142,8 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   }
 
   const day = access.day;
-  const [chapter, completed, comments, commentCount] = await Promise.all([
+  const [chapter, comments, commentCount] = await Promise.all([
     getJoshuaChapter(day.chapter),
-    getCompletedDays(member.userId),
     listComments(member, day.day, sort),
     countComments(day.day),
   ]);
