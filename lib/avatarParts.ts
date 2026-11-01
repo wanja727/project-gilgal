@@ -128,15 +128,16 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
  * 꾸미기 화면에서 머리 선택지를 묶어 보여 주는 순서(2026-11-02) — 35개가 한 줄로 이어져 끝까지 넘겨 보다 지치지 않게.
  * 성별로 나누지 않고 모양으로 묶는다. 모든 머리 선택지가 정확히 한 묶음에 들어가야 한다(테스트로 확인).
  */
-export const TOP_GROUPS: { label: string; ids: string[] }[] = [
+export const TOP_GROUPS: { label: string; ids: string[]; withNone?: boolean }[] = [
   {
     label: "긴 머리·묶은 머리",
     ids: ["bob", "bangs", "medium", "long", "longbangs", "wavy", "ponytail", "pigtails", "bun", "braid"],
   },
-  { label: "짧은 머리", ids: ["pixie", "crop", "sidepart", "comma", "curtain", "allback", "shortcurl"] },
+  // "없음"(머리 없는 구슬)은 가장 짧은 머리라 이 묶음 맨 앞에
+  { label: "짧은 머리", withNone: true, ids: ["pixie", "crop", "sidepart", "comma", "curtain", "allback", "shortcurl", "crimp"] },
   {
     label: "개성 머리",
-    ids: ["shag", "curls", "ringlets", "afro", "crimp", "flick", "curl", "swirl", "spikes", "zigzag", "cowlick", "tuft", "knot"],
+    ids: ["shag", "curls", "ringlets", "afro", "flick", "curl", "swirl", "spikes", "zigzag", "cowlick", "tuft", "knot"],
   },
   { label: "모자·소품", ids: ["bow", "garland", "cap", "beanie", "sunhat", "headphones", "antenna"] },
 ];

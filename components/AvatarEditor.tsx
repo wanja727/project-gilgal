@@ -193,11 +193,11 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
         aria-labelledby={`avatar-tab-${tab}`}
         className="mt-3"
       >
-        {/* 머리는 35개라 모양별로 묶어 작은 제목을 단다(2026-11-02). "없음"은 맨 앞 묶음 첫 칸 */}
+        {/* 머리는 35개가 넘어 모양별로 묶어 작은 제목을 단다(2026-11-02). "없음"은 짧은 머리 묶음 첫 칸 */}
         {tab === "top" ? (
           TOP_GROUPS.map((g, gi) => {
             const byKey = new Map(choices.map((c) => [c.key, c]));
-            const items = [...(gi === 0 ? [NONE] : []), ...g.ids].map((id) => byKey.get(id)).filter((c) => !!c);
+            const items = [...(g.withNone ? [NONE] : []), ...g.ids].map((id) => byKey.get(id)).filter((c) => !!c);
             return (
               <section key={g.label} aria-label={g.label} className={gi ? "mt-3.5" : ""}>
                 <h3 className="px-1 pb-1.5 text-caption font-semibold text-mute">{g.label}</h3>
