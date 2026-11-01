@@ -90,6 +90,7 @@ describe("아바타 꾸미기", () => {
     }
   });
   it("뺀 부품(점·수염·선글라스)을 고른 저장값은 그 부위만 없음으로 — 나머지 꾸민 모양은 그대로", () => {
+    expect(parseAvatarParts({ ...PARTS, top: "wavy" })?.top).toBe(NONE);
     for (const [face, glasses] of [["mustache", "round"], ["beard", NONE], ["mole", "square"], ["blush", "sun"]]) {
       const parsed = parseAvatarParts({ ...PARTS, face, glasses });
       expect(parsed).not.toBeNull();
