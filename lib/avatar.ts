@@ -87,6 +87,8 @@ const HAIR = {
   // 정수리를 둥글게 덮고 귀 위에서 짧은 옆머리로 구슬에 붙는다
   crop: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M37 21.5l-1.6 5M50 20v5.5M63 21.5l1.6 5", 2.2)],
   sidepart: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M60 15q-7 10.5-26 15", 2.4)],
+  // 쉼표머리(2026-11-02): 옆으로 넘긴 앞머리 끝이 이마 위에서 안으로 말린다 — 안경테에 닿지 않게 말린 끝을 눈썹보다 위에
+  comma: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M61 15q-6 10.5-23 14.5q-4.5 1.3-4.5 4.5 0 2.2 2.4 2", 2.4)],
   // 올백: 정수리를 높이 올리고 이마 선에서 뒤로 빗어 넘긴 세로 결 다섯 줄
   allback: [
     line("M15.5 50C12 26 28 9.5 50 9.5S88 26 84.5 50"),
