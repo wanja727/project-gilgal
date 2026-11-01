@@ -132,7 +132,7 @@ export function AvatarEditor({ seed: savedSeed, parts: savedParts }: { seed: str
         <div className="min-w-0 flex-1">
           <p className="text-body font-semibold text-main">{dirty ? "이 모양은 어때요?" : "지금 아바타"}</p>
           <p className="mt-0.5 text-caption text-mute">
-            {dirty ? "저장하기 전까지는 지금 아바타가 그대로예요" : "머리·모자, 눈, 안경을 골라 나를 닮게 꾸며 보세요"}
+            {dirty ? "저장하기 전까지는 지금 아바타가 그대로예요" : "머리·모자, 눈, 안경을 골라 나만의 아바타를 꾸며 보세요"}
           </p>
         </div>
       </div>

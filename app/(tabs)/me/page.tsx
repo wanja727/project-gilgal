@@ -51,7 +51,7 @@ export default async function MePage() {
           <Avatar avatarKey={member.avatarKey} size={56} />
           <span className="min-w-0 flex-1">
             <span className="block text-title font-bold text-main">나의 아바타</span>
-            <span className="mt-0.5 block text-caption text-mute">나를 닮게 꾸며 보세요</span>
+            <span className="mt-0.5 block text-caption text-mute">나만의 아바타를 꾸며 보세요</span>
           </span>
           <span className="flex items-center gap-0.5 text-small font-semibold text-mute">
             꾸미기
