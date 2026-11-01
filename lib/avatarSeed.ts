@@ -16,7 +16,7 @@ export function randomAvatarSeed(): string {
  * 아바타 그림 버전. /api/avatar 는 seed 별로 영구 캐시되므로, 그림(팔레트 등)을 바꾸면 이 값을 올려
  * 새 주소로 받게 한다. 라우트는 이 값을 읽지 않는다 — 캐시 키를 바꾸는 용도다.
  */
-export const AVATAR_RENDER_VERSION = "navy1";
+export const AVATAR_RENDER_VERSION = "navy2"; // navy2: 웰링턴 안경·뺀 입(2026-11-01)
 
 /** 아바타 키(seed 또는 seed~부품, lib/avatarParts.ts) → 이미지 주소 */
 export function avatarUrl(avatarKey: string): string {

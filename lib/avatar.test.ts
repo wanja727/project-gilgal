@@ -27,7 +27,10 @@ describe("avatar", () => {
     for (let i = 0; i < 100; i++) {
       const seed = randomAvatarSeed();
       if (resolveAvatarParts(seed, null).top === "cap") continue;
-      expect(avatarSvg(seed)).toBe(new Avatar(stock, { seed, ...palette, borderRadius: 50 }).toString());
+      const original = new Avatar(stock, { seed, ...palette, borderRadius: 50 });
+      // 뺀 입(시무룩·메롱)이 나온 seed 는 입만 다른 것으로 바꿔 그린다(2026-11-01) — 그 밖은 그대로
+      if (["pout", "tongue"].includes((original.toJSON().options as { mouthVariant?: string }).mouthVariant ?? "")) continue;
+      expect(avatarSvg(seed)).toBe(original.toString());
     }
   });
   it("seed 형식 검증", () => {
@@ -73,6 +76,17 @@ describe("아바타 꾸미기", () => {
     for (let i = 0; i < 50; i++) {
       const parts = randomAvatarParts();
       expect(parseAvatarKey(encodeAvatarKey("abcDEF123_-x", parts))?.parts).toEqual(parts);
+    }
+  });
+  it("뺀 입(시무룩·메롱)은 꾸미지 않은 아바타에도 나오지 않고, 꾸미기 화면의 출발 모양도 저장할 수 있다", () => {
+    const mouths = AVATAR_PARTS.find((p) => p.id === "mouth")!.options.map((o) => o.id);
+    expect(mouths).not.toContain("pout");
+    expect(mouths).not.toContain("tongue");
+    for (let i = 0; i < 400; i++) {
+      const seed = `seed-${i}`;
+      const resolved = resolveAvatarParts(seed, null);
+      expect(mouths).toContain(resolved.mouth);
+      expect(parseAvatarParts(resolved)).not.toBeNull();
     }
   });
   it("섞기는 긴 머리·리본과 수염을 함께 뽑지 않는다", () => {

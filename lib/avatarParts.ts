@@ -70,6 +70,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
   {
     id: "mouth",
     label: "입",
+    // 시무룩(pout)·메롱(tongue)은 뺐다(2026-11-01 운영자) — 꾸미지 않은 아바타에 나오면 lib/avatar.ts 가 다른 입으로 바꿔 그린다
     optional: false,
     options: [
       { id: "smile", label: "미소" },
@@ -80,9 +81,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "line", label: "일자" },
       { id: "wavy", label: "물결" },
       { id: "jagged", label: "삐뚤" },
-      { id: "pout", label: "시무룩" },
       { id: "cat", label: "고양이" },
-      { id: "tongue", label: "메롱" },
     ],
   },
   {

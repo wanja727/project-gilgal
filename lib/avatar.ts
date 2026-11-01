@@ -178,11 +178,29 @@ function partOptions(parts: AvatarParts): Json {
   return o;
 }
 
+/**
+ * 꾸미기에서 뺀 입(2026-11-01). Marbles 의 무작위 후보에서 지우면 모든 사람의 기본 입이 다시 뽑혀 바뀌므로,
+ * 후보는 그대로 두고 이 입이 나온 seed 만 남은 입 중 하나(seed 로 정해져 늘 같음)로 바꿔 그린다.
+ */
+const RETIRED_MOUTHS = new Set(["pout", "tongue"]);
+const MOUTHS = AVATAR_PARTS.find((p) => p.id === "mouth")!.options.map((o) => o.id);
+
+function seedIndex(seed: string, n: number) {
+  let h = 0;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % n;
+}
+
 function render(seed: string, parts: AvatarParts | null) {
   // 원형으로 잘라 내보낸다 — 지도 SVG 안의 <image> 에서도 clipPath 없이 동그랗게 보이도록
   const options = { seed, ...MARBLES_PALETTE, borderRadius: 50, ...(parts ? partOptions(parts) : {}) };
   const style = parts && parts.glasses !== NONE ? marblesWithGlasses : marbles;
-  return new Avatar(style, options as ConstructorParameters<typeof Avatar>[1]);
+  const avatar = new Avatar(style, options as ConstructorParameters<typeof Avatar>[1]);
+  if (parts) return avatar;
+  const mouth = (avatar.toJSON().options as Json).mouthVariant;
+  if (typeof mouth !== "string" || !RETIRED_MOUTHS.has(mouth)) return avatar;
+  const replaced = { ...options, mouthVariant: MOUTHS[seedIndex(seed, MOUTHS.length)], mouthProbability: 100 };
+  return new Avatar(style, replaced as ConstructorParameters<typeof Avatar>[1]);
 }
 
 export function avatarSvg(seed: string, parts: AvatarParts | null = null, style: AvatarStyle = "marbles"): string {
