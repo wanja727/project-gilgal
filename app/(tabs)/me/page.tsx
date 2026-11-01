@@ -28,7 +28,7 @@ export default async function MePage() {
     <>
       <PageTitle>나</PageTitle>
       <p className="px-5 pt-1.5 text-sub text-mute">
-        {member.realName} · {member.cellName}
+        {member.realName} · {member.personal ? `${member.cellName} · 개인 참여` : member.cellName}
       </p>
 
       <Card aria-labelledby="me-progress">

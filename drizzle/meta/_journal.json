@@ -29,6 +29,13 @@
       "when": 1793284755832,
       "tag": "0003_trail_note",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793530781007,
+      "tag": "0004_personal_cell",
+      "breakpoints": true
     }
   ]
 }

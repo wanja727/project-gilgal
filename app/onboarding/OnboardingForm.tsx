@@ -7,7 +7,7 @@ import { submitCell, submitRealName, type CellStepState, type NameStepState } fr
 const inputClass =
   "h-[54px] w-full rounded-btn border border-line bg-surface px-4 text-body text-text placeholder:text-mid focus:border-main focus:outline-none";
 
-export function OnboardingForm({ cells }: { cells: { id: number; name: string }[] }) {
+export function OnboardingForm({ cells }: { cells: { id: number; name: string; personal: boolean }[] }) {
   const [nameState, nameAction, namePending] = useActionState<NameStepState, FormData>(submitRealName, {
     step: "name",
   });
@@ -29,11 +29,25 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string }[
           <option value="" disabled>
             소속 셀을 선택하세요
           </option>
-          {cells.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          {cells
+            .filter((c) => !c.personal)
+            .map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          {/* 청년캠프 셀이 아닌 성도도 함께 걷는다(ADR-031) — "무소속" 대신 다른 공동체에서 개인으로 참여 */}
+          {cells.some((c) => c.personal) && (
+            <optgroup label="셀이 없다면">
+              {cells
+                .filter((c) => c.personal)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} (셀 없이 개인으로 참여)
+                  </option>
+                ))}
+            </optgroup>
+          )}
         </select>
         {cellState.error && (
           <p role="alert" className="text-center text-caption text-main">

@@ -100,6 +100,8 @@ export const cells = pgTable("cell", {
   name: text("name").notNull().unique(),
   sortOrder: integer("sort_order").notNull().default(0),
   active: boolean("active").notNull().default(true),
+  // 셀 없이 개인으로 참여하는 사람들의 자리("다른 공동체", 2026-11-01). 셀 카드·셀 칩을 보여 주지 않는다
+  personal: boolean("personal").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }).enableRLS();
 

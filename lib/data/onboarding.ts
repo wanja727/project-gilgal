@@ -178,7 +178,7 @@ export async function selectCellManually(
 /** 온보딩 셀 선택지 */
 export async function listActiveCells() {
   return db
-    .select({ id: cells.id, name: cells.name })
+    .select({ id: cells.id, name: cells.name, personal: cells.personal })
     .from(cells)
     .where(eq(cells.active, true))
     .orderBy(cells.sortOrder, cells.name);

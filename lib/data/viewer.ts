@@ -16,6 +16,8 @@ export type Viewer = {
   realName: string | null;
   cellId: number | null;
   cellName: string | null;
+  /** 셀 없이 개인으로 참여("다른 공동체", ADR-031) — 셀 카드·셀 칩을 보여 주지 않는다 */
+  personal: boolean;
   onboarded: boolean;
   isAdmin: boolean;
   isTest: boolean;
@@ -38,6 +40,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       realName: profiles.realName,
       cellId: profiles.cellId,
       cellName: cells.name,
+      personal: cells.personal,
       isAdmin: profiles.isAdmin,
       isTest: profiles.isTest,
       avatarSeed: profiles.avatarSeed,
@@ -49,11 +52,12 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   // 세션은 있는데 프로필이 없는 경우(로그인 이벤트 실패 등) — 로그인부터 다시
   if (!row) return null;
 
-  const { avatarOptions, ...rest } = row;
+  const { avatarOptions, personal, ...rest } = row;
   const avatarParts = parseAvatarParts(avatarOptions);
   return {
     userId,
     ...rest,
+    personal: personal ?? false,
     avatarParts,
     avatarKey: encodeAvatarKey(row.avatarSeed, avatarParts),
     onboarded: row.realName !== null && row.cellId !== null,

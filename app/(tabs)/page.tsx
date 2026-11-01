@@ -44,7 +44,7 @@ export default async function Home() {
   // 최근 나눔 여럿을 가져와 숨김 처리된 것을 빼고(작성자·운영자에게도 미리보기에서는 뺀다) 무작위로 고른다
   const [board, cellMembers, community, recent, shareTotal] = await Promise.all([
     p.flag ? getArrivalBoard(p.flag.day, member.userId) : null,
-    getCellMembers(member.cellId, member.userId, criterion),
+    member.personal ? [] : getCellMembers(member.cellId, member.userId, criterion),
     p.flag ? null : getCommunityToday(today),
     p.flag
       ? listComments(member, p.flag.day, "latest", SHARE_POOL)
@@ -75,7 +75,7 @@ export default async function Home() {
       <header className="flex items-center justify-between px-5 pt-4">
         <span className="font-serif text-[20px] font-bold tracking-[-0.03em] text-main">{BRAND.name}</span>
         <span className="flex items-center gap-2">
-          {member.cellName && <CellChip cellName={member.cellName} />}
+          {member.cellName && !member.personal && <CellChip cellName={member.cellName} />}
           {/* 내 아바타를 누르면 꾸미기로 (2026-10-29) */}
           <Link href="/me/avatar" aria-label="아바타 꾸미기" className="-m-1 rounded-full p-1">
             <Avatar avatarKey={member.avatarKey} size={34} />
@@ -187,7 +187,8 @@ export default async function Home() {
         </Card>
       )}
 
-      {member.cellName && (
+      {/* 셀 없이 개인으로 참여하면 셀 카드는 없다(ADR-031) */}
+      {member.cellName && !member.personal && (
         <CellCard
           cellName={member.cellName}
           members={cellMembers}
