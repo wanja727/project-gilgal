@@ -54,9 +54,9 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string; p
           <form action={cellAction} className="rounded-card bg-surface px-5 pt-4 pb-5 text-center">
             <input type="hidden" name="realName" value={nameState.name} />
             <input type="hidden" name="cellId" value={personal.id} />
-            <p className="text-small font-semibold text-main">청년캠프 셀이 아니신가요?</p>
+            <p className="text-small font-semibold text-main">청년캠프1 소속이 아니신가요?</p>
             <p className="mt-1 text-caption leading-5 text-mute">
-              다른 공동체 성도님도 셀 없이 개인으로 함께 걸을 수 있어요.
+              다른 공동체 성도님도 셀 없이 개인으로 참여하실 수 있어요.
             </p>
             <button type="submit" disabled={cellPending} className={buttonClass("line", "mt-3.5 h-12 text-body")}>
               셀 없이 개인으로 참여하기
