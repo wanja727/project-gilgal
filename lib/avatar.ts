@@ -78,6 +78,12 @@ const HAIR = {
   // 정수리를 둥글게 덮고 귀 위에서 짧은 옆머리로 구슬에 붙는다
   crop: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M37 21.5l-1.6 5M50 20v5.5M63 21.5l1.6 5", 2.2)],
   sidepart: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M60 15q-7 10.5-26 15", 2.4)],
+  // 올백: 정수리를 높이 올리고 이마 선에서 뒤로 빗어 넘긴 세로 결 다섯 줄
+  allback: [
+    line("M15.5 50C12 26 28 9.5 50 9.5S88 26 84.5 50"),
+    line(SHORT_SIDEBURNS, 2.4),
+    line("M31 26q-2-5 0-10M40.5 22.5q-1-6 .5-11M50 21.5v-10.5M59.5 22.5q1-6-.5-11M69 26q2-5 0-10", 2),
+  ],
   // 덮은 앞머리: 가운데서 양옆으로 흘러내려 이마를 덮는 남자 커트
   curtain: [line(SHORT_CROWN), line(SHORT_SIDEBURNS, 2.4), line("M50 16.5q-4 9-20 14.5M50 16.5q4 9 20 14.5", 2.4)],
   // 정수리를 작은 물결로(타원 위 11개 물결, 생성 식은 커밋 기록 참고)

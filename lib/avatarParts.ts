@@ -32,6 +32,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "crop", label: "짧은 머리" },
       { id: "sidepart", label: "옆가르마" },
       { id: "curtain", label: "덮은 앞머리" },
+      { id: "allback", label: "올백" },
       { id: "shortcurl", label: "짧은 곱슬" },
       { id: "shag", label: "덥수룩" },
       { id: "curls", label: "두 고리" },
