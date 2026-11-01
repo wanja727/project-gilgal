@@ -31,6 +31,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "braid", label: "땋은 머리" },
       { id: "crop", label: "짧은 머리" },
       { id: "sidepart", label: "옆가르마" },
+      { id: "curtain", label: "덮은 앞머리" },
       { id: "shortcurl", label: "짧은 곱슬" },
       { id: "shag", label: "덥수룩" },
       { id: "curls", label: "두 고리" },
@@ -103,7 +104,6 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     optional: true,
     options: [
       { id: "round", label: "동그란" },
-      { id: "thin", label: "얇은 동그란" },
       { id: "square", label: "뿔테" },
       { id: "browline", label: "웰링턴" },
     ],
@@ -141,7 +141,7 @@ function isValidColor(value: unknown): value is number {
 const RETIRED: Partial<Record<AvatarPartId, ReadonlySet<string>>> = {
   top: new Set(["wavy"]), // 긴 웨이브 — 물결선이 다른 머리와 결이 달라 뺐다
   face: new Set(["mole", "mustache", "beard"]),
-  glasses: new Set(["sun"]),
+  glasses: new Set(["sun", "thin"]), // thin: 얇은 동그란 — 넣었다가 바로 뺐다
 };
 
 /** DB(avatar_options jsonb)·클라이언트 입력 검증. 모든 부위가 허용 목록 안이어야 하고, 아니면 null(= 꾸미지 않음) */
