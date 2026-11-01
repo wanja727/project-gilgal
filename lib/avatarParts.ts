@@ -169,13 +169,24 @@ export function avatarKeyOf(seed: string, options: unknown): string {
   return encodeAvatarKey(seed, parseAvatarParts(options));
 }
 
-/** 꾸미기 "섞기": 부위마다 아무거나. 안경·얼굴은 가끔만 붙여 처음 보는 모양이 너무 요란하지 않게 */
+/** 섞기에서 수염과 함께 뽑지 않는 머리 — 긴 머리(길갈 HAIR)·리본·화관. 직접 고르는 건 막지 않는다 */
+export const SOFT_TOPS = new Set(["bob", "bangs", "long", "wavy", "ponytail", "pigtails", "bun", "braid", "bow", "garland"]);
+export const BEARDS = new Set(["mustache", "beard"]);
+
+/**
+ * 꾸미기 "섞기": 부위마다 아무거나. 안경·얼굴은 가끔만 붙여 처음 보는 모양이 너무 요란하지 않게.
+ * 긴 머리·리본에 수염이 같이 뽑히면 보기 흉해서(2026-11-01 운영자) 그때는 수염이 아닌 얼굴 장식으로 바꾼다.
+ */
 export function randomAvatarParts(rand: () => number = Math.random): AvatarParts {
   const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
   const parts = { color: Math.floor(rand() * AVATAR_COLOR_COUNT) } as AvatarParts;
   const chance: Partial<Record<AvatarPartId, number>> = { nose: 0.75, glasses: 0.3, face: 0.3 };
   for (const part of AVATAR_PARTS) {
     parts[part.id] = rand() < (chance[part.id] ?? 1) ? pick(part.options).id : NONE;
+  }
+  if (SOFT_TOPS.has(parts.top) && BEARDS.has(parts.face)) {
+    const face = AVATAR_PARTS.find((p) => p.id === "face")!;
+    parts.face = pick(face.options.filter((o) => !BEARDS.has(o.id))).id;
   }
   return parts;
 }

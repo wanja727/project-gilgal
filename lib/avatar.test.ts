@@ -2,7 +2,7 @@ import { Avatar, Style } from "@dicebear/core";
 import marblesDefinition from "@dicebear/styles/marbles.json";
 import { describe, expect, it } from "vitest";
 import { avatarSvg, isValidSeed, resolveAvatarParts } from "./avatar";
-import { AVATAR_PARTS, type AvatarParts, encodeAvatarKey, NONE, parseAvatarKey, parseAvatarParts, randomAvatarParts } from "./avatarParts";
+import { AVATAR_PARTS, type AvatarParts, BEARDS, encodeAvatarKey, NONE, parseAvatarKey, parseAvatarParts, randomAvatarParts, SOFT_TOPS } from "./avatarParts";
 import { AVATAR_SEED_RE, randomAvatarSeed } from "./avatarSeed";
 
 const PARTS: AvatarParts = { top: "cap", eyes: "wink", mouth: "grin", nose: NONE, glasses: "round", face: "freckles", color: 2 };
@@ -74,6 +74,21 @@ describe("아바타 꾸미기", () => {
       const parts = randomAvatarParts();
       expect(parseAvatarKey(encodeAvatarKey("abcDEF123_-x", parts))?.parts).toEqual(parts);
     }
+  });
+  it("섞기는 긴 머리·리본과 수염을 함께 뽑지 않는다", () => {
+    let soft = 0;
+    for (let i = 0; i < 4000; i++) {
+      const parts = randomAvatarParts();
+      if (SOFT_TOPS.has(parts.top)) {
+        soft++;
+        expect(BEARDS.has(parts.face)).toBe(false);
+      }
+    }
+    expect(soft).toBeGreaterThan(0);
+    // 목록의 머리·얼굴 이름이 실제 부품과 맞는지(오타로 규칙이 조용히 꺼지지 않게)
+    const ids = (part: string) => AVATAR_PARTS.find((p) => p.id === part)!.options.map((o) => o.id);
+    for (const t of SOFT_TOPS) expect(ids("top")).toContain(t);
+    for (const f of BEARDS) expect(ids("face")).toContain(f);
   });
   it("허용 목록 밖의 부품·색·형식은 받지 않는다", () => {
     expect(parseAvatarKey("abcDEF123_-x~crown.wink.grin.none.round.freckles.2")).toBeNull();
