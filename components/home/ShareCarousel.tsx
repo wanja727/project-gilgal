@@ -90,16 +90,7 @@ export function ShareCarousel({ comments, showChapter }: { comments: SharedComme
     // view.seq: 손으로 넘겼을 때도 다음 넘김까지 처음부터 다시 센다
   }, [shown, pageCount, page, view.seq, go]);
 
-  // 묶음마다 줄 수가 달라도 카드 높이가 들썩이지 않게 — 가장 컸던 높이를 유지
   const currentRef = useRef<HTMLDivElement>(null);
-  const [minHeight, setMinHeight] = useState(0);
-  useEffect(() => {
-    const el = currentRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setMinHeight((h) => Math.max(h, el.offsetHeight)));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [view.seq]);
 
   // 좌우로 밀기: 가로로 확실히 움직였을 때만 잡는다 — 세로 스크롤을 방해하지 않게
   const drag = useRef<{ x: number; y: number; dx: number; active: boolean } | null>(null);
@@ -185,9 +176,16 @@ export function ShareCarousel({ comments, showChapter }: { comments: SharedComme
         // 키보드로 말풍선·하트에 머무는 동안도 넘기지 않는다
         onFocus={() => (held.current = true)}
         onBlur={() => (held.current = false)}
-        style={{ minHeight }}
         className="-mx-5 mt-4 grid touch-pan-y overflow-hidden px-5 select-none"
       >
+        {/* 높이 맞춤: 모든 묶음을 같은 칸에 보이지 않게 겹쳐 두어, 처음부터 가장 긴 묶음 높이로 고정한다.
+            넘길 때 카드 높이가 늘면 아래 카드(셀 카드 등)가 밀려 내려가 그 위의 강조 연출이 튀었다(2026-11-01) */}
+        {pageCount > 1 &&
+          pages.map((_, i) => (
+            <div key={`size-${i}`} aria-hidden inert className="invisible flex flex-col gap-3.5 [grid-area:1/1]">
+              {rows(i, false)}
+            </div>
+          ))}
         {view.out && (
           <div
             key={`out-${view.seq}`}
