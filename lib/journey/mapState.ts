@@ -68,6 +68,14 @@ export type MapView = {
   canaanFilled: boolean;
 };
 
+/**
+ * 지도에 드러난 장소(2026-11-01): 출발지 싯딤 + 이미 열린 장의 장소. 나머지는 그 장이 열리는 날 지도에 나타난다
+ * — 여호수아도 갈 길을 다 알고 걷지 않았다. 열린 장의 순서대로(처음 드러난 순).
+ */
+export function revealedSites(today: IsoDate): SiteId[] {
+  return [...new Set<SiteId>(["shittim", ...unlockedDays(today).map((d) => d.site)])];
+}
+
 export function mapView({
   completed,
   position,

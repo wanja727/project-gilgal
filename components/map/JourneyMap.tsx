@@ -57,6 +57,8 @@ export type JourneyMapProps = {
    * 다음 장이면 진하게 그려지는 길을 함께 따라가고, 뒤로 가면 그 길을 되돌아간다. "내 위치" 이름표는 실제 내 위치에 섰을 때만.
    */
   walker?: { from: SiteId | null; to: SiteId; key: string } | null;
+  /** 드러난 장소만 그린다(revealedSites — 길은 그날 열린다). 없으면 모든 장소 */
+  revealed?: readonly SiteId[] | null;
   onSelectSite?: (id: SiteId) => void;
   ariaLabel: string;
   className?: string;
@@ -99,6 +101,7 @@ export function JourneyMap({
   arrival = null,
   leg,
   walker = null,
+  revealed = null,
   onSelectSite,
   ariaLabel,
   className = "",
@@ -217,6 +220,7 @@ export function JourneyMap({
 
       {/* 장소 */}
       {SITE_IDS.map((id) => {
+        if (revealed && !revealed.includes(id)) return null;
         const s = SITES[id];
         const isVisited = visited.has(id);
         const isFocus = focus === id;
@@ -229,7 +233,7 @@ export function JourneyMap({
         const beforeTone: "ring" | "off" =
           (arrival ? id === arrival.from || walked.slice(0, -1).includes(id) : isVisited) ? "ring" : "off";
         return (
-          <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id}>
+          <g key={popClass === "map-pop-quick" ? `${id}-${leg!.key}` : id} data-site={id}>
             {selected === id && (
               <circle
                 key={leg ? `sel-${leg.key}` : "sel"}

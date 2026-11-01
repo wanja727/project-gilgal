@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { SiteGlyph } from "@/components/map/SiteGlyph";
@@ -13,6 +13,7 @@ import { EXPLORER_CROP, SITES, type SiteId } from "@/lib/journey/locations";
 import { type ChapterStatus, type MapView, previousSite } from "@/lib/journey/mapState";
 
 type ViewMode = "map" | "list";
+const REVEAL_SEEN_KEY = "gilgal_reveal_seen";
 
 /**
  * 여정 탭 본문: 지도/목록 전환.
@@ -21,6 +22,8 @@ type ViewMode = "map" | "list";
  * 지도와 장 카드가 모바일 한 화면에 들어오게 지도 높이를 제한한다(2026-10-26).
  * [2026-11-01] 지도를 키웠다 — 제목 아래 설명 줄을 빼고, 장 카드의 같은 장소 칩 줄을 없애 읽기 버튼을 눈금 옆으로 올렸다.
  * 내 아바타도 고른 장의 장소로 함께 걸어간다(도착 화면의 걷기와 같은 방식).
+ * [2026-11-01] 길은 그날 열린다: 지도에는 드러난 장소만, 장 카드·눈금은 열린 장까지만 움직이고, 목록도 열리기 전 장은 날짜만.
+ * 그날 처음 지도를 보면 오늘 열린 장소가 톡 나타난다(기기에 날짜를 남겨 하루 한 번).
  */
 export function JourneyExplorer({
   view,
@@ -30,6 +33,9 @@ export function JourneyExplorer({
   flagLabel,
   avatarKey,
   initialChapter,
+  revealed,
+  today,
+  revealDay,
 }: {
   view: MapView;
   statuses: ChapterStatus[];
@@ -38,22 +44,45 @@ export function JourneyExplorer({
   flagLabel: string | null;
   avatarKey: string;
   initialChapter: number;
+  /** 지도에 드러난 장소(revealedSites) */
+  revealed: SiteId[];
+  today: string;
+  /** 오늘 열린 장 */
+  revealDay: number | null;
 }) {
+  // 열린 장 수 — 공개는 날짜순이라 1장부터 이만큼이 열려 있다. 그 뒤로는 고를 수 없다
+  const lastOpen = statuses.filter((s) => s !== "locked").length;
   const [mode, setMode] = useState<ViewMode>("map");
   const [chapter, setChapterState] = useState(initialChapter);
   // 바로 전에 고른 장의 장소 — 지도에서 그 강조를 서서히 빼는 데 쓴다
   const [prevSite, setPrevSite] = useState<SiteId | null>(null);
   const site = JOURNEY_DAYS[chapter - 1].site;
-  const setChapter = (n: number) => {
+  const setChapter = (want: number) => {
+    const n = Math.min(Math.max(want, 1), Math.max(lastOpen, 1));
     if (n === chapter) return;
     setPrevSite(site);
     setChapterState(n);
   };
 
-  // 지도에서 장소를 누르면 그 장소의 장 중 지금 고른 장에서 가장 가까운 장으로
+  // 그날 처음 지도를 볼 때 오늘 열린 장소를 톡 — 그리기 상태와 무관해 DOM 에 직접 붙인다
+  const mapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (mode !== "map" || !revealDay) return;
+    let seen: string | null = null;
+    try {
+      seen = localStorage.getItem(REVEAL_SEEN_KEY);
+      localStorage.setItem(REVEAL_SEEN_KEY, today);
+    } catch {}
+    if (seen === today) return;
+    const marker = mapRef.current?.querySelector<SVGGElement>(`[data-site="${JOURNEY_DAYS[revealDay - 1].site}"]`);
+    marker?.classList.add("map-reveal");
+  }, [mode, revealDay, today]);
+
+  // 지도에서 장소를 누르면 그 장소의 (열린) 장 중 지금 고른 장에서 가장 가까운 장으로
   const selectSite = (id: SiteId) => {
     if (id === site) return;
-    const candidates = JOURNEY_DAYS.filter((d) => d.site === id);
+    const candidates = JOURNEY_DAYS.filter((d) => d.site === id && d.day <= lastOpen);
+    if (candidates.length === 0) return;
     const nearest = candidates.reduce((a, b) => (Math.abs(b.day - chapter) < Math.abs(a.day - chapter) ? b : a));
     setChapter(nearest.day);
   };
@@ -84,7 +113,7 @@ export function JourneyExplorer({
         <div>
           {/* 지도 높이 = 화면 높이 - (제목·장 카드·하단 탭 약 390px). 장 카드가 첫 화면에 다 들어오게.
               지도는 세로로 긴 그림이라 폭보다 높이가 크기를 정한다. 장소 아이콘 설명은 장 카드(아이콘 + 장소 이름)가 대신한다 */}
-          <div className="mx-gutter mt-3 h-[clamp(260px,calc(100dvh-392px),620px)] overflow-hidden rounded-map bg-surface">
+          <div ref={mapRef} className="mx-gutter mt-3 h-[clamp(260px,calc(100dvh-392px),620px)] overflow-hidden rounded-map bg-surface">
             <JourneyMap
               view={view}
               avatarKey={avatarKey}
@@ -100,11 +129,12 @@ export function JourneyExplorer({
                 prev: prevSite,
               }}
               walker={{ from: prevSite, to: site, key: String(chapter) }}
+              revealed={revealed}
               onSelectSite={selectSite}
-              ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. 장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
+              ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${lastOpen ? `${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. ` : ""}장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
             />
           </div>
-          <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
+          <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} lastOpen={lastOpen} onChange={setChapter} />
         </div>
       ) : (
         <ChapterList statuses={statuses} position={position} flagDay={flagDay} avatarKey={avatarKey} />
@@ -120,16 +150,19 @@ const STATUS_TEXT: Record<ChapterStatus, string> = { done: "읽음", open: "읽�
  * 장 순서대로 넘기며(◀ ▶, 눈금 끌기·누르기, 키보드 ←→) 그 장의 걸음·제목과 그 장소에서 있었던 일을 본다.
  * [2026-11-01] 같은 장소 칩 줄은 지도를 키우려고 없앴다(지도에서 장소를 누르면 그 장소의 가까운 장으로 간다).
  * 눈금 위에 투명한 range 입력을 겹쳐 두어 키보드·스크린리더로도 움직일 수 있다.
+ * 열린 장(lastOpen)까지만 고를 수 있다. 출발 전에는(열린 장 없음) 첫 길이 언제 열리는지만 보여 준다.
  */
 function ChapterCard({
   chapter,
   statuses,
   flagDay,
+  lastOpen,
   onChange,
 }: {
   chapter: number;
   statuses: ChapterStatus[];
   flagDay: number | null;
+  lastOpen: number;
   onChange: (n: number) => void;
 }) {
   const day = JOURNEY_DAYS[chapter - 1];
@@ -139,6 +172,7 @@ function ChapterCard({
   const from = SITES[previousSite(chapter)].name;
   const arrow =
     "grid size-11 shrink-0 place-items-center rounded-full bg-soft text-main disabled:bg-transparent disabled:text-line";
+  const hidden = st === "locked";
 
   return (
     <section aria-label="여정 되짚기" className="mx-gutter mt-2 mb-4 rounded-card bg-surface px-3 pt-3 pb-3.5">
@@ -148,15 +182,18 @@ function ChapterCard({
         </button>
         <div className="min-w-0 flex-1 text-center" aria-live="polite">
           <p className="truncate text-caption font-semibold text-mute">
-            {chapter}장 · {from === place.name ? place.name : `${from} → ${place.name}`} ·{" "}
-            {day.day === flagDay ? "오늘의 장" : st === "locked" ? `${formatDate(day.readingDate)}에 열려요` : STATUS_TEXT[st]}
+            {hidden
+              ? `${chapter}장 · 출발 전`
+              : `${chapter}장 · ${from === place.name ? place.name : `${from} → ${place.name}`} · ${day.day === flagDay ? "오늘의 장" : STATUS_TEXT[st]}`}
           </p>
-          <p className="mt-0.5 truncate font-serif text-[18px] font-bold tracking-[-0.03em] text-main">{day.title}</p>
+          <p className="mt-0.5 truncate font-serif text-[18px] font-bold tracking-[-0.03em] text-main">
+            {hidden ? "아직 열리지 않은 길" : day.title}
+          </p>
         </div>
         <button
           type="button"
           className={arrow}
-          disabled={chapter >= total}
+          disabled={chapter >= lastOpen}
           onClick={() => onChange(chapter + 1)}
           aria-label="다음 장"
         >
@@ -166,10 +203,18 @@ function ChapterCard({
 
       {/* 이 장에서 있었던 일 (장별 한 줄) */}
       <div className="mx-1 mt-2.5 flex gap-3 rounded-tile bg-bg px-3.5 py-3">
-        <SiteGlyph id={day.site} size={22} strokeWidth={1.7} className="mt-0.5 shrink-0 text-main" />
-        <p className="text-small leading-[1.6] text-text">
-          <b className="font-bold text-main">{place.name}</b> {day.summary}
-        </p>
+        {hidden ? (
+          <p className="text-small leading-[1.6] text-mute">
+            {formatDate(day.readingDate, true)}, {SITES.shittim.name}에서 첫 길이 열려요. 어디로 가는지는 그날그날 열려요.
+          </p>
+        ) : (
+          <>
+            <SiteGlyph id={day.site} size={22} strokeWidth={1.7} className="mt-0.5 shrink-0 text-main" />
+            <p className="text-small leading-[1.6] text-text">
+              <b className="font-bold text-main">{place.name}</b> {day.summary}
+            </p>
+          </>
+        )}
       </div>
 
       {/* 눈금(장 고르기) + 읽기 버튼 한 줄 — 같은 장소의 다른 장은 지도에서 그 장소를 누르거나 눈금으로 */}
@@ -196,7 +241,8 @@ function ChapterCard({
             value={chapter}
             onChange={(e) => onChange(Number(e.target.value))}
             aria-label="장 고르기"
-            aria-valuetext={`${chapter}장 ${day.title}, ${STATUS_TEXT[st]}`}
+            aria-valuetext={hidden ? `${chapter}장, ${STATUS_TEXT[st]}` : `${chapter}장 ${day.title}, ${STATUS_TEXT[st]}`}
+            disabled={lastOpen < 2}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
@@ -258,9 +304,9 @@ function ChapterList({
                       </span>
                       <span>
                         <b className={`block text-body ${st === "locked" ? "font-medium text-mid" : "font-semibold text-main"}`}>
-                          {d.title}
+                          {st === "locked" ? "아직 열리지 않은 길" : d.title}
                         </b>
-                        <span className="mt-0.5 block text-[12.5px] text-mute">{d.place}</span>
+                        {st !== "locked" && <span className="mt-0.5 block text-[12.5px] text-mute">{d.place}</span>}
                       </span>
                       {d.day === position ? (
                         <span className="flex items-center gap-1.5 rounded-chip bg-soft py-0.5 pr-2.5 pl-0.5 text-[11.5px] font-bold text-main">

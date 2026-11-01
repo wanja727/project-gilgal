@@ -31,14 +31,14 @@ describe("홈 안내 문구", () => {
     const p = journeyProgress(range(1, 6), "2026-11-07");
     expect(goal(p)).toEqual({
       title: "오늘 깃발에 도착했어요",
-      body: "11월 9일 월요일에는 7장, 아이로 가요",
+      body: "11월 9일 월요일에는 7장, 새로운 길이 열려요",
       action: { label: "11월 9일 월요일에 7장이 열려요", variant: "quiet" },
     });
   });
 
   it("오늘 장 도착 (평일 → 내일)", () => {
     const p = journeyProgress(range(1, 7), "2026-11-09");
-    expect(goal(p).body).toBe("내일은 8장, 에발산으로 가요");
+    expect(goal(p).body).toBe("내일은 8장, 새로운 길이 열려요");
   });
 
   it("주일", () => {

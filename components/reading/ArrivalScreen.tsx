@@ -9,7 +9,7 @@ import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
 import { goal, journeyProgress } from "@/lib/journey/guide";
 import { cropAroundLeg, SITES } from "@/lib/journey/locations";
-import { type MapView, previousSite, trail } from "@/lib/journey/mapState";
+import { type MapView, previousSite, revealedSites, trail } from "@/lib/journey/mapState";
 
 /**
  * 도착 화면 — 읽기 완료를 처음 저장했을 때만 뜬다(다시 읽기·이미 완료한 장에서는 뜨지 않음).
@@ -107,6 +107,7 @@ export function ArrivalScreen({
           avatarKey={avatarKey}
           crop={cropAroundLeg(previousSite(day.day), day.site)}
           arrival={{ crossJordan: day.day === 3, from: previousSite(day.day) }}
+          revealed={revealedSites(today)}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
         />
       </div>

@@ -3,7 +3,8 @@ import { getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, journeyProgress } from "@/lib/journey/guide";
-import { chapterStatus, mapView } from "@/lib/journey/mapState";
+import { chapterStatus, mapView, revealedSites } from "@/lib/journey/mapState";
+import { todaysDay } from "@/lib/journey/schedule";
 import { todayKst } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,9 @@ export default async function JourneyPage() {
       flagLabel={flagCaption(p)}
       avatarKey={member.avatarKey}
       initialChapter={initialChapter}
+      revealed={revealedSites(today)}
+      today={today}
+      revealDay={todaysDay(today)?.day ?? null}
     />
   );
 }

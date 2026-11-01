@@ -22,6 +22,8 @@ import { ChapterSheet } from "./ChapterSheet";
  * - 깃발 = 오늘의 장(주일에는 가장 최근에 열린 장)
  * - 칸을 누르면 그 장 본문으로 바로 간다("이어 읽기"와 같은 경험 — 장 소개는 본문 맨 위에서).
  *   아직 열리지 않은 장만 언제 열리는지 작은 시트로 알린다(2026-10-26)
+ * - [2026-11-01] 길은 그날 열린다: 아직 열리지 않은 장은 장소 대신 여는 날짜(11/12)만 보인다.
+ *   그날 처음 볼 때(intro) 오늘 열린 장의 날짜가 장소 이름으로 바뀌며 톡 떠오른다
  */
 
 const W = 330;
@@ -66,12 +68,20 @@ export type ChapterPathProps = {
   motion?: PathMotion;
   /** 보고 나서 쿠키에 남길 값 */
   seen?: string;
+  /** 오늘 열린 장 — 그날 처음 볼 때 이 칸의 장소 이름이 드러난다 */
+  revealDay?: number | null;
 };
+
+/** 열리기 전 칸 아래 글자: 11/12 */
+function shortDate(date: string) {
+  const [, m, d] = date.split("-").map(Number);
+  return `${m}/${d}`;
+}
 
 const STATUS_LABEL: Record<ChapterStatus, string> = { done: "읽음", open: "읽을 차례", locked: "아직 열리지 않음" };
 
 
-export function ChapterPath({ statuses, position, flag, avatarKey, motion = { kind: "none" }, seen }: ChapterPathProps) {
+export function ChapterPath({ statuses, position, flag, avatarKey, motion = { kind: "none" }, seen, revealDay = null }: ChapterPathProps) {
   const router = useRouter();
   const [openDay, setOpenDay] = useState<number | null>(null);
   const select = (day: number) => {
@@ -114,6 +124,9 @@ export function ChapterPath({ statuses, position, flag, avatarKey, motion = { ki
   };
   // 연출이 끝나는 때 — 깃발까지의 점선은 그 뒤에 나타난다
   const settleAt = anim.kind === "step" ? START_MS + (position - from) * per : anim.kind === "intro" ? START_MS + intro : 0;
+
+  // 오늘 열린 장소 드러내기: 그날 처음 보는 연출(intro)에서만, 길 그리기가 끝난 뒤
+  const reveal = (day: number) => anim.kind === "intro" && day === revealDay;
 
   const me = meDay > 0 ? pos(meDay) : START;
   const flagPos = flag ? pos(flag.day) : null;
@@ -171,7 +184,7 @@ export function ChapterPath({ statuses, position, flag, avatarKey, motion = { ki
               key={d.day}
               role={st === "locked" ? "button" : "link"}
               tabIndex={0}
-              aria-label={`${d.day}장 ${d.place}, ${STATUS_LABEL[st]}`}
+              aria-label={st === "locked" ? `${d.day}장, ${STATUS_LABEL[st]}` : `${d.day}장 ${d.place}, ${STATUS_LABEL[st]}`}
               aria-haspopup={st === "locked" ? "dialog" : undefined}
               className="cursor-pointer outline-none [&:focus-visible>circle:nth-child(2)]:stroke-[3]"
               onClick={() => select(d.day)}
@@ -211,16 +224,34 @@ export function ChapterPath({ statuses, position, flag, avatarKey, motion = { ki
                   </text>
                 </g>
               )}
-              <text
-                x={p.x}
-                y={p.y + 33}
-                textAnchor="middle"
-                fontSize="10"
-                fontWeight={strong ? 700 : 500}
-                fill={strong ? "var(--color-main)" : "var(--color-mute)"}
-              >
-                {d.place}
-              </text>
+              {st === "locked" || reveal(d.day) ? (
+                <text
+                  x={p.x}
+                  y={p.y + 33}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fontWeight={500}
+                  fill="var(--color-mid)"
+                  className={reveal(d.day) ? "path-label-out" : undefined}
+                  style={reveal(d.day) ? { animationDelay: `${settleAt}ms` } : undefined}
+                >
+                  {shortDate(d.readingDate)}
+                </text>
+              ) : null}
+              {st !== "locked" && (
+                <text
+                  x={p.x}
+                  y={p.y + 33}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fontWeight={strong ? 700 : 500}
+                  fill={strong ? "var(--color-main)" : "var(--color-mute)"}
+                  className={reveal(d.day) ? "path-label-in" : undefined}
+                  style={reveal(d.day) ? { animationDelay: `${settleAt + 120}ms` } : undefined}
+                >
+                  {d.place}
+                </text>
+              )}
             </g>
           );
         })}

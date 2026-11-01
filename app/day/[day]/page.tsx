@@ -119,7 +119,13 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
     return (
       <ReaderRoot settings={settings}>
         <ReadingBar title={`${formatDate(day.readingDate)}의 장`} settings={settings} />
-        <ChapterIntro day={day} />
+        {/* 장 소개(장소·제목·요약)도 그날 열린다(2026-11-01) — 주소를 직접 넣어도 미리 보이지 않게 */}
+        <div className="px-5 pt-4">
+          <p className="text-caption font-semibold text-mute">ACT {day.act}</p>
+          <h1 className="mt-1 font-serif text-display font-bold tracking-[-0.04em] text-main">
+            {JOSHUA_2026.book.name} {day.chapter}장
+          </h1>
+        </div>
         <div className="mx-gutter mt-3 rounded-card bg-surface">
           <EmptyState title="아직 열리지 않은 길">
             {JOSHUA_2026.book.name} {day.chapter}장은 {formatDate(day.readingDate, true)}에 열려요.

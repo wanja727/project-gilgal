@@ -163,6 +163,12 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   stroke-dashoffset: 1;
   animation: map-draw 1.3s 0.35s var(--ease-journey) forwards;
 }
+/* 여정 지도(2026-11-01): 그날 처음 볼 때 오늘 열린 장소가 톡 나타난다 */
+.map-reveal {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pop 0.55s var(--ease-sheet) 0.35s both;
+}
 /* 여정 되짚기: 구간을 넘길 때마다 바로 그린다 */
 .map-draw-quick {
   stroke-dasharray: 1;
@@ -209,6 +215,35 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 .path-draw {
   stroke-dasharray: 1 2;
   stroke-dashoffset: 1;
+}
+/* 오늘 열린 장소(2026-11-01): 날짜가 빠지고 장소 이름이 톡 — 길은 그날 열린다 */
+.path-label-out {
+  animation: path-label-out 0.3s ease-in both;
+}
+.path-label-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: path-label-in 0.5s var(--ease-sheet) both;
+}
+@keyframes path-label-out {
+  to {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+@keyframes path-label-in {
+  0% {
+    opacity: 0;
+    transform: translateY(5px) scale(0.7);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 .path-pop {
   transform-box: fill-box;

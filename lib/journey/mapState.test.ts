@@ -5,6 +5,7 @@ import {
   contiguousPosition,
   flagDay,
   mapView,
+  revealedSites,
   nextToRead,
   previousSite,
   trail,
@@ -92,5 +93,21 @@ describe("previousSite", () => {
     expect(previousSite(3)).toBe("shittim");
     expect(previousSite(1)).toBe("shittim");
     expect(previousSite(18)).toBe("shechem");
+  });
+});
+
+describe("드러난 장소", () => {
+  it("출발 전에는 싯딤만", () => {
+    expect(revealedSites("2026-11-01")).toEqual(["shittim"]);
+  });
+  it("열린 장의 장소까지만, 아직 열리지 않은 장의 장소는 없다", () => {
+    const today = JOURNEY_DAYS[5].readingDate;
+    const sites = revealedSites(today);
+    for (const d of JOURNEY_DAYS.slice(0, 6)) expect(sites).toContain(d.site);
+    const later = JOURNEY_DAYS.slice(6).map((d) => d.site).filter((s) => !JOURNEY_DAYS.slice(0, 6).some((d) => d.site === s));
+    for (const s of later) expect(sites).not.toContain(s);
+  });
+  it("다 열리면 모든 장소", () => {
+    expect(new Set(revealedSites("2026-12-31")).size).toBe(new Set(JOURNEY_DAYS.map((d) => d.site)).size);
   });
 });

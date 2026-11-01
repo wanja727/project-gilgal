@@ -1,4 +1,4 @@
-import { formatDate, givenName, josa } from "@/lib/format";
+import { formatDate, givenName } from "@/lib/format";
 import { addDays, type IsoDate } from "@/lib/time";
 import { JOSHUA_2026 } from "./campaign";
 import { type JourneyDay } from "./days";
@@ -122,7 +122,8 @@ export function goal(p: JourneyProgress): Goal {
     const when = openDay(upcoming, p.today);
     return {
       title: p.phase === "rest" ? "열린 장을 모두 걸었어요" : "오늘 깃발에 도착했어요",
-      body: `${when === "내일" ? "내일은" : `${when}에는`} ${upcoming.day}장, ${josa(upcoming.place, "으로/로")} 가요`,
+      // 다음 장소는 미리 말하지 않는다 — 길은 그날 열린다(2026-11-01)
+      body: `${when === "내일" ? "내일은" : `${when}에는`} ${upcoming.day}장, 새로운 길이 열려요`,
       action: { label: `${when === "내일" ? "내일" : `${when}에`} ${upcoming.day}장이 열려요`, variant: "quiet" },
     };
   }

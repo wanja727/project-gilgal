@@ -19,6 +19,7 @@ import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guid
 import { chapterStatus } from "@/lib/journey/mapState";
 import { formatPathSeen, PATH_SEEN_COOKIE, pathCount, pathMotion } from "@/lib/journey/pathMotion";
 import { OVERVIEW_INTRO } from "@/lib/journey/overview";
+import { todaysDay } from "@/lib/journey/schedule";
 import { nowKst, todayKst } from "@/lib/time";
 
 // 날짜와 사용자에 따라 내용이 바뀌므로 정적 캐시하지 않는다
@@ -130,6 +131,7 @@ export default async function Home() {
           avatarKey={member.avatarKey}
           motion={motion}
           seen={nextSeen}
+          revealDay={todaysDay(today)?.day ?? null}
         />
         <div className="mx-2 mt-1.5 flex items-center gap-3.5 rounded-tile bg-bg p-4">
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface text-main">
