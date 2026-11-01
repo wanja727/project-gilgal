@@ -52,6 +52,11 @@ export type JourneyMapProps = {
    * prev: 바로 전에 강조돼 있던 장소 — 강조가 갑자기 꺼지지 않고 서서히 빠지게 한다.
    */
   leg?: { from: SiteId; to: SiteId; locked?: boolean; key: string; prev?: SiteId | null } | null;
+  /**
+   * 여정 되짚기(2026-11-01): 내 아바타가 내 위치(view.me) 대신 고른 장의 장소(to)에 서고, 장을 바꾸면 from 에서 걸어간다.
+   * 다음 장이면 진하게 그려지는 길을 함께 따라가고, 뒤로 가면 그 길을 되돌아간다. "내 위치" 이름표는 실제 내 위치에 섰을 때만.
+   */
+  walker?: { from: SiteId | null; to: SiteId; key: string } | null;
   onSelectSite?: (id: SiteId) => void;
   ariaLabel: string;
   className?: string;
@@ -93,6 +98,7 @@ export function JourneyMap({
   labels = true,
   arrival = null,
   leg,
+  walker = null,
   onSelectSite,
   ariaLabel,
   className = "",
@@ -305,7 +311,10 @@ export function JourneyMap({
       )}
 
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
-      {!focused && view.me && avatarKey && (
+      {!focused && view.me && avatarKey && walker && (
+        <Walker walker={walker} leg={strong} avatarKey={avatarKey} tag={walker.to === view.me && !meAtFlag} />
+      )}
+      {!focused && view.me && avatarKey && !walker && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
           <MovingAvatar d={curve(strong.from, strong.to, 1)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
             <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} />
@@ -429,6 +438,37 @@ function MapAvatar({ site, avatarKey, tag }: { site: SiteId; avatarKey: string; 
     <g transform={`translate(${s.x + off.x} ${s.y + off.y})`}>
       <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(site) : null} />
     </g>
+  );
+}
+
+/** 여정 되짚기의 아바타: 고른 장의 장소로 걸어간다(key 가 바뀔 때마다 새로 걷는다). 진한 구간과 같은 시간(map-draw-quick 0.6초) */
+function Walker({
+  walker,
+  leg,
+  avatarKey,
+  tag,
+}: {
+  walker: { from: SiteId | null; to: SiteId; key: string };
+  leg: { from: SiteId; to: SiteId } | null;
+  avatarKey: string;
+  tag: boolean;
+}) {
+  const { from, to } = walker;
+  if (!from || from === to) return <MapAvatar site={to} avatarKey={avatarKey} tag={tag} />;
+  // 앞으로: 지금 그려지는 진한 구간 그대로. 그 밖(뒤로·건너뛰기): 반대 방향 구간(한 장 뒤로면 방금 보던 길)을 거꾸로
+  const forward = leg?.from === from && leg?.to === to;
+  return (
+    <MovingAvatar
+      key={walker.key}
+      d={forward ? curve(from, to, 1) : curve(to, from, 1)}
+      reverse={!forward}
+      fromOffset={avatarOffset(from)}
+      toOffset={avatarOffset(to)}
+      delayMs={0}
+      durationMs={600}
+    >
+      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(to) : null} />
+    </MovingAvatar>
   );
 }
 

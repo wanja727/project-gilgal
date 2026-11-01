@@ -19,6 +19,8 @@ type ViewMode = "map" | "list";
  * 지도에서는 "여정 되짚기" — 장을 하나 고르면(◀ ▶, 눈금 끌기, 지도의 장소·같은 장소 칩 누르기) 그 장의 한 걸음
  * (이전 장소 → 이 장소)만 진하게 그려지고, 아래 장 카드에 그 장의 제목과 그 장소에서 있었던 일이 나온다.
  * 지도와 장 카드가 모바일 한 화면에 들어오게 지도 높이를 제한한다(2026-10-26).
+ * [2026-11-01] 지도를 키웠다 — 제목 아래 설명 줄을 빼고, 장 카드의 같은 장소 칩 줄을 없애 읽기 버튼을 눈금 옆으로 올렸다.
+ * 내 아바타도 고른 장의 장소로 함께 걸어간다(도착 화면의 걷기와 같은 방식).
  */
 export function JourneyExplorer({
   view,
@@ -77,15 +79,12 @@ export function JourneyExplorer({
           ))}
         </div>
       </div>
-      <p className="px-5 pt-1.5 text-sub text-mute">
-        {view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지, 지금까지 걸어온 길` : "싯딤에서 출발하는 24일의 길"}
-      </p>
 
       {mode === "map" ? (
         <div>
-          {/* 지도 높이 = 화면 높이 - (제목·장 카드·하단 탭 약 470px). 장 카드가 첫 화면에 다 들어오게.
-              장소 아이콘 설명은 장 카드(아이콘 + 장소 이름)가 대신한다 */}
-          <div className="mx-gutter mt-3 h-[clamp(240px,calc(100dvh-470px),440px)] overflow-hidden rounded-map bg-surface">
+          {/* 지도 높이 = 화면 높이 - (제목·장 카드·하단 탭 약 390px). 장 카드가 첫 화면에 다 들어오게.
+              지도는 세로로 긴 그림이라 폭보다 높이가 크기를 정한다. 장소 아이콘 설명은 장 카드(아이콘 + 장소 이름)가 대신한다 */}
+          <div className="mx-gutter mt-3 h-[clamp(260px,calc(100dvh-392px),620px)] overflow-hidden rounded-map bg-surface">
             <JourneyMap
               view={view}
               avatarKey={avatarKey}
@@ -100,8 +99,9 @@ export function JourneyExplorer({
                 key: String(chapter),
                 prev: prevSite,
               }}
+              walker={{ from: prevSite, to: site, key: String(chapter) }}
               onSelectSite={selectSite}
-              ariaLabel={`여호수아 여정 지도. ${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. 장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
+              ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. 장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
             />
           </div>
           <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} onChange={setChapter} />
@@ -118,6 +118,7 @@ const STATUS_TEXT: Record<ChapterStatus, string> = { done: "읽음", open: "읽�
 /**
  * 장 카드 = 여정 되짚기 + 장소 카드 (2026-10-26 하나로 합침).
  * 장 순서대로 넘기며(◀ ▶, 눈금 끌기·누르기, 키보드 ←→) 그 장의 걸음·제목과 그 장소에서 있었던 일을 본다.
+ * [2026-11-01] 같은 장소 칩 줄은 지도를 키우려고 없앴다(지도에서 장소를 누르면 그 장소의 가까운 장으로 간다).
  * 눈금 위에 투명한 range 입력을 겹쳐 두어 키보드·스크린리더로도 움직일 수 있다.
  */
 function ChapterCard({
@@ -136,7 +137,6 @@ function ChapterCard({
   const total = JOURNEY_DAYS.length;
   const place = SITES[day.site];
   const from = SITES[previousSite(chapter)].name;
-  const samePlace = JOURNEY_DAYS.filter((d) => d.site === day.site);
   const arrow =
     "grid size-11 shrink-0 place-items-center rounded-full bg-soft text-main disabled:bg-transparent disabled:text-line";
 
@@ -172,62 +172,40 @@ function ChapterCard({
         </p>
       </div>
 
-      <div className="relative mx-1 mt-1 h-9">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-1/2 grid -translate-y-1/2 grid-cols-[repeat(24,minmax(0,1fr))] items-center gap-[3px]"
-          aria-hidden
-        >
-          {statuses.map((s, i) => (
-            <span
-              key={i}
-              className={`block rounded-full transition-all ${i + 1 === chapter ? "h-4" : "h-1.5"} ${
-                s === "done" ? "bg-main" : s === "open" ? "bg-mid" : "bg-soft"
-              } ${i + 1 === chapter ? "shadow-[0_0_0_2px_var(--color-surface),0_0_0_3.5px_var(--color-main)]" : ""}`}
-            />
-          ))}
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={total}
-          step={1}
-          value={chapter}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label="장 고르기"
-          aria-valuetext={`${chapter}장 ${day.title}, ${STATUS_TEXT[st]}`}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-        />
-      </div>
-
-      <div className="mx-1 mt-1 flex items-center gap-2">
-        {/* 같은 장소의 다른 장으로 바로 */}
-        <div
-          className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
-          role="group"
-          aria-label={`${place.name}의 장`}
-        >
-          {samePlace.length > 1 &&
-            samePlace.map((d) => (
-              <button
-                key={d.day}
-                type="button"
-                onClick={() => onChange(d.day)}
-                aria-current={d.day === chapter ? "true" : undefined}
-                aria-label={`${d.chapter}장 ${d.title}`}
-                className={`grid h-8 min-w-8 shrink-0 place-items-center rounded-chip px-2 text-caption font-bold ${
-                  d.day === chapter ? "bg-main text-white" : statuses[d.day - 1] === "locked" ? "bg-soft text-mid" : "bg-soft text-main"
-                }`}
-              >
-                {d.chapter}
-              </button>
+      {/* 눈금(장 고르기) + 읽기 버튼 한 줄 — 같은 장소의 다른 장은 지도에서 그 장소를 누르거나 눈금으로 */}
+      <div className="mx-1 mt-2 flex items-center gap-3">
+        <div className="relative h-10 min-w-0 flex-1">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-1/2 grid -translate-y-1/2 grid-cols-[repeat(24,minmax(0,1fr))] items-center gap-[2px]"
+            aria-hidden
+          >
+            {statuses.map((s, i) => (
+              <span
+                key={i}
+                className={`block rounded-full transition-all ${i + 1 === chapter ? "h-4" : "h-1.5"} ${
+                  s === "done" ? "bg-main" : s === "open" ? "bg-mid" : "bg-soft"
+                } ${i + 1 === chapter ? "shadow-[0_0_0_2px_var(--color-surface),0_0_0_3.5px_var(--color-main)]" : ""}`}
+              />
             ))}
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={total}
+            step={1}
+            value={chapter}
+            onChange={(e) => onChange(Number(e.target.value))}
+            aria-label="장 고르기"
+            aria-valuetext={`${chapter}장 ${day.title}, ${STATUS_TEXT[st]}`}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
         </div>
         {st === "locked" ? (
-          <span className="shrink-0 py-3 text-small text-mute">{formatDate(day.readingDate, true)}에 열려요</span>
+          <span className="shrink-0 text-caption text-mute">{formatDate(day.readingDate, true)}에 열려요</span>
         ) : (
           <Link
             href={`/day/${day.day}`}
-            className="flex h-11 shrink-0 items-center justify-center rounded-btn bg-main px-5 text-small font-bold text-white active:scale-[0.985]"
+            className="flex h-10 shrink-0 items-center justify-center rounded-btn bg-main px-4 text-small font-bold text-white active:scale-[0.985]"
           >
             {st === "done" ? `${day.chapter}장 다시 읽기` : `${day.chapter}장 읽기`}
           </Link>

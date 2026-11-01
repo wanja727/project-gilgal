@@ -9,6 +9,7 @@ type Point = { x: number; y: number };
  * 길 그리기(.map-draw: 0.35초 뒤 1.3초, --ease-journey)와 같은 시간·같은 가속으로 움직여 선 끝과 함께 도착한다.
  * 아바타는 장소 아이콘 옆(장소마다 다른 오프셋)에 있으므로 길 위의 점에 오프셋을 서서히 바꿔 더한다.
  * 움직임 줄이기 설정이면 처음부터 도착 위치에 둔다.
+ * reverse: 길(d)을 끝에서 처음 쪽으로 걷는다 — 여정 되짚기에서 한 장 뒤로 갈 때 방금 진하게 그렸던 길을 되돌아가게.
  */
 export function MovingAvatar({
   d,
@@ -16,6 +17,7 @@ export function MovingAvatar({
   toOffset,
   delayMs = 350,
   durationMs = 1300,
+  reverse = false,
   children,
 }: {
   /** 장소 중심을 잇는 길 (진한 구간과 같은 곡선) */
@@ -24,6 +26,7 @@ export function MovingAvatar({
   toOffset: Point;
   delayMs?: number;
   durationMs?: number;
+  reverse?: boolean;
   /** (0,0) 기준으로 그린 아바타 */
   children: React.ReactNode;
 }) {
@@ -36,7 +39,7 @@ export function MovingAvatar({
     if (!path || !g) return;
     const length = path.getTotalLength();
     const place = (progress: number) => {
-      const p = path.getPointAtLength(progress * length);
+      const p = path.getPointAtLength((reverse ? 1 - progress : progress) * length);
       const dx = fromOffset.x + (toOffset.x - fromOffset.x) * progress;
       const dy = fromOffset.y + (toOffset.y - fromOffset.y) * progress;
       g.setAttribute("transform", `translate(${p.x + dx} ${p.y + dy})`);
@@ -54,10 +57,10 @@ export function MovingAvatar({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [d, fromOffset.x, fromOffset.y, toOffset.x, toOffset.y, delayMs, durationMs]);
+  }, [d, fromOffset.x, fromOffset.y, toOffset.x, toOffset.y, delayMs, durationMs, reverse]);
 
-  // 서버 렌더·첫 그림: 출발 장소 옆
-  const m = /^M([-\d.]+),([-\d.]+)/.exec(d);
+  // 서버 렌더·첫 그림: 출발 장소 옆(거꾸로면 길의 끝점이 출발)
+  const m = reverse ? /([-\d.]+),([-\d.]+)\s*$/.exec(d) : /^M([-\d.]+),([-\d.]+)/.exec(d);
   const sx = (m ? Number(m[1]) : 0) + fromOffset.x;
   const sy = (m ? Number(m[2]) : 0) + fromOffset.y;
 
