@@ -154,6 +154,8 @@ export function CommentComposer({
           submitLabel="나눔 남기기"
           pendingLabel="남기는 중…"
           quoting
+          // 홈 말풍선 카드에 소개된다는 걸 미리 알려, 나중에 "내 글이 홈에?" 하고 놀라지 않게(ADR-029)
+          notice="남긴 나눔은 홈에서도 동행자들에게 소개돼요"
           chapter={chapter}
           maxLength={maxLength}
           text={text}
@@ -187,6 +189,7 @@ export function ComposerDock({
   submitLabel,
   pendingLabel = "저장하는 중…",
   quoting = false,
+  notice,
   chapter,
   maxLength,
   text,
@@ -202,6 +205,8 @@ export function ComposerDock({
   submitLabel: string;
   pendingLabel?: string;
   quoting?: boolean;
+  /** 제목 아래 덧붙이는 안내(새 나눔이면 홈에 소개된다는 것) */
+  notice?: string;
   chapter: number;
   maxLength: number;
   text: string;
@@ -289,6 +294,7 @@ export function ComposerDock({
             {title}
           </label>
           {quoting && <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절이 들어가고, 다시 누르면 빠져요</p>}
+          {notice && <p className="mt-0.5 text-caption text-mute">{notice}</p>}
         </div>
         <button type="button" onClick={onClose} aria-label={`${title} 닫기`} className="-mr-2 grid size-11 shrink-0 place-items-center text-mute">
           <CloseIcon className="size-5" />

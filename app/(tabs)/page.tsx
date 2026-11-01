@@ -27,7 +27,7 @@ const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
 /** 홈 나눔 미리보기에서 세 개씩 넘겨 보여 줄 최근 나눔 수 */
 const SHARE_PREVIEW = 12;
 
-/** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 + 나눔 미리보기 (기간 상태별 분기, architecture 7절) */
+/** 홈 = 인사 + 'ㄹ'자 진행도 + 나눔 미리보기 + 오늘 장에 도착한 사람 + 우리 셀 (기간 상태별 분기, architecture 7절) */
 export default async function Home() {
   const member = await requireMember();
   const today = todayKst();
@@ -150,6 +150,9 @@ export default async function Home() {
         </div>
       </Card>
 
+      {/* 나눔은 "오늘 읽기" 바로 다음 — 첫 할 일(읽기 버튼)은 밀어내지 않으면서, 조금만 내려도 넘어가는 말풍선이 보이게(ADR-029) */}
+      {sharePreview && <SharePreview dayNo={p.flag?.day ?? null} comments={sharePreview} total={shareTotal} />}
+
       {board && p.flag && (
         <ArrivalBoard
           board={board}
@@ -193,8 +196,6 @@ export default async function Home() {
           }
         />
       )}
-
-      {sharePreview && <SharePreview dayNo={p.flag?.day ?? null} comments={sharePreview} total={shareTotal} />}
     </>
   );
 }
