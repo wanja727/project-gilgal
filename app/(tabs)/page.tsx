@@ -12,6 +12,7 @@ import { BRAND } from "@/lib/brand";
 import { countComments, listComments, listRecentComments, toShared } from "@/lib/data/comments";
 import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
+import { sampleShares } from "@/lib/share/sample";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { flagCaption, goal, greeting, journeyProgress } from "@/lib/journey/guide";
@@ -24,8 +25,10 @@ import { nowKst, todayKst } from "@/lib/time";
 export const dynamic = "force-dynamic";
 
 const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
-/** 홈 나눔 미리보기에서 세 개씩 넘겨 보여 줄 최근 나눔 수 */
+/** 홈 나눔 미리보기에서 세 개씩 넘겨 보여 줄 나눔 수 */
 const SHARE_PREVIEW = 12;
+/** 이만큼의 최근 나눔 중에서 무작위로 골라 섞는다 — 늘 같은 사람(가장 최근·먼저 쓴 사람)만 앞에 보이지 않게 */
+const SHARE_POOL = 40;
 
 /** 홈 = 인사 + 'ㄹ'자 진행도 + 나눔 미리보기 + 오늘 장에 도착한 사람 + 우리 셀 (기간 상태별 분기, architecture 7절) */
 export default async function Home() {
@@ -37,19 +40,19 @@ export default async function Home() {
   // 셀 카드 기준: 깃발이 있으면 그 장, 보충 기간·종료 후에는 24장 전체, 기간 전에는 없음
   const criterion = p.flag ? [p.flag.day] : p.phase === "before" ? [] : ALL_DAYS;
   // 나눔 미리보기: 깃발 장의 나눔, 깃발이 없으면(보충 기간·종료 후) 여러 장의 최근 나눔, 기간 전엔 없음.
-  // 숨김 처리된 나눔은 작성자·운영자에게도 미리보기에서는 빼므로 몇 개 더 가져온다
+  // 최근 나눔 여럿을 가져와 숨김 처리된 것을 빼고(작성자·운영자에게도 미리보기에서는 뺀다) 무작위로 고른다
   const [board, cellMembers, community, recent, shareTotal] = await Promise.all([
     p.flag ? getArrivalBoard(p.flag.day, member.userId) : null,
     getCellMembers(member.cellId, member.userId, criterion),
     p.flag ? null : getCommunityToday(today),
     p.flag
-      ? listComments(member, p.flag.day, "latest", SHARE_PREVIEW + 6)
+      ? listComments(member, p.flag.day, "latest", SHARE_POOL)
       : p.phase === "before"
         ? null
-        : listRecentComments(member, today, SHARE_PREVIEW + 6),
+        : listRecentComments(member, today, SHARE_POOL),
     p.flag ? countComments(p.flag.day) : 0,
   ]);
-  const sharePreview = recent ? toShared(recent.filter((c) => !c.hidden).slice(0, SHARE_PREVIEW), nowKst()) : null;
+  const sharePreview = recent ? toShared(sampleShares(recent.filter((c) => !c.hidden), SHARE_PREVIEW), nowKst()) : null;
 
   const hello = greeting(p, member.realName);
   const g = goal(p);
