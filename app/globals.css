@@ -384,8 +384,13 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 [data-inview] .cell-bar {
   width: var(--pct);
 }
-[data-inview] .cell-pop {
+/* 화면에 들어오기 전부터 떠오르기 시작 모습(작고 흐리게)으로 둔다 — 다 보이던 얼굴이 들어오는 순간 작아졌다 커지면 튄다 */
+.cell-pop {
   display: block;
+  opacity: 0.4;
+  transform: scale(0.82);
+}
+[data-inview] .cell-pop {
   animation: cell-pop 0.42s var(--ease-sheet) var(--d, 0ms) both;
 }
 @keyframes cell-pop {
