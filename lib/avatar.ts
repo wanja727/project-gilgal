@@ -16,7 +16,6 @@ export type AvatarStyle = "marbles";
 
 type Json = Record<string, unknown>;
 const ink = { type: "color", name: "ink" };
-const bloom = { type: "color", name: "bloom" };
 const el = (name: string, attributes: Json) => ({ name, type: "element", attributes });
 /** Marbles 의 선과 같은 굵기·끝 모양 */
 const line = (d: string, width = 2.6, extra: Json = {}) =>
@@ -50,12 +49,6 @@ const GLASSES = {
     line("M19 42.2q11-3.3 22 0M59 42.2q11-3.3 22 0", 3.8),
     line("M41.5 44.5q8.5-3 17 0", 2.4),
     line("M18.5 44.5l-4.5-1.2M81.5 44.5l4.5-1.2", 2.4),
-  ],
-  sun: [
-    el("ellipse", { cx: "30", cy: "48.5", rx: "10.5", ry: "8", fill: ink }),
-    el("ellipse", { cx: "70", cy: "48.5", rx: "10.5", ry: "8", fill: ink }),
-    line("M40 46.5q10-4 20 0", 2.4),
-    line("M24.5 45.5q2.5-2.6 6.5-2.8M64.5 45.5q2.5-2.6 6.5-2.8", 1.6, { stroke: bloom, opacity: ".55" }),
   ],
 };
 
@@ -101,24 +94,12 @@ const CAP = [
 /** 꾸미기에서 이 머리를 고르면 Marbles top 대신 hair 부위로 그린다 */
 export const GILGAL_HAIR = new Set(Object.keys(HAIR));
 
-const MUSTACHE = el("path", {
-  d: "M50 57.2c-3.2-2.6-8.6-3-12 .4-1.7 1.7-4.4 1.5-5.4-.6 0 4 4.4 6.1 8.6 4.6 3.3-1.2 6-2.1 8.8-2.1 2.8 0 5.5.9 8.8 2.1 4.2 1.5 8.6-.6 8.6-4.6-1 2.1-3.7 2.3-5.4.6-3.4-3.4-8.8-3-12-.4z",
-  fill: ink,
-});
-
 const FACE = {
   blush: [
     el("ellipse", { cx: "22", cy: "59", rx: "6", ry: "3.4", fill: ink, opacity: ".16" }),
     el("ellipse", { cx: "78", cy: "59", rx: "6", ry: "3.4", fill: ink, opacity: ".16" }),
   ],
   freckles: [dot(19.5, 57, 1.1), dot(24, 59, 1.1), dot(20.5, 61.5, 1.1), dot(80.5, 57, 1.1), dot(76, 59, 1.1), dot(79.5, 61.5, 1.1)],
-  mole: [dot(65, 64, 1.4)],
-  mustache: [MUSTACHE],
-  // 턱 둘레를 덮는 수염 — 입 아래(78)부터 구슬 아래 끝까지, 입은 가리지 않는다
-  beard: [
-    el("path", { d: "M18 62c1 18 14 30 32 30s31-12 32-30c-5 10-16 17-32 17S23 72 18 62z", fill: ink, opacity: ".82" }),
-    MUSTACHE,
-  ],
 };
 
 const toVariants = (shapes: Record<string, unknown[]>) =>

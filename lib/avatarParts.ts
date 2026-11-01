@@ -102,7 +102,6 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "round", label: "동그란" },
       { id: "square", label: "뿔테" },
       { id: "browline", label: "웰링턴" },
-      { id: "sun", label: "선글라스" },
     ],
   },
   {
@@ -112,9 +111,6 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     options: [
       { id: "blush", label: "볼터치" },
       { id: "freckles", label: "주근깨" },
-      { id: "mole", label: "점" },
-      { id: "mustache", label: "콧수염" },
-      { id: "beard", label: "턱수염" },
     ],
   },
 ];
@@ -133,10 +129,21 @@ function isValidColor(value: unknown): value is number {
   return Number.isInteger(value) && (value as number) >= 0 && (value as number) < AVATAR_COLOR_COUNT;
 }
 
+/**
+ * 꾸미기에서 뺀 부품(2026-11-01 운영자 — 어둡거나 부정적인 인상): 점·콧수염·턱수염, 선글라스.
+ * 이미 고른 사람의 저장값은 "없음"으로 읽는다 — 그 부위만 비고 나머지 꾸민 모양은 그대로 남게
+ * (목록에서만 지우면 허용 목록 밖 값이 되어 꾸민 모양 전체가 기본 그림으로 돌아간다).
+ */
+const RETIRED: Partial<Record<AvatarPartId, ReadonlySet<string>>> = {
+  face: new Set(["mole", "mustache", "beard"]),
+  glasses: new Set(["sun"]),
+};
+
 /** DB(avatar_options jsonb)·클라이언트 입력 검증. 모든 부위가 허용 목록 안이어야 하고, 아니면 null(= 꾸미지 않음) */
 export function parseAvatarParts(value: unknown): AvatarParts | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const v = value as Record<string, unknown>;
+  const v = { ...(value as Record<string, unknown>) };
+  for (const [id, retired] of Object.entries(RETIRED)) if (retired!.has(v[id] as string)) v[id] = NONE;
   for (const part of AVATAR_PARTS) if (!isValidOption(part, v[part.id])) return null;
   if (!isValidColor(v.color)) return null;
   const parts = { color: v.color } as AvatarParts;
@@ -168,24 +175,13 @@ export function avatarKeyOf(seed: string, options: unknown): string {
   return encodeAvatarKey(seed, parseAvatarParts(options));
 }
 
-/** 섞기에서 수염과 함께 뽑지 않는 머리 — 긴 머리(길갈 HAIR)·리본·화관. 직접 고르는 건 막지 않는다 */
-export const SOFT_TOPS = new Set(["bob", "bangs", "long", "wavy", "ponytail", "pigtails", "bun", "braid", "bow", "garland"]);
-export const BEARDS = new Set(["mustache", "beard"]);
-
-/**
- * 꾸미기 "섞기": 부위마다 아무거나. 안경·얼굴은 가끔만 붙여 처음 보는 모양이 너무 요란하지 않게.
- * 긴 머리·리본에 수염이 같이 뽑히면 보기 흉해서(2026-11-01 운영자) 그때는 수염이 아닌 얼굴 장식으로 바꾼다.
- */
+/** 꾸미기 "섞기": 부위마다 아무거나. 안경·얼굴은 가끔만 붙여 처음 보는 모양이 너무 요란하지 않게 */
 export function randomAvatarParts(rand: () => number = Math.random): AvatarParts {
   const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
   const parts = { color: Math.floor(rand() * AVATAR_COLOR_COUNT) } as AvatarParts;
   const chance: Partial<Record<AvatarPartId, number>> = { nose: 0.75, glasses: 0.3, face: 0.3 };
   for (const part of AVATAR_PARTS) {
     parts[part.id] = rand() < (chance[part.id] ?? 1) ? pick(part.options).id : NONE;
-  }
-  if (SOFT_TOPS.has(parts.top) && BEARDS.has(parts.face)) {
-    const face = AVATAR_PARTS.find((p) => p.id === "face")!;
-    parts.face = pick(face.options.filter((o) => !BEARDS.has(o.id))).id;
   }
   return parts;
 }
