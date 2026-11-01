@@ -1,5 +1,6 @@
 "use client";
 
+import { flashLift } from "@/components/motion/flashLift";
 import { CELL_CARD_ID } from "./CellCard";
 
 /**
@@ -16,12 +17,6 @@ export function CellChip({ cellName }: { cellName: string }) {
         if (!card) return;
         e.preventDefault();
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const flash = () => {
-          card.classList.remove("flash-lift");
-          void card.offsetWidth; // 연달아 눌러도 처음부터 다시 반짝이게
-          card.classList.add("flash-lift");
-          card.addEventListener("animationend", () => card.classList.remove("flash-lift"), { once: true });
-        };
         // 스크롤이 끝난 뒤에 반짝인다 — 이미 그 자리(페이지 끝 등)면 바로, scrollend 를 모르는 브라우저는 시간으로
         const max = document.documentElement.scrollHeight - window.innerHeight;
         const target = Math.min(window.scrollY + card.getBoundingClientRect().top - 16, max);
@@ -30,7 +25,7 @@ export function CellChip({ cellName }: { cellName: string }) {
         const once = () => {
           if (done) return;
           done = true;
-          flash();
+          flashLift(card);
         };
         card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
         if (!moves || reduce) once();

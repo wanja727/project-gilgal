@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { deleteCommentAction, editCommentAction, setHiddenAction, setLikeAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
+import { flashLift } from "@/components/motion/flashLift";
 import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { isJustPosted } from "@/lib/share/justPosted";
@@ -41,7 +42,7 @@ export function CommentCard({
   const [pending, startTransition] = useTransition();
   // 방금 남긴 내 나눔이면 목록에 내려앉는 연출 — 처음 그릴 때 한 번만 정한다
   const [arriving] = useState(() => comment.mine && isJustPosted());
-  // 홈 말풍선에서 눌러 왔으면(#share-<id>) 이 나눔을 가운데로 데려오고 한동안 물들여 "이거예요" 하고 알린다(2026-11-01).
+  // 홈 말풍선에서 눌러 왔으면(#share-<id>) 이 나눔을 가운데로 데려와 셀 카드와 같은 방식으로 알린다(2026-11-01).
   // 다시 그려지거나 새로고침해도 또 반짝이지 않게 주소는 #share 로 바꿔 둔다. 반짝임은 DOM 에 직접 — 그리기 상태와 무관
   const articleRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -51,8 +52,7 @@ export function CommentCard({
     // 주소는 반짝임을 시작할 때 바꾼다 — 개발 모드에서 효과가 두 번 돌 때 첫 번째가 지워 버리지 않게
     const t = window.setTimeout(() => {
       history.replaceState(history.state, "", "#share");
-      el.classList.add("share-focus");
-      el.addEventListener("animationend", () => el.classList.remove("share-focus"), { once: true });
+      flashLift(el);
     }, 200);
     return () => window.clearTimeout(t);
   }, [comment.id]);
