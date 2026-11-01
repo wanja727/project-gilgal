@@ -31,6 +31,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "pigtails", label: "양갈래" },
       { id: "bun", label: "올림머리" },
       { id: "braid", label: "땋은 머리" },
+      { id: "pixie", label: "숏컷" },
       { id: "crop", label: "짧은 머리" },
       { id: "sidepart", label: "옆가르마" },
       { id: "curtain", label: "덮은 앞머리" },
@@ -131,7 +132,7 @@ export const TOP_GROUPS: { label: string; ids: string[] }[] = [
     label: "긴 머리·묶은 머리",
     ids: ["bob", "bangs", "medium", "long", "longbangs", "wavy", "ponytail", "pigtails", "bun", "braid"],
   },
-  { label: "짧은 머리", ids: ["crop", "sidepart", "curtain", "allback", "shortcurl"] },
+  { label: "짧은 머리", ids: ["pixie", "crop", "sidepart", "curtain", "allback", "shortcurl"] },
   {
     label: "개성 머리",
     ids: ["shag", "curls", "ringlets", "afro", "crimp", "flick", "curl", "swirl", "spikes", "zigzag", "cowlick", "tuft", "knot"],
