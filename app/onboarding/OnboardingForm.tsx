@@ -16,47 +16,54 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string; p
   const [backToName, setBackToName] = useState(false);
 
   if (nameState.step === "cell" && !backToName) {
+    const regular = cells.filter((c) => !c.personal);
+    const personal = cells.find((c) => c.personal);
     return (
-      <form action={cellAction} className="space-y-4">
-        <p className="rounded-btn bg-soft px-4 py-3 text-center text-small leading-5 text-mute">
-          {nameState.message}
-        </p>
-        <input type="hidden" name="realName" value={nameState.name} />
-        <p className="text-center text-body text-text">
-          <span className="font-semibold text-main">{nameState.name}</span> 님의 소속 셀
-        </p>
-        <select name="cellId" aria-label="소속 셀" required defaultValue="" className={inputClass}>
-          <option value="" disabled>
-            소속 셀을 선택하세요
-          </option>
-          {cells
-            .filter((c) => !c.personal)
-            .map((c) => (
+      <div className="space-y-4">
+        <form action={cellAction} className="space-y-4">
+          <p className="rounded-btn bg-soft px-4 py-3 text-center text-small leading-5 text-mute">
+            {nameState.message}
+          </p>
+          <input type="hidden" name="realName" value={nameState.name} />
+          <p className="text-center text-body text-text">
+            <span className="font-semibold text-main">{nameState.name}</span> 님의 소속 셀
+          </p>
+          <select name="cellId" aria-label="소속 셀" required defaultValue="" className={inputClass}>
+            <option value="" disabled>
+              소속 셀을 선택하세요
+            </option>
+            {regular.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          {/* 청년캠프 셀이 아닌 성도도 함께 걷는다(ADR-031) — "무소속" 대신 다른 공동체에서 개인으로 참여 */}
-          {cells.some((c) => c.personal) && (
-            <optgroup label="셀이 없다면">
-              {cells
-                .filter((c) => c.personal)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} (셀 없이 개인으로 참여)
-                  </option>
-                ))}
-            </optgroup>
+          </select>
+          {cellState.error && (
+            <p role="alert" className="text-center text-caption text-main">
+              {cellState.error}
+            </p>
           )}
-        </select>
-        {cellState.error && (
-          <p role="alert" className="text-center text-caption text-main">
-            {cellState.error}
-          </p>
+          <button type="submit" disabled={cellPending} className={buttonClass("main")}>
+            {cellPending ? "저장 중…" : "여정 시작하기"}
+          </button>
+        </form>
+
+        {/* 셀이 없는 성도(ADR-031): 셀 목록 안에 섞지 않고 따로 — 셀이 아니라 "개인으로 참여"라는 다른 선택이라서.
+            같은 서버 액션에 그 자리(cell.personal)의 id 를 보낸다 */}
+        {personal && (
+          <form action={cellAction} className="rounded-card bg-surface px-5 pt-4 pb-5 text-center">
+            <input type="hidden" name="realName" value={nameState.name} />
+            <input type="hidden" name="cellId" value={personal.id} />
+            <p className="text-small font-semibold text-main">청년캠프 셀이 아니신가요?</p>
+            <p className="mt-1 text-caption leading-5 text-mute">
+              다른 공동체 성도님도 셀 없이 개인으로 함께 걸을 수 있어요.
+            </p>
+            <button type="submit" disabled={cellPending} className={buttonClass("line", "mt-3.5 h-12 text-body")}>
+              셀 없이 개인으로 참여하기
+            </button>
+          </form>
         )}
-        <button type="submit" disabled={cellPending} className={buttonClass("main")}>
-          {cellPending ? "저장 중…" : "여정 시작하기"}
-        </button>
+
         <button
           type="button"
           onClick={() => setBackToName(true)}
@@ -67,7 +74,7 @@ export function OnboardingForm({ cells }: { cells: { id: number; name: string; p
         <p className="text-center text-[11px] leading-5 text-mute">
           셀 정보가 잘못되었다면 운영자에게 알려 주세요. 운영자가 바로잡아 드려요.
         </p>
-      </form>
+      </div>
     );
   }
 
