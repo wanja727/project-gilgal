@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Card, CardHead, ChevronRight, MoreLink } from "@/components/ui";
 import type { SharedComment } from "@/lib/data/comments";
-import { ShareFeed } from "./ShareFeed";
+import { ShareCarousel } from "./ShareCarousel";
 
 /**
  * 홈의 나눔 미리보기 (2026-10-26, 나눔 탭 대신).
  * 나눔은 본문과 함께 읽을 때 맥락이 살아서, 홈에서는 세 개씩만 보여 주고 장 본문 아래 나눔으로 보낸다.
- * 최근 나눔 몇 개가 한 칸씩 흘러 바뀐다(ShareFeed, 2026-10-30).
+ * 최근 나눔 몇 개를 세 개씩 말풍선으로 넘겨 보여 주고, 홈에서 바로 공감할 수 있다(ShareCarousel, ADR-029).
  * - 깃발이 있으면 그 장의 나눔, 없으면(보충 기간·종료 후) 여러 장의 최근 나눔
- * 공감·수정 같은 조작은 본문 아래 나눔에서만 한다(여기는 읽기 전용).
+ * 수정·삭제 같은 조작은 본문 아래 나눔에서만 한다.
  */
 export function SharePreview({
   dayNo,
@@ -39,7 +39,7 @@ export function SharePreview({
           <ChevronRight className="size-4 shrink-0 text-mid" />
         </Link>
       ) : (
-        <ShareFeed comments={comments} showChapter={!dayNo} />
+        <ShareCarousel comments={comments} showChapter={!dayNo} />
       )}
 
       {dayNo && (

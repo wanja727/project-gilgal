@@ -5,14 +5,11 @@ import { CellCard } from "@/components/home/CellCard";
 import { CellChip } from "@/components/home/CellChip";
 import { ChapterPath } from "@/components/home/ChapterPath";
 import { SharePreview } from "@/components/home/SharePreview";
-import { NoteComposer } from "@/components/notes/NoteComposer";
-import { TrailNotesCard } from "@/components/notes/TrailNotesCard";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { buttonClass, ButtonLink, Card, CardHead, ChevronRight, FlagIcon, MoreLink } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { countComments, listComments, listRecentComments, toShared } from "@/lib/data/comments";
-import { getMyTrailNote, listTrailNotes } from "@/lib/data/notes";
 import { getArrivalBoard, getCellMembers, getCommunityToday, getCompletedDays } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
@@ -27,7 +24,7 @@ import { nowKst, todayKst } from "@/lib/time";
 export const dynamic = "force-dynamic";
 
 const ALL_DAYS = JOURNEY_DAYS.map((d) => d.day);
-/** 홈 나눔 미리보기에서 돌아가며 보여 줄 최근 나눔 수(한 번에 보이는 건 3개) */
+/** 홈 나눔 미리보기에서 세 개씩 넘겨 보여 줄 최근 나눔 수 */
 const SHARE_PREVIEW = 12;
 
 /** 홈 = 인사 + 'ㄹ'자 진행도 + 오늘 장에 도착한 사람 + 우리 셀 + 나눔 미리보기 (기간 상태별 분기, architecture 7절) */
@@ -41,11 +38,7 @@ export default async function Home() {
   const criterion = p.flag ? [p.flag.day] : p.phase === "before" ? [] : ALL_DAYS;
   // 나눔 미리보기: 깃발 장의 나눔, 깃발이 없으면(보충 기간·종료 후) 여러 장의 최근 나눔, 기간 전엔 없음.
   // 숨김 처리된 나눔은 작성자·운영자에게도 미리보기에서는 빼므로 몇 개 더 가져온다
-  // 앞서 간 동행자의 한마디(ADR-028): 다음에 읽을 장에 먼저 도착한 사람들의 말풍선.
-  // 다 따라왔으면 지금 있는 장(마지막으로 읽은 장)에 함께 도착한 사람들 — 그때는 나도 한마디를 남길 수 있다
-  const noteAhead = p.next !== null;
-  const noteDay = p.phase === "before" ? null : (p.next?.day ?? (completed.length ? Math.max(...completed) : null));
-  const [board, cellMembers, community, recent, shareTotal, notes, myNote] = await Promise.all([
+  const [board, cellMembers, community, recent, shareTotal] = await Promise.all([
     p.flag ? getArrivalBoard(p.flag.day, member.userId) : null,
     getCellMembers(member.cellId, member.userId, criterion),
     p.flag ? null : getCommunityToday(today),
@@ -55,10 +48,7 @@ export default async function Home() {
         ? null
         : listRecentComments(member, today, SHARE_PREVIEW + 6),
     p.flag ? countComments(p.flag.day) : 0,
-    noteDay ? listTrailNotes(member, noteDay) : null,
-    noteDay && !noteAhead ? getMyTrailNote(member.userId, noteDay) : null,
   ]);
-  const notePlace = noteDay ? JOURNEY_DAYS[noteDay - 1].place : "";
   const sharePreview = recent ? toShared(recent.filter((c) => !c.hidden).slice(0, SHARE_PREVIEW), nowKst()) : null;
 
   const hello = greeting(p, member.realName);
@@ -159,24 +149,6 @@ export default async function Home() {
           )}
         </div>
       </Card>
-
-      {noteDay && notes && (
-        <TrailNotesCard
-          title={noteAhead ? `${notePlace}에서 기다리는 동행자들` : `${notePlace}에 함께 도착한 동행자들`}
-          sub={`${noteDay}장 · ${notes.total}명`}
-          notes={notes.notes}
-          isAdmin={member.isAdmin}
-          empty={
-            noteAhead
-              ? `아직 ${notePlace}에 남겨진 한마디가 없어요. ${noteDay}장을 읽고 먼저 도착해 첫 한마디를 남겨 보세요.`
-              : "아직 남겨진 한마디가 없어요. 뒤에 올 동행자에게 첫 한마디를 남겨 보세요."
-          }
-        >
-          {noteAhead
-            ? notes.total > 0 && <p className="text-caption text-mute">{noteDay}장을 읽고 도착하면 이들을 만나요</p>
-            : myNote === null && <NoteComposer dayNo={noteDay} avatarKey={member.avatarKey} />}
-        </TrailNotesCard>
-      )}
 
       {board && p.flag && (
         <ArrivalBoard

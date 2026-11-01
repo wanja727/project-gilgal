@@ -5,8 +5,8 @@
  *                                        # 테스트 사용자 + 세션 생성, 브라우저 쿠키 값을 출력
  *   pnpm test-user crowd <명수> --upto <장> [--lag] [--cell 셀이름] [--campaign joshua-2026]
  *                                        # 같은 셀의 테스트 동행자 여러 명 + 1~upto장 읽기 기록(순위·셀 카드 확인용)
- *   pnpm test-user notes <장> [--campaign joshua-2026]
- *                                        # 그 장을 읽은 테스트 동행자들에게 예시 한마디(ADR-028)를 남긴다(홈 말풍선 확인용)
+ *   pnpm test-user shares <장> [--campaign joshua-2026]
+ *                                        # 그 장을 읽은 테스트 동행자들이 예시 나눔을 하나씩 남긴다(홈 나눔 말풍선 확인용)
  *   pnpm test-user list                  # 테스트 계정·기록 행 수
  *   pnpm test-user delete                # 테스트 계정과 그 기록 모두 삭제
  *
@@ -25,23 +25,20 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { accounts, cells, profiles, readingProgress, sessions, trailNotes, users } from "../lib/db/schema";
+import { accounts, cells, profiles, readingComments, readingProgress, sessions, users } from "../lib/db/schema";
 import { campaignSlug } from "../lib/journey/campaign";
 import { JOURNEY_DAYS } from "../lib/journey/days";
 
-/** notes 예시 한마디 — 어느 장에서나 어울리게 */
-const SAMPLE_NOTES = [
-  "먼저 와 있어요! 천천히 오세요",
-  "여기까지 오느라 수고했어요",
-  "같이 걸으니 힘이 나요 🙌",
-  "오늘 말씀 꼭 읽어 보세요!",
-  "다리 아파도 조금만 더!",
-  "기다릴게요, 함께 가요",
-  "생각보다 금방 와요ㅎㅎ",
-  "여기 경치 좋아요",
-  "먼저 간 길, 안전해요",
-  "우리 같이 도착해요!",
-];
+/** shares 예시 나눔 — 길이가 제각각이어야 홈 말풍선(세 줄 자르기·높이)을 확인할 수 있다 */
+const SAMPLE_SHARES = [
+  "오늘 말씀 읽으면서 마음이 많이 따뜻해졌어요.",
+  "강하고 담대하라는 말씀이 오늘 저한테 하시는 말씀 같았어요. 요즘 새 일을 시작하면서 두려운 마음이 컸는데, 혼자 가는 길이 아니라는 게 위로가 됐습니다.",
+  "같이 읽으니 끝까지 갈 수 있을 것 같아요 🙌",
+  "요단강 앞에서 발을 먼저 내디뎌야 물이 갈라졌다는 부분이 계속 남아요. 확신이 들고 나서 움직이려고 했던 제 모습이 떠올랐어요. 이번 주는 작은 것부터 먼저 순종해 보려고 합니다.",
+  "기억의 돌을 세운 것처럼 저도 오늘 감사한 것 세 가지 적어 봤어요.",
+  "짧은 장인데 생각할 게 많네요.",
+  "셀원들이랑 같이 읽으니 빼먹지 않게 돼요ㅎㅎ 내일도 함께 가요!",
+]
 
 const CROWD_NAMES = [
   "김하은", "박준서", "이수아", "최민재", "한소율", "오지훈", "윤서연", "장예준", "서지민", "문태호",
@@ -172,9 +169,9 @@ async function main() {
       return;
     }
 
-    if (command === "notes") {
+    if (command === "shares") {
       const dayNo = Number(flags[0]);
-      if (!Number.isInteger(dayNo) || dayNo < 1 || dayNo > 24) throw new Error("사용법: pnpm test-user notes <장 1~24>");
+      if (!Number.isInteger(dayNo) || dayNo < 1 || dayNo > 24) throw new Error("사용법: pnpm test-user shares <장 1~24>");
       const ids = await testUserIds();
       const arrived = ids.length
         ? await db
@@ -182,17 +179,15 @@ async function main() {
             .from(readingProgress)
             .where(and(inArray(readingProgress.userId, ids), eq(readingProgress.campaign, campaignSlug()), eq(readingProgress.dayNo, dayNo)))
         : [];
-      for (const [i, { userId }] of arrived.entries()) {
-        const content = SAMPLE_NOTES[i % SAMPLE_NOTES.length];
+      if (arrived.length) {
         await db
-          .insert(trailNotes)
-          .values({ campaign: campaignSlug(), dayNo, userId, content })
-          .onConflictDoUpdate({ target: [trailNotes.campaign, trailNotes.dayNo, trailNotes.userId], set: { content } });
+          .insert(readingComments)
+          .values(arrived.map(({ userId }, i) => ({ campaign: campaignSlug(), dayNo, userId, content: SAMPLE_SHARES[i % SAMPLE_SHARES.length] })));
       }
       console.log(
         arrived.length
-          ? `${dayNo}장 한마디 ${arrived.length}개 (그 장을 읽은 테스트 계정, 캠페인 ${campaignSlug()})`
-          : `${dayNo}장을 읽은 테스트 계정이 없어 한마디를 넣지 못했어요 — 먼저 crowd <명수> --upto ${dayNo} 이상으로 만들어 주세요 (캠페인 ${campaignSlug()})`,
+          ? `${dayNo}장 나눔 ${arrived.length}개 (그 장을 읽은 테스트 계정, 캠페인 ${campaignSlug()}) — 계정을 지우면 함께 지워진다`
+          : `${dayNo}장을 읽은 테스트 계정이 없어 나눔을 넣지 못했어요 — 먼저 crowd <명수> --upto ${dayNo} 이상으로 만들어 주세요 (캠페인 ${campaignSlug()})`,
       );
       return;
     }
@@ -218,7 +213,7 @@ async function main() {
       return;
     }
 
-    throw new Error("사용법: pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | notes <장> | list | delete");
+    throw new Error("사용법: pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] | crowd <명수> --upto <장> [--lag] | shares <장> | list | delete");
   } finally {
     await client.end();
   }

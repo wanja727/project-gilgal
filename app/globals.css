@@ -304,7 +304,7 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: flash-lift 0.9s;
 }
 
-/* 한마디 말풍선이 "톡" 하고 떠오른다(ADR-028) */
+/* 말풍선이 "톡" 하고 떠오른다 */
 @keyframes bubble-pop {
   0% {
     opacity: 0;
@@ -321,10 +321,10 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 }
 
 /*
- * 홈 한마디 넘김(ADR-028): 다음 세 사람이 옆에서 한 줄씩 "착착착" 들어오고, 말풍선은 한 박자 늦게 "뿅".
+ * 홈 나눔 말풍선 넘김(ADR-029, 한마디 카드 ADR-028 에서 옮김): 다음 세 나눔이 옆에서 한 줄씩 "착착착" 들어오고, 말풍선은 한 박자 늦게 "뿅".
  * --dir: 1 이면 오른쪽에서(다음), -1 이면 왼쪽에서(이전). --d: 줄마다 늦추는 시간.
  */
-@keyframes note-row-in {
+@keyframes bubble-row-in {
   0% {
     opacity: 0;
     transform: translateX(calc(var(--dir, 1) * 48px));
@@ -338,15 +338,15 @@ body:has(#reader-root[data-reader-theme="dark"]) {
     transform: none;
   }
 }
-.note-row-in {
-  animation: note-row-in 0.42s var(--ease-sheet) var(--d, 0ms) both;
+.bubble-row-in {
+  animation: bubble-row-in 0.42s var(--ease-sheet) var(--d, 0ms) both;
 }
-.note-row-in > blockquote {
+.bubble-row-in > blockquote {
   transform-origin: left bottom;
   animation: bubble-pop 0.42s var(--ease-sheet) calc(var(--d, 0ms) + 110ms) both;
 }
-/* 나가는 세 사람은 함께 미끄러져 사라진다 — 손으로 끌던 자리(--from)에서 이어서 */
-@keyframes note-page-out {
+/* 나가는 세 나눔은 함께 미끄러져 사라진다 — 손으로 끌던 자리(--from)에서 이어서 */
+@keyframes bubble-page-out {
   from {
     opacity: 1;
     transform: translateX(var(--from, 0px));
@@ -356,8 +356,24 @@ body:has(#reader-root[data-reader-theme="dark"]) {
     transform: translateX(calc(var(--dir, 1) * -72px));
   }
 }
-.note-page-out {
-  animation: note-page-out 0.24s ease-in both;
+.bubble-page-out {
+  animation: bubble-page-out 0.24s ease-in both;
+}
+
+/* 홈 공감 하트(2026-11-01): 누르면 통 튀었다 제자리 */
+.like-pop {
+  animation: like-pop 0.45s var(--ease-sheet);
+}
+@keyframes like-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  45% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: none;
+  }
 }
 
 /* 셀 카드(2026-10-30): 화면에 들어오면(InView) 막대가 도착 비율만큼 차오르고, 도착한 셀원이 차례로 톡 */
@@ -486,41 +502,6 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   from {
     opacity: 0;
     transform: var(--tab-from);
-  }
-}
-
-/* 홈 나눔 미리보기(2026-10-30): 맨 위 칸은 접혀 올라가고, 아래에서 다음 나눔이 펼쳐지며 올라온다 */
-.feed-in,
-.feed-out {
-  display: grid;
-}
-.feed-in {
-  animation: feed-in 0.45s var(--ease-sheet) both;
-}
-.feed-out {
-  animation: feed-out 0.45s var(--ease-sheet) both;
-}
-@keyframes feed-in {
-  from {
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    grid-template-rows: 1fr;
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes feed-out {
-  from {
-    grid-template-rows: 1fr;
-    opacity: 1;
-  }
-  to {
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transform: translateY(-10px);
   }
 }
 

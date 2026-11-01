@@ -269,7 +269,7 @@ export const readingCommentLikes = pgTable(
   (l) => [primaryKey({ columns: [l.commentId, l.userId] }), index("reading_comment_like_user_idx").on(l.userId)],
 ).enableRLS();
 
-// ─── 앞서 간 동행자의 한마디 (ADR-028) ─────────────────────────────────────
+// ─── 앞서 간 동행자의 한마디 (ADR-028, 화면은 ADR-029 로 걷어 냄 — 데이터 보존용) ─────────────────────────────────────
 
 
 /**
