@@ -2,7 +2,7 @@ import { Avatar, Style } from "@dicebear/core";
 import marblesDefinition from "@dicebear/styles/marbles.json";
 import { describe, expect, it } from "vitest";
 import { avatarSvg, isValidSeed, resolveAvatarParts } from "./avatar";
-import { AVATAR_PARTS, type AvatarParts, encodeAvatarKey, NONE, parseAvatarKey, parseAvatarParts, randomAvatarParts } from "./avatarParts";
+import { AVATAR_PARTS, type AvatarParts, encodeAvatarKey, NONE, parseAvatarKey, parseAvatarParts, randomAvatarParts, TOP_GROUPS } from "./avatarParts";
 import { AVATAR_SEED_RE, randomAvatarSeed } from "./avatarSeed";
 
 const PARTS: AvatarParts = { top: "cap", eyes: "wink", mouth: "grin", nose: NONE, glasses: "round", face: "freckles", color: 2 };
@@ -100,6 +100,12 @@ describe("아바타 꾸미기", () => {
     const ids = (part: string) => AVATAR_PARTS.find((p) => p.id === part)!.options.map((o) => o.id);
     for (const gone of ["mole", "mustache", "beard"]) expect(ids("face")).not.toContain(gone);
     expect(ids("glasses")).not.toContain("sun");
+  });
+  it("꾸미기 화면의 머리 묶음은 모든 머리를 정확히 한 번씩 담는다", () => {
+    const ids = AVATAR_PARTS.find((p) => p.id === "top")!.options.map((o) => o.id);
+    const grouped = TOP_GROUPS.flatMap((g) => g.ids);
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect([...grouped].sort()).toEqual([...ids].sort());
   });
   it("허용 목록 밖의 부품·색·형식은 받지 않는다", () => {
     expect(parseAvatarKey("abcDEF123_-x~crown.wink.grin.none.round.freckles.2")).toBeNull();
