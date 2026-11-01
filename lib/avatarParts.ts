@@ -31,7 +31,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "pigtails", label: "양갈래" },
       { id: "bun", label: "올림머리" },
       { id: "braid", label: "땋은 머리" },
-      { id: "pixie", label: "여성 숏컷" },
+      { id: "pixie", label: "숏컷" },
       { id: "crop", label: "짧은 머리" },
       { id: "sidepart", label: "옆가르마" },
       { id: "comma", label: "쉼표머리" },
