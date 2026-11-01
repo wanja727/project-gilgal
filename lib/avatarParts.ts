@@ -102,7 +102,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     options: [
       { id: "round", label: "동그란" },
       { id: "square", label: "뿔테" },
-      { id: "browline", label: "반무테" },
+      { id: "browline", label: "웰링턴" },
       { id: "sun", label: "선글라스" },
     ],
   },
