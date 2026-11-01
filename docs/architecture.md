@@ -19,7 +19,7 @@
 | 프레임워크 | Next.js 16.1.6 (App Router, RSC, Server Actions), React 19.2.3, TypeScript strict |
 | 스타일 | Tailwind CSS v4 (`@theme` 토큰, `globals.css`) |
 | 인증 | Auth.js `next-auth@5.0.0-beta.30` + **카카오 OAuth**, `session.strategy = "database"` |
-| DB 접근 | Drizzle ORM 0.45 + `postgres`(postgres.js), `prepare: false`(트랜잭션 풀러 호환) |
+| DB 접근 | Drizzle ORM 0.45 + `pg`(node-postgres) + Vercel `attachDatabasePool`, 질의 15초 제한(ADR-032 — 이전 postgres.js). 스크립트는 postgres.js `prepare: false` |
 | DB | Supabase PostgreSQL (서울 리전 풀러) |
 | Supabase SDK | 의존성에만 있고 코드에서 미사용 |
 | 패키지 매니저 | pnpm |
@@ -54,7 +54,7 @@
 |---|---|---|
 | `lib/auth.ts`, `types/next-auth.d.ts` | Auth.js + Kakao + DB 세션 | 같은 패턴으로 새로 작성 |
 | `app/onboarding/*` | 3단계 셀 배정 | 규칙 재사용, 길갈 테이블 구조로 재작성 |
-| `lib/db/index.ts` | postgres.js + drizzle (`prepare:false`) | 그대로 |
+| `lib/db/index.ts` | postgres.js + drizzle (`prepare:false`) | [변경 2026-11-01] pg + attachDatabasePool(ADR-032) |
 | `lib/db/import-from-empty-tomb.ts` | 타 서비스 카카오 ID import | 이관 스크립트의 선례(단, 길갈은 Selah DB에 직접 접속하지 않음 — ADR-013) |
 | `lib/utils/date.ts` | KST 날짜 | `lib/time.ts` 로 확장 |
 | `lib/browser/env.ts`, `InAppBrowserNotice` | 인앱 브라우저 감지 | 안내 배너만(ADR-010) |
@@ -102,7 +102,7 @@
                                 ├─ RSC 페이지: auth() → getViewer() → DB 조회 → HTML
                                 ├─ Server Actions: 읽기 완료 / 온보딩 / 댓글 / 공감 (userId=세션)
                                 ├─ Route Handler: /api/auth/*, /api/avatar/[key]
-                                └─ lib/db (drizzle + postgres.js, prepare:false)
+                                └─ lib/db (drizzle + pg, attachDatabasePool)
                                         │ DATABASE_URL (트랜잭션 풀러 :6543)
                                         ▼
                                [길갈 Supabase Postgres (서울)]
@@ -838,3 +838,10 @@ CREATE TABLE comment_reaction (
 - **배경**: 운영자 요청 — 소속 셀이 없는 성도도 함께 읽고 싶다. "무소속"은 어감이 좋지 않아 "다른 공동체에서 개인으로 참여"로.
 - **대안**: `profile.cell_id` 를 비워 두고 온보딩 완료 조건을 바꾸기 — "실명·셀이 있어야 완료"(architecture 5.4)와 공동체 인원 조건(`communityMember`)을 여러 곳에서 바꿔야 한다. 셀 이름으로 특별 행을 알아보기 — 이름을 바꾸면 깨진다.
 - **결과**: 기존 온보딩·통계 쿼리는 그대로. 로스터에는 쓰지 않는다(셀 직접 선택과 같음). 이 사람들끼리 셀 카드로 묶이지 않는다. 셀 정정은 지금처럼 운영자가 DB에서 `profile.cell_id` 를 바꾼다.
+
+
+### ADR-032 런타임 DB 드라이버를 node-postgres(pg) + attachDatabasePool 로 — 채택 (2026-11-01)
+- **결정**: `lib/db/index.ts` 를 postgres.js 에서 `pg` Pool + `@vercel/functions` 의 `attachDatabasePool` 로 바꾼다. 풀 max 5, 놀던 연결 5초 뒤 정리, 연결 10초·질의 15초(클라이언트 `query_timeout` + 서버 `statement_timeout`)에서 실패. 운영 스크립트(`scripts/`)는 postgres.js 그대로.
+- **배경**: 오픈 전날 운영(read-joshua.vercel.app)에서 로그인한 화면, 특히 쿼리를 가장 많이 동시에 보내는 홈이 첫 요청 뒤로 응답 없이 멈췄다. DB 는 정상(직접 질의 10ms, 잠금 없음)이었고, 같은 코드·DB 를 로컬 dev·로컬 프로덕션 빌드로 띄우면 20/20 정상 — Vercel Fluid compute 에서 인스턴스가 쉬었다 깨어나는 사이 붙잡고 있던 연결이 죽은 채 남아, 그 연결로 보낸 쿼리가 영원히 기다린 것으로 본다. postgres.js 에는 질의 시간 제한이 없어 한번 걸리면 그 인스턴스의 풀 전체가 묶였고, DB 쪽에도 질의 도중 멈춘 연결(`active`+`ClientRead`)이 쌓여 엉뚱한 요청에 statement timeout 오류가 전달됐다.
+- **대안**: postgres.js 에 idle_timeout 등만 추가(먼저 시도, 커밋 7774813) — 질의 도중 멈춤은 못 막는다. 요청마다 연결 생성 — 풀러 연결 비용이 매번 든다.
+- **결과**: Vercel 이 공식 지원하는 조합이라 멈추기 전 연결 정리가 보장된다. 그래도 응답이 없으면 15초 안에 오류로 끝나 인스턴스 전체가 묶이지 않는다. 의존성 `pg`, `@vercel/functions`, `@types/pg` 추가. drizzle 질의 코드는 그대로(`db.execute` 미사용).

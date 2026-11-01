@@ -56,7 +56,7 @@
 
 - Next.js 16(App Router, RSC, Server Actions) · React 19 · TypeScript strict · Tailwind CSS v4 · pnpm · vitest
 - Auth.js(NextAuth v5) + 카카오 OAuth(Selah와 같은 앱), DB 세션 전략, `@auth/drizzle-adapter` — Auth.js 테이블은 표준 그대로
-- Drizzle ORM + postgres.js(`prepare: false`) → 길갈 Supabase PostgreSQL(서울). Supabase Auth/클라이언트 SDK·Data API 미사용
+- Drizzle ORM + node-postgres(`pg`, Vercel `attachDatabasePool`, ADR-032) → 길갈 Supabase PostgreSQL(서울). 스크립트(`scripts/`)는 postgres.js. Supabase Auth/클라이언트 SDK·Data API 미사용
 - Vercel 배포(함수 리전 `icn1`)
 - 아바타: DiceBear `marbles` + 길갈 부품(안경·얼굴), 꾸미기는 `profile.avatar_options` (서버에서 SVG 생성, `/api/avatar/[key]`, ADR-027)
 - 지도: 인라인 SVG schematic map (외부 지도 라이브러리 없음)
