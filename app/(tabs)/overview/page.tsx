@@ -48,7 +48,8 @@ export default async function OverviewPage() {
       {/* 배경 */}
       <Card aria-labelledby="ov-background">
         <CardHead id="ov-background" title="여호수아서의 배경" />
-        <ol className="mt-4 grid grid-cols-3 gap-1.5">
+        {/* 박스 사이 간격(gap-4)을 화살표 칸으로 쓴다 — 화살표가 간격 한가운데 오게(2026-11-02) */}
+        <ol className="mt-4 grid grid-cols-3 gap-4">
           {BACKGROUND_STEPS.map((s, i) => (
             <li key={s.label} className="relative rounded-tile bg-bg px-2.5 pt-3 pb-3 text-center">
               <span className="mx-auto flex size-6 items-center justify-center rounded-chip bg-main text-caption font-bold text-white">
@@ -57,7 +58,7 @@ export default async function OverviewPage() {
               <p className="mt-2 font-serif text-[15px] font-bold tracking-[-0.03em] text-main">{s.label}</p>
               <p className="mt-1 text-caption leading-[1.45] text-mute">{s.body}</p>
               {i < BACKGROUND_STEPS.length - 1 && (
-                <span aria-hidden className="absolute top-1/2 -right-[9px] z-10 -translate-y-1/2 text-mid">
+                <span aria-hidden className="absolute top-1/2 left-full flex w-4 -translate-y-1/2 justify-center text-mid">
                   ›
                 </span>
               )}
