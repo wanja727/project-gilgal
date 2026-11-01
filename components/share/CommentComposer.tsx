@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { createCommentAction } from "@/app/actions/comments";
+import { flashLift } from "@/components/motion/flashLift";
+import { shareAnchor } from "@/lib/share/anchor";
 import { markJustPosted } from "@/lib/share/justPosted";
 import { Avatar } from "@/components/Avatar";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
@@ -14,6 +16,7 @@ const ERRORS: Record<string, string> = {
   invalid: "내용을 적어 주세요.",
   locked: "아직 열리지 않은 장이에요.",
   limit: "오늘은 나눔을 충분히 남겼어요. 내일 또 나눠 주세요.",
+  exists: "이 장에는 이미 나눔을 남겼어요. 남긴 나눔을 고쳐 주세요.",
 };
 
 const OPEN_EVENT = "gilgal:compose";
@@ -57,6 +60,7 @@ function saveDraft(key: string, text: string) {
  * 입력창만 아래에 머문다(2026-10-29). 본문 아래 자리는 입력창과 똑같이 생기면 같은 칸이 하나 더 뜨는 것처럼 보여서
  * "누르면 쓰기 창이 열리는 한 줄"로 둔다.
  * draftKey: 임시저장 자리(캠페인·아바타 seed·장). 같은 기기를 다른 사람이 써도 섞이지 않게 사람별로 나눈다.
+ * mineId: 이 장에 이미 남긴 내 나눔(한 사람은 한 장에 하나, ADR-034) — 있으면 쓰기 대신 "내 나눔 보기"로 그 나눔에 데려간다.
  */
 export function CommentComposer({
   dayNo,
@@ -64,12 +68,14 @@ export function CommentComposer({
   maxLength,
   avatarKey,
   draftKey,
+  mineId = null,
 }: {
   dayNo: number;
   chapter: number;
   maxLength: number;
   avatarKey: string;
   draftKey: string;
+  mineId?: number | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -84,15 +90,24 @@ export function CommentComposer({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // 이미 남긴 나눔이 있으면 그 나눔을 가운데로 데려와 알린다(셀 카드·홈 말풍선과 같은 강조)
+  const showMine = useCallback(() => {
+    const el = mineId ? document.getElementById(shareAnchor(mineId)) : null;
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    window.setTimeout(() => flashLift(el), 450);
+  }, [mineId]);
+
   useEffect(() => {
     // 도착 화면에서 열 때는 키보드를 바로 올리지 않는다 — 먼저 본문을 다시 볼 수 있게
     const onOpen = () => {
+      if (mineId) return showMine();
       setFocusOnOpen(false);
       setOpen(true);
     };
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
-  }, []);
+  }, [mineId, showMine]);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -117,6 +132,22 @@ export function CommentComposer({
       }
     });
   };
+
+  if (mineId) {
+    return (
+      <button
+        type="button"
+        onClick={showMine}
+        className="mt-2 flex w-full items-center gap-3 rounded-[20px] bg-surface py-3 pr-3 pl-3.5 text-left"
+      >
+        <Avatar avatarKey={avatarKey} size={34} ring={false} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-caption font-semibold text-main">이 장의 나눔을 남겼어요</span>
+          <span className="mt-0.5 block text-sub text-mute">내 나눔 보기 · 고치려면 내 나눔의 ‘수정’</span>
+        </span>
+      </button>
+    );
+  }
 
   return (
     <>

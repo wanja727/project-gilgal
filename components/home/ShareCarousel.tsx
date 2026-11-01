@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { setLikeAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
-import { shareAnchor } from "@/components/share/CommentCard";
+import { shareAnchor } from "@/lib/share/anchor";
 import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 

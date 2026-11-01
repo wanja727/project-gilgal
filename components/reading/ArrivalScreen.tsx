@@ -22,6 +22,7 @@ export function ArrivalScreen({
   arrival,
   today,
   avatarKey,
+  hasShare = false,
   onClose,
   onShare,
 }: {
@@ -30,6 +31,8 @@ export function ArrivalScreen({
   arrival: { rank: number; total: number } | null;
   today: string;
   avatarKey: string;
+  /** 이 장에 이미 나눔을 남겼다 — 다시 읽은 뒤면 새로 쓰지 않고 내 나눔으로 */
+  hasShare?: boolean;
   onClose: () => void;
   onShare: () => void;
 }) {
@@ -88,7 +91,7 @@ export function ArrivalScreen({
 
   const shareButton = (variant: "main" | "line") => (
     <button type="button" onClick={onShare} className={buttonClass(variant)}>
-      나눔 남기기
+      {hasShare ? "내 나눔 보기" : "나눔 남기기"}
     </button>
   );
 

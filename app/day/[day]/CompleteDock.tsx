@@ -20,6 +20,7 @@ export function CompleteDock({
   after,
   today,
   avatarKey,
+  hasShare = false,
 }: {
   day: JourneyDay;
   initiallyDone: boolean;
@@ -27,6 +28,8 @@ export function CompleteDock({
   after: { primary: { label: string; href: string }; secondary: { label: string; href: string } | null };
   today: string;
   avatarKey: string;
+  /** 이 장에 이미 남긴 내 나눔이 있다(한 장에 하나, ADR-034) — 도착 화면 버튼이 "내 나눔 보기"가 된다 */
+  hasShare?: boolean;
 }) {
   const router = useRouter();
   const [done, setDone] = useState(initiallyDone);
@@ -105,6 +108,7 @@ export function CompleteDock({
           arrival={arrived.arrival}
           today={today}
           avatarKey={avatarKey}
+          hasShare={hasShare}
           onClose={close}
           onShare={share}
         />

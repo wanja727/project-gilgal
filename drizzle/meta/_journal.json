@@ -36,6 +36,13 @@
       "when": 1793530781007,
       "tag": "0004_personal_cell",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793550310493,
+      "tag": "0005_one_share_per_day",
+      "breakpoints": true
     }
   ]
 }

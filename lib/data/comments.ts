@@ -126,7 +126,7 @@ export async function countComments(dayNo: number): Promise<number> {
 
 export type CommentWriteResult =
   | { status: "ok" }
-  | { status: "invalid" | "too_long" | "locked" | "limit" | "not_found" };
+  | { status: "invalid" | "too_long" | "locked" | "limit" | "not_found" | "exists" };
 
 function normalizeContent(input: unknown): string | null {
   if (typeof input !== "string") return null;
@@ -161,16 +161,42 @@ export async function createComment(
     );
   if (n >= COMMENT_DAILY_LIMIT) return { status: "limit" };
 
+  // 한 사람은 한 장에 나눔 하나(ADR-034). 이미 있으면 새로 쓰지 않고 남긴 나눔을 고치게 한다.
+  // 두 탭·두 번 누르기처럼 동시에 들어와도 DB 의 부분 유니크 인덱스(지운 나눔 제외)가 하나만 남긴다
+  const [mine] = await db
+    .select({ id: readingComments.id })
+    .from(readingComments)
+    .where(
+      and(
+        eq(readingComments.campaign, campaignSlug()),
+        eq(readingComments.dayNo, access.day.day),
+        eq(readingComments.userId, userId),
+        isNull(readingComments.deletedAt),
+      ),
+    );
+  if (mine) return { status: "exists" };
+
   const now = nowKst();
-  await db.insert(readingComments).values({
-    campaign: campaignSlug(),
-    dayNo: access.day.day,
-    userId,
-    content,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    await db.insert(readingComments).values({
+      campaign: campaignSlug(),
+      dayNo: access.day.day,
+      userId,
+      content,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (e) {
+    if (isUniqueViolation(e)) return { status: "exists" };
+    throw e;
+  }
   return { status: "ok" };
+}
+
+/** Postgres unique_violation(23505) — drizzle 이 감싼 오류의 cause 까지 본다 */
+function isUniqueViolation(e: unknown): boolean {
+  const code = (x: unknown) => (x && typeof x === "object" && "code" in x ? (x as { code?: string }).code : undefined);
+  return code(e) === "23505" || code((e as { cause?: unknown })?.cause) === "23505";
 }
 
 function validId(id: unknown): id is number {

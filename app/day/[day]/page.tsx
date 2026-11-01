@@ -190,6 +190,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
         after={after}
         today={today}
         avatarKey={member.avatarKey}
+        hasShare={shared.some((c) => c.mine)}
       />
 
       <section id="share" aria-labelledby="share-title" className="scroll-mt-4 px-gutter pt-2 pb-7">
@@ -221,6 +222,7 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
           maxLength={COMMENT_MAX_LENGTH}
           avatarKey={member.avatarKey}
           draftKey={`${campaignSlug()}:${member.avatarSeed}:${day.day}`}
+          mineId={shared.find((c) => c.mine)?.id ?? null}
         />
         {shared.length === 0 ? (
           <p className="px-2 py-6 text-center text-small text-mute">아직 나눔이 없어요. 첫 나눔을 남겨 보세요.</p>

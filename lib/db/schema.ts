@@ -248,6 +248,10 @@ export const readingComments = pgTable(
     index("reading_comment_campaign_day_created_idx").on(c.campaign, c.dayNo, c.createdAt),
     index("reading_comment_campaign_created_idx").on(c.campaign, c.createdAt),
     index("reading_comment_user_idx").on(c.userId),
+    // 한 사람은 한 장에 나눔 하나(2026-11-02, ADR-034) — 지운 나눔은 세지 않아 지우면 다시 쓸 수 있다
+    uniqueIndex("reading_comment_one_per_day_uq")
+      .on(c.campaign, c.dayNo, c.userId)
+      .where(sql`${c.deletedAt} IS NULL`),
     check("reading_comment_day_no_chk", sql`${c.dayNo} BETWEEN 1 AND 24`),
     check(
       "reading_comment_content_chk",

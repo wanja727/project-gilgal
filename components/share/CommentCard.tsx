@@ -8,14 +8,10 @@ import { Avatar } from "@/components/Avatar";
 import { flashLift } from "@/components/motion/flashLift";
 import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { shareAnchor } from "@/lib/share/anchor";
 import { isJustPosted } from "@/lib/share/justPosted";
 import { ComposerDock } from "./CommentComposer";
 import { VerseRefText } from "./VerseRefText";
-
-/** 나눔 한 개로 바로 가는 주소 조각 — 홈 말풍선이 이 나눔을 가리킬 때 */
-export function shareAnchor(id: number) {
-  return `share-${id}`;
-}
 
 /** 나눔 한 개: 작성자 · 내용 · 공감 · (내 나눔이면) 수정/삭제 · (운영자면) 숨김/복구 */
 export function CommentCard({

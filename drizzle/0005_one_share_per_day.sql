@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "reading_comment_one_per_day_uq" ON "reading_comment" USING btree ("campaign","day_no","user_id") WHERE "reading_comment"."deleted_at" IS NULL;
