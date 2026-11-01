@@ -25,6 +25,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       { id: "bangs", label: "앞머리 단발" },
       { id: "medium", label: "중단발" },
       { id: "long", label: "긴 생머리" },
+      { id: "wavy", label: "긴 웨이브" },
       { id: "ponytail", label: "포니테일" },
       { id: "pigtails", label: "양갈래" },
       { id: "bun", label: "올림머리" },
@@ -135,12 +136,11 @@ function isValidColor(value: unknown): value is number {
 }
 
 /**
- * 꾸미기에서 뺀 부품(2026-11-01 운영자 — 어둡거나 부정적인 인상): 점·콧수염·턱수염, 선글라스, 긴 웨이브 머리.
+ * 꾸미기에서 뺀 부품(2026-11-01 운영자 — 어둡거나 부정적인 인상): 점·콧수염·턱수염, 선글라스(긴 웨이브는 뺐다가 좌우 대칭으로 고쳐 되살림).
  * 이미 고른 사람의 저장값은 "없음"으로 읽는다 — 그 부위만 비고 나머지 꾸민 모양은 그대로 남게
  * (목록에서만 지우면 허용 목록 밖 값이 되어 꾸민 모양 전체가 기본 그림으로 돌아간다).
  */
 const RETIRED: Partial<Record<AvatarPartId, ReadonlySet<string>>> = {
-  top: new Set(["wavy"]), // 긴 웨이브 — 물결선이 다른 머리와 결이 달라 뺐다
   face: new Set(["mole", "mustache", "beard"]),
   glasses: new Set(["sun", "thin"]), // thin: 얇은 동그란 — 넣었다가 바로 뺐다
 };
