@@ -64,7 +64,7 @@
 ## 코딩 컨벤션
 
 - 경로 별칭 `@/*`. 서버 전용 모듈(`lib/db`, `lib/auth`, `lib/data`)은 `server-only` 로 표시하고 클라이언트 컴포넌트에서 import 하지 않는다.
-- 날짜는 항상 **KST(Asia/Seoul) 기준 `YYYY-MM-DD`** 문자열. 현재 시각은 `lib/time` 의 `nowKst()` 로만 얻는다.
+- 날짜는 항상 **KST(Asia/Seoul) 기준 `YYYY-MM-DD`** 문자열. 현재 시각은 `lib/time` 의 `nowKst()` 로만 얻는다. 하루는 **새벽 4시**에 바뀐다(`todayKst()`·`toServiceDate()`·`serviceDayStart()`, ADR-033) — 자정 기준 날짜(`toKstDate`)는 표시용으로만.
 - 장 공개 규칙은 `lib/journey/schedule.ts` 한 곳: `readingDate <= todayKst` 이면 공개, 종료일 없음. 서버에서 검증한다.
 - 사용자 식별자는 **항상 서버 세션에서** 얻는다. 클라이언트가 보낸 userId/cellId 는 신뢰하지 않는다. 쓰기 쿼리는 소유권 조건을 WHERE에 포함한다.
 - 프로필·셀·관리자 여부는 `getViewer()`(요청당 1회 캐시)로 조회한다.

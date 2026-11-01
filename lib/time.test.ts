@@ -8,7 +8,9 @@ import {
   PRELAUNCH_UNTIL,
   isIsoDate,
   resolveNow,
+  serviceDayStart,
   toKstDate,
+  toServiceDate,
   weekdayOf,
 } from "./time";
 
@@ -25,6 +27,23 @@ describe("toKstDate — KST 자정 경계", () => {
   });
   it("연말 경계", () => {
     expect(toKstDate(new Date("2026-12-31T15:00:00Z"))).toBe("2027-01-01");
+  });
+});
+
+describe("toServiceDate — 새벽 4시 경계(ADR-033)", () => {
+  it("자정을 넘겨도 새벽 4시 전이면 전날", () => {
+    expect(toServiceDate(new Date("2026-11-03T00:30:00+09:00"))).toBe("2026-11-02");
+    expect(toServiceDate(new Date("2026-11-03T03:59:59+09:00"))).toBe("2026-11-02");
+  });
+  it("새벽 4시가 되면 다음 날", () => {
+    expect(toServiceDate(new Date("2026-11-03T04:00:00+09:00"))).toBe("2026-11-03");
+    expect(toServiceDate(new Date("2026-11-03T23:59:59+09:00"))).toBe("2026-11-03");
+  });
+  it("연말 경계", () => {
+    expect(toServiceDate(new Date("2027-01-01T02:00:00+09:00"))).toBe("2026-12-31");
+  });
+  it("serviceDayStart 는 그날 04:00 KST", () => {
+    expect(serviceDayStart("2026-11-02").toISOString()).toBe("2026-11-01T19:00:00.000Z");
   });
 });
 
@@ -59,12 +78,20 @@ describe("resolveNow — GILGAL_DEV_NOW 오버라이드", () => {
     expect(now.toISOString()).toBe("2026-11-12T03:00:00.000Z");
   });
 
+  it("날짜만 주고 실제 시각이 새벽 4시 전이면, 서비스 날짜가 주어진 날짜가 되게 하루 뒤 달력에 둔다", () => {
+    const night = new Date("2026-10-19T17:30:00Z"); // 10/20 02:30 KST
+    const now = resolveNow({ GILGAL_DEV_NOW: "2026-11-12" }, night);
+    expect(now.toISOString()).toBe("2026-11-12T17:30:00.000Z"); // 11/13 02:30 KST
+    expect(toServiceDate(now)).toBe("2026-11-12");
+  });
+
   it("오픈 전 운영 테스트 모드: 첫 장 공개 전까지만 운영에서도 적용", () => {
     const env = { GILGAL_DEV_NOW: "2026-11-12", VERCEL_ENV: "production", GILGAL_PRELAUNCH_TEST: "1" };
     expect(isPrelaunchTest(env, real)).toBe(true);
     expect(toKstDate(resolveNow(env, real))).toBe("2026-11-12");
-    // 11/2 00:00 KST 가 되면 환경변수가 남아 있어도 저절로 꺼진다
-    const launch = new Date("2026-11-01T15:00:00Z");
+    // 첫 장이 열리는 11/2 04:00 KST 가 되면 환경변수가 남아 있어도 저절로 꺼진다
+    expect(isPrelaunchTest(env, new Date("2026-11-01T18:59:59Z"))).toBe(true);
+    const launch = new Date("2026-11-01T19:00:00Z");
     expect(isPrelaunchTest(env, launch)).toBe(false);
     expect(resolveNow(env, launch)).toBe(launch);
     // 값이 "1" 이 아니면 꺼짐

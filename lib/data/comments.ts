@@ -6,7 +6,7 @@ import { cells, COMMENT_MAX_LENGTH, profiles, readingCommentLikes, readingCommen
 import { campaignSlug } from "@/lib/journey/campaign";
 import { checkDayAccess, unlockedDays } from "@/lib/journey/schedule";
 import { relativeTime } from "@/lib/format";
-import { addDays, type IsoDate, nowKst } from "@/lib/time";
+import { addDays, type IsoDate, nowKst, serviceDayStart } from "@/lib/time";
 
 /**
  * 장별 나눔과 공감 (architecture 8.7).
@@ -146,8 +146,9 @@ export async function createComment(
   if (!content) return { status: "invalid" };
   if (content.length > COMMENT_MAX_LENGTH) return { status: "too_long" };
 
-  const since = new Date(`${today}T00:00:00+09:00`);
-  const until = new Date(`${addDays(today, 1)}T00:00:00+09:00`);
+  // 하루 나눔 수 제한도 서비스 하루(새벽 4시 경계) 기준
+  const since = serviceDayStart(today);
+  const until = serviceDayStart(addDays(today, 1));
   const [{ n }] = await db
     .select({ n: count() })
     .from(readingComments)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toKstDate } from "@/lib/time";
+import { toServiceDate } from "@/lib/time";
 import {
   campaignPhase,
   checkDayAccess,
@@ -81,9 +81,11 @@ describe("공개 정책 (확정 1~7)", () => {
     }
   });
 
-  it("KST 자정 경계: 11/2 00:00 KST 에 1장 공개", () => {
-    const before = toKstDate(new Date("2026-11-01T14:59:59Z"));
-    const after = toKstDate(new Date("2026-11-01T15:00:00Z"));
+  it("새벽 4시 경계(ADR-033): 11/2 04:00 KST 에 1장 공개 — 자정에는 아직", () => {
+    const midnight = toServiceDate(new Date("2026-11-02T00:00:00+09:00"));
+    expect(checkDayAccess(1, midnight).ok).toBe(false);
+    const before = toServiceDate(new Date("2026-11-02T03:59:59+09:00"));
+    const after = toServiceDate(new Date("2026-11-02T04:00:00+09:00"));
     expect(checkDayAccess(1, before).ok).toBe(false);
     expect(checkDayAccess(1, after).ok).toBe(true);
   });

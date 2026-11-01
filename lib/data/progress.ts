@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { cells, profiles, readingProgress } from "@/lib/db/schema";
 import { campaignSlug } from "@/lib/journey/campaign";
 import { checkDayAccess } from "@/lib/journey/schedule";
-import { addDays, type IsoDate, isPrelaunchTest, nowKst } from "@/lib/time";
+import { addDays, type IsoDate, isPrelaunchTest, nowKst, serviceDayStart } from "@/lib/time";
 
 /**
  * 읽기 기록. 모든 함수는 현재 캠페인 slug(GILGAL_CAMPAIGN) 안에서만 읽고 쓴다 —
@@ -65,9 +65,9 @@ export async function completeDay(userId: string, dayNo: unknown, today: IsoDate
   return { status: inserted.length ? "completed" : "already", day: access.day.day };
 }
 
-/** KST 하루의 시작·끝 시각 */
+/** 서비스 하루(새벽 4시 ~ 다음 날 새벽 4시)의 시작·끝 시각 */
 function kstDayRange(date: IsoDate): [Date, Date] {
-  return [new Date(`${date}T00:00:00+09:00`), new Date(`${addDays(date, 1)}T00:00:00+09:00`)];
+  return [serviceDayStart(date), serviceDayStart(addDays(date, 1))];
 }
 
 export type CommunityToday = {

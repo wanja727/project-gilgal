@@ -4,12 +4,12 @@ import { ButtonLink, Card, CardHead, ChevronLeft } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { getCompletionTimes } from "@/lib/data/progress";
 import { requireMember } from "@/lib/data/viewer";
-import { formatDate, toKstDateLabel } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import { ACTS, JOURNEY_DAYS, type ActNo } from "@/lib/journey/days";
 import { journeyProgress } from "@/lib/journey/guide";
 import { mapView } from "@/lib/journey/mapState";
-import { todayKst } from "@/lib/time";
+import { todayKst, toServiceDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +83,8 @@ export default async function FinalePage() {
                       {d.title}
                       <span className="ml-1.5 text-caption text-mute">{d.place}</span>
                     </span>
-                    <span className="text-caption text-mute">{at ? toKstDateLabel(at) : formatDate(d.readingDate)}</span>
+                    {/* 새벽 4시 전에 읽었으면 전날 걸은 것으로(ADR-033) */}
+                    <span className="text-caption text-mute">{formatDate(at ? toServiceDate(at) : d.readingDate)}</span>
                   </li>
                 );
               })}

@@ -1,5 +1,7 @@
 /**
  * 길갈의 모든 날짜 판단은 KST(Asia/Seoul) 기준 "YYYY-MM-DD" 문자열로 한다.
+ * [2026-11-01] 하루는 자정이 아니라 새벽 4시에 바뀐다(ADR-033) — 자정 넘어 읽는 사람도 그날 읽은 것으로.
+ *   "오늘"(todayKst)·장 공개·"오늘" 집계·하루 나눔 수 제한이 모두 이 경계를 따른다.
  *
  * - 현재 시각은 이 모듈만 안다(nowKst/todayKst). 나머지 코드는 날짜 문자열을 인자로 받는
  *   순수 함수로 작성해 테스트 가능하게 한다.
@@ -16,6 +18,10 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** 서비스의 하루가 시작되는 시각(KST, 시) */
+export const DAY_START_HOUR = 4;
+const DAY_START_MS = DAY_START_HOUR * 60 * 60 * 1000;
+
 // process.env 를 그대로 넘길 수 있도록 인덱스 시그니처를 둔다
 type TimeEnv = {
   GILGAL_DEV_NOW?: string;
@@ -25,10 +31,10 @@ type TimeEnv = {
 };
 
 /**
- * 오픈 전 운영 테스트 모드가 끝나는 시각 = 첫 장 공개(campaign.startDate 00:00 KST).
+ * 오픈 전 운영 테스트 모드가 끝나는 시각 = 첫 장 공개(campaign.startDate 04:00 KST, ADR-033).
  * lib/journey 가 이 모듈을 import 하므로 순환을 피해 상수로 두고, 같은 값인지는 테스트로 확인한다.
  */
-export const PRELAUNCH_UNTIL = "2026-11-02T00:00:00+09:00";
+export const PRELAUNCH_UNTIL = "2026-11-02T04:00:00+09:00";
 
 /** 오픈 전 운영 테스트 모드가 켜져 있는가 — 실제 시각 기준(오버라이드와 무관) */
 export function isPrelaunchTest(env: TimeEnv, realNow: Date): boolean {
@@ -44,7 +50,7 @@ export function isDevNowAllowed(env: TimeEnv, realNow: Date = new Date()): boole
  * 현재 시각 결정 로직(순수 함수). 테스트용으로 env 와 실제 시각을 주입받는다.
  * - 시각까지 주면("2026-11-08T10:00:00+09:00") 그 순간에 멈춘다.
  * - 날짜만 주면("2026-11-12") 날짜만 바꾸고 시각은 실제 KST 시각을 쓴다 — 여러 사람이 테스트할 때
- *   완료 시각·도착 순서가 실제처럼 흘러간다.
+ *   완료 시각·도착 순서가 실제처럼 흘러간다. 새벽 4시 전이면 하루 뒤 달력 날짜에 두어 서비스 날짜가 주어진 날짜가 되게 한다.
  * 잘못된 GILGAL_DEV_NOW 는 조용히 무시하지 않고 에러로 알린다 — 다른 날짜로 테스트하고 있다고
  * 착각하는 것을 막기 위함.
  */
@@ -53,7 +59,8 @@ export function resolveNow(env: TimeEnv, realNow: Date): Date {
   if (!override || !isDevNowAllowed(env, realNow)) return realNow;
   if (ISO_DATE_RE.test(override) && isIsoDate(override)) {
     const clock = new Date(realNow.getTime() + KST_OFFSET_MS).toISOString().slice(11, 23);
-    return new Date(`${override}T${clock}+09:00`);
+    const early = Number(clock.slice(0, 2)) < DAY_START_HOUR;
+    return new Date(`${early ? addDays(override, 1) : override}T${clock}+09:00`);
   }
   const parsed = new Date(override);
   if (Number.isNaN(parsed.getTime())) {
@@ -74,14 +81,24 @@ export function nowKst(): Date {
   return resolveNow(process.env, new Date());
 }
 
-/** 주어진 시각의 KST 달력 날짜 */
+/** 주어진 시각의 KST 달력 날짜(자정 기준 — 표시용) */
 export function toKstDate(instant: Date): IsoDate {
   return new Date(instant.getTime() + KST_OFFSET_MS).toISOString().slice(0, 10);
 }
 
-/** 오늘(KST) 날짜 */
+/** 주어진 시각의 서비스 날짜 — KST 새벽 4시에 바뀐다(11/3 02:00 은 아직 11/2) */
+export function toServiceDate(instant: Date): IsoDate {
+  return toKstDate(new Date(instant.getTime() - DAY_START_MS));
+}
+
+/** 서비스 날짜 date 가 시작되는 순간(그날 04:00 KST) */
+export function serviceDayStart(date: IsoDate): Date {
+  return new Date(toUtcMidnight(date) - KST_OFFSET_MS + DAY_START_MS);
+}
+
+/** 오늘(서비스 날짜). 장 공개·"오늘" 판단은 모두 이것으로 */
 export function todayKst(): IsoDate {
-  return toKstDate(nowKst());
+  return toServiceDate(nowKst());
 }
 
 // ─── 날짜 문자열 연산 (시간대와 무관한 달력 계산) ─────────────────────────
