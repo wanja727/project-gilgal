@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { setLikeAction } from "@/app/actions/comments";
 import { Avatar } from "@/components/Avatar";
+import { shareAnchor } from "@/components/share/CommentCard";
 import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 
@@ -228,7 +229,7 @@ export function ShareCarousel({ comments, showChapter }: { comments: SharedComme
   );
 }
 
-/** 나눔 한 개: 아바타 옆 말풍선(누르면 그 장 나눔으로) + 공감 하트 */
+/** 나눔 한 개: 아바타 옆 말풍선(누르면 그 장 본문 아래의 이 나눔으로 — 가서 강조된다) + 공감 하트 */
 function ShareBubble({
   c,
   showChapter,
@@ -245,7 +246,7 @@ function ShareBubble({
       <Avatar avatarKey={c.author.avatarKey} size={36} className="mb-1 shrink-0" />
       {/* 꼬리 쪽 모서리를 덜 둥글게 — 옆 아바타가 하는 말로 읽히게 */}
       <blockquote className="min-w-0 flex-1 rounded-[16px] rounded-bl-[5px] bg-bg">
-        <Link href={`/day/${c.dayNo}#share`} draggable={false} className="block px-3.5 pt-2 pb-2.5">
+        <Link href={`/day/${c.dayNo}#${shareAnchor(c.id)}`} draggable={false} className="block px-3.5 pt-2 pb-2.5">
           <span className="flex items-center gap-1.5 text-caption">
             <b className="truncate font-semibold text-main">{c.author.name}</b>
             <span className="shrink-0 text-mute">

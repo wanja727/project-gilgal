@@ -304,6 +304,33 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: flash-lift 0.9s;
 }
 
+/* 홈 말풍선에서 눌러 온 나눔(2026-11-01): flash-lift 와 같은 결로 떠오르되, 찾을 시간을 주려고 물든 채 잠시 머문다 */
+@keyframes share-focus {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+    background-color: var(--color-surface);
+    animation-timing-function: var(--ease-sheet);
+  }
+  15%,
+  55% {
+    animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+    transform: scale(1.015);
+    box-shadow:
+      0 0 0 2px var(--color-main),
+      0 12px 28px -12px color-mix(in srgb, var(--color-main) 35%, transparent);
+    background-color: color-mix(in srgb, var(--color-water) 45%, var(--color-surface));
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+    background-color: var(--color-surface);
+  }
+}
+.share-focus {
+  animation: share-focus 2.4s;
+}
+
 /* 말풍선이 "톡" 하고 떠오른다 */
 @keyframes bubble-pop {
   0% {
