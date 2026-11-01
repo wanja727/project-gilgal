@@ -154,7 +154,7 @@ export default async function OverviewPage() {
       {/* 핵심 구절 */}
       <figure className="mx-gutter mt-3 rounded-card bg-surface px-5 pt-6 pb-5">
         <span aria-hidden className="block font-serif text-[44px] leading-[0.6] text-mid">“</span>
-        <blockquote className="mt-2 font-serif text-[17px] leading-8 tracking-[-0.02em] text-main">{KEY_VERSE.text}</blockquote>
+        <blockquote className="mt-2 font-serif text-[17px] leading-8 font-bold tracking-[-0.02em] text-main">{KEY_VERSE.text}</blockquote>
         <span aria-hidden className="mt-4 block text-right font-serif text-[44px] leading-[0.6] text-mid">”</span>
         <figcaption className="mt-1 text-right text-small font-semibold text-mute">{KEY_VERSE.ref}</figcaption>
       </figure>
