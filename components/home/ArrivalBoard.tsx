@@ -1,8 +1,8 @@
 import { Avatar } from "@/components/Avatar";
-import { CountUp } from "@/components/motion/CountUp";
 import { Card, CardHead } from "@/components/ui";
 import type { ArrivalBoard as Board } from "@/lib/data/progress";
 import { formatKstTime, ordinalEn } from "@/lib/format";
+import { ReadRatio } from "./ReadRatio";
 
 /**
  * "오늘 N장까지 읽은 사람" — 완료 시각 순 1st/2nd/3rd, 4번째부터는 아바타 몇 개와 인원수,
@@ -25,7 +25,7 @@ export function ArrivalBoard({
   const rest = board.total - board.podium.length;
   return (
     <Card aria-labelledby="arrival-title">
-      <CardHead id="arrival-title" title={title} right={<span className="text-small font-semibold text-mute"><CountUp value={board.total} delay={150} />명</span>} />
+      <CardHead id="arrival-title" title={title} right={<ReadRatio read={board.total} total={board.participants} />} />
 
       {board.total === 0 ? (
         <p className="mt-4 text-small leading-6 text-mute">아직 도착한 동행자가 없어요. 오늘의 첫 걸음을 내디뎌 보세요.</p>

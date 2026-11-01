@@ -120,6 +120,8 @@ export type ArrivalBoard = {
   dayNo: number;
   /** 이 장을 완료한 공동체 인원 */
   total: number;
+  /** 전체 인원(온보딩을 마친 공동체 인원) — "읽은 사람 / 전체 · %" */
+  participants: number;
   /** 완료 시각 순 1~3번째 */
   podium: Arrival[];
   /** 4번째부터 몇 명의 아바타 (이름은 보내지 않는다) */
@@ -137,7 +139,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
   const campaign = campaignSlug();
   const ofDay = and(eq(readingProgress.campaign, campaign), eq(readingProgress.dayNo, dayNo));
 
-  const [rows, totalRow, mineRow] = await Promise.all([
+  const [rows, totalRow, mineRow, participantsRow] = await Promise.all([
     db
       .select({
         name: profiles.realName,
@@ -161,6 +163,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
       .select({ id: readingProgress.id, at: readingProgress.completedAt })
       .from(readingProgress)
       .where(and(ofDay, eq(readingProgress.userId, userId))),
+    db.select({ n: count() }).from(profiles).where(communityMember()),
   ]);
 
   let mine: ArrivalBoard["mine"] = null;
@@ -186,6 +189,7 @@ export async function getArrivalBoard(dayNo: number, userId: string, restCount =
   return {
     dayNo,
     total: totalRow[0].n,
+    participants: participantsRow[0].n,
     podium: rows.slice(0, 3).map((r) => ({
       name: r.name ?? "",
       cellName: r.cellName,

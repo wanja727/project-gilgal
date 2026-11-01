@@ -1,8 +1,8 @@
 import { Avatar } from "@/components/Avatar";
-import { CountUp } from "@/components/motion/CountUp";
 import { InView } from "@/components/motion/InView";
 import { Card, CardHead } from "@/components/ui";
 import type { CellMember } from "@/lib/data/progress";
+import { ReadRatio } from "./ReadRatio";
 
 /**
  * 우리 셀: 기준 장까지 온 셀원은 선명하게, 아직인 셀원은 흐리게. 이름은 모두 성까지 보인다(2026-10-26).
@@ -29,15 +29,9 @@ export function CellCard({
       <CardHead
         id="cell-title"
         title={cellName}
-        sub={
-          showCount ? (
-            <>
-              <CountUp value={arrived} delay={150} /> / {members.length}
-            </>
-          ) : (
-            `${members.length}명`
-          )
-        }
+        // 오늘 본문을 읽은 셀원 / 셀 인원 · % (기간 전에는 인원만)
+        sub={showCount ? undefined : `${members.length}명`}
+        right={showCount ? <ReadRatio read={arrived} total={members.length} /> : undefined}
       />
       {/* 화면에 들어오면 막대가 차오르고, 도착한 셀원이 차례로 톡 떠오른다(2026-10-30) */}
       <InView>
