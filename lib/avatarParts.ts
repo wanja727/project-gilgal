@@ -23,6 +23,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
       // 단발~짧은 곱슬과 캡모자는 길갈에서 그려 붙인 머리(lib/avatar.ts HAIR)
       { id: "bob", label: "단발" },
       { id: "bangs", label: "앞머리 단발" },
+      { id: "medium", label: "중단발" },
       { id: "long", label: "긴 생머리" },
       { id: "ponytail", label: "포니테일" },
       { id: "pigtails", label: "양갈래" },
@@ -102,6 +103,7 @@ export const AVATAR_PARTS: { id: AvatarPartId; label: string; options: Option[];
     optional: true,
     options: [
       { id: "round", label: "동그란" },
+      { id: "thin", label: "얇은 동그란" },
       { id: "square", label: "뿔테" },
       { id: "browline", label: "웰링턴" },
     ],
