@@ -133,9 +133,6 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 #reader-root[data-selecting] {
   padding-bottom: 150px;
 }
-#reader-root[data-quoting] .reader-num {
-  color: var(--color-main);
-}
 /* 형광펜: 글자 줄에만 칠해(줄 간격은 비움) 실제 형광펜처럼 — 줄이 바뀌어도 줄마다 둥글게 */
 #reader-root [data-hl] .verse-text {
   background-color: var(--color-hl);
@@ -145,18 +142,15 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   box-decoration-break: clone;
 }
 /*
- * 고른 절(도구)·글에 넣은 절(입력창): 배경을 깔면 글자가 흐려 보여(2026-11-03 피드백) 밑줄과 절 번호 표시로 바꾼다.
- * 형광펜과 겹쳐도 구분된다.
+ * 고른 절 — 도구로 고른 절과 나눔 글에 넣은 절을 같은 모양 하나로(2026-11-03): 칠한 절 번호 + 얇은 밑줄.
+ * 배경을 깔면 글자가 흐려 보이고(피드백), 형광펜(노랑)과도 겹쳐 구분돼야 해서 밑줄로.
  */
 #reader-root [data-selected] .verse-text,
 #reader-root[data-quoting] [data-picked] .verse-text {
   text-decoration-line: underline;
   text-decoration-color: var(--color-main);
-  text-decoration-thickness: 1.5px;
+  text-decoration-thickness: 1px;
   text-underline-offset: 0.32em;
-}
-#reader-root[data-quoting] [data-picked] .verse-text {
-  text-decoration-style: dashed;
 }
 #reader-root [data-selected] .reader-num,
 #reader-root[data-quoting] [data-picked] .reader-num {

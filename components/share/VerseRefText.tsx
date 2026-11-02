@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { getVersesAction, type VersesResult } from "@/app/actions/bible";
-import { buttonClass } from "@/components/ui";
 import { parseReaderSettings, READER_COOKIE, readerCssVars } from "@/lib/reading/settings";
 import { formatVerseRef, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
 
@@ -29,7 +28,7 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
               aria-expanded={open?.index === i}
               aria-controls={panelId}
               aria-label={`여호수아 ${formatVerseRef(s.ref)} 본문 ${open?.index === i ? "접기" : "펼치기"}`}
-              className={`rounded-[6px] px-1 font-semibold underline decoration-dotted underline-offset-[3px] transition-colors ${
+              className={`rounded-[6px] px-1 font-semibold transition-colors ${
                 open?.index === i ? "bg-main text-surface" : "bg-soft text-main"
               }`}
             >
@@ -45,8 +44,21 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
   );
 }
 
-/** 나눔 카드 안에 펼치는 구절 본문 */
-function VerseInline({ id, verseRef, onClose }: { id: string; verseRef: VerseRef; onClose: () => void }) {
+/**
+ * 그 자리에 펼치는 구절 본문 — 나눔 카드와 입력창(고른 구절 칩)이 같은 모양으로 쓴다(2026-11-03, 하단 시트 대신).
+ * className: 놓이는 자리에 맞춘 여백·높이 제한(입력창에서는 짧게 잘라 스크롤)
+ */
+export function VerseInline({
+  id,
+  verseRef,
+  onClose,
+  className = "mt-2.5",
+}: {
+  id?: string;
+  verseRef: VerseRef;
+  onClose: () => void;
+  className?: string;
+}) {
   const pathname = usePathname();
   const [readerVars] = useState(readerVarsFromCookie);
   const result = useVerses(verseRef);
@@ -54,7 +66,7 @@ function VerseInline({ id, verseRef, onClose }: { id: string; verseRef: VerseRef
   const goTo = result?.status === "ok" && pathname !== `/day/${result.dayNo}` ? `/day/${result.dayNo}` : null;
 
   return (
-    <section id={id} aria-label={title} className="mt-2.5 animate-[rise_.25s_ease-out] rounded-[14px] border-l-[3px] border-main bg-bg py-2.5 pr-2 pl-3.5">
+    <section id={id} aria-label={title} className={`animate-[rise_.25s_ease-out] rounded-[14px] border-l-[3px] border-main bg-bg py-2.5 pr-2 pl-3.5 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-serif text-[15px] font-bold tracking-[-0.02em] text-main">{title}</h3>
         <button type="button" onClick={onClose} className="min-h-9 shrink-0 px-2 text-caption font-semibold text-mute">
@@ -90,7 +102,7 @@ function VerseInline({ id, verseRef, onClose }: { id: string; verseRef: VerseRef
   );
 }
 
-/** 구절 본문 불러오기 — 시트·카드 안 펼침이 함께 쓴다 */
+/** 구절 본문 불러오기 */
 function useVerses(verseRef: VerseRef): VersesResult | null {
   const [result, setResult] = useState<VersesResult | null>(null);
   useEffect(() => {
@@ -112,8 +124,8 @@ const MESSAGES: Record<Exclude<VersesResult["status"], "ok">, string> = {
 };
 
 /**
- * 본문 화면에서 고른 읽기 설정(글자 크기·글꼴·굵기·줄 간격)을 시트 본문에도 — 쿠키(ADR-026)를 읽어 같은 CSS 변수로.
- * 시트는 누른 뒤에만 그려지므로(서버 렌더 없음) 여기서 document.cookie 를 읽어도 어긋나지 않는다.
+ * 본문 화면에서 고른 읽기 설정(글자 크기·글꼴·굵기·줄 간격)을 펼친 본문에도 — 쿠키(ADR-026)를 읽어 같은 CSS 변수로.
+ * 펼침은 누른 뒤에만 그려지므로(서버 렌더 없음) 여기서 document.cookie 를 읽어도 어긋나지 않는다.
  */
 function readerVarsFromCookie(): React.CSSProperties {
   const raw = document.cookie
@@ -127,73 +139,4 @@ function readerVarsFromCookie(): React.CSSProperties {
     value = undefined;
   }
   return readerCssVars(parseReaderSettings(value)) as React.CSSProperties;
-}
-
-/** 구절 본문 시트 — 입력창의 고른 구절 칩(입력창 위에 뜨므로 글을 가리지 않는다) */
-export function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose: () => void }) {
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-  const [readerVars] = useState(readerVarsFromCookie);
-  const result = useVerses(verseRef);
-
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    sheetRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      previous?.focus();
-    };
-  }, [onClose]);
-
-  const title = `여호수아 ${formatVerseRef(verseRef)}`;
-  // 이미 그 장 본문 화면이면 이동 버튼은 두지 않는다
-  const goTo = result?.status === "ok" && pathname !== `/day/${result.dayNo}` ? `/day/${result.dayNo}` : null;
-
-  return (
-    <div className="fixed inset-0 z-50 mx-auto max-w-md">
-      <button type="button" aria-label="닫기" className="absolute inset-0 bg-scrim animate-[rise_.2s_ease-out]" onClick={onClose} />
-      <div
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        tabIndex={-1}
-        className="absolute inset-x-2 bottom-2 flex max-h-[75dvh] flex-col rounded-sheet bg-surface px-5 pt-2.5 pb-[max(env(safe-area-inset-bottom),22px)] outline-none animate-[rise_.35s_var(--ease-sheet)]"
-      >
-        <div className="mx-auto mb-4 h-[5px] w-9 shrink-0 rounded-full bg-line" aria-hidden />
-        <h2 className="font-serif text-[22px] font-bold tracking-[-0.03em] text-main">{title}</h2>
-        <div className="mt-3 min-h-16 overflow-y-auto">
-          {!result ? (
-            <p className="py-4 text-small text-mute">본문을 불러오는 중…</p>
-          ) : result.status === "ok" ? (
-            <>
-              <ol style={readerVars} className="reader-text text-text">
-                {result.verses.map((v) => (
-                  <li key={v.number} className="mb-2 grid grid-cols-[24px_1fr]">
-                    <span className="reader-num font-sans text-[11px] font-bold text-mid">{v.number}</span>
-                    <span>{v.text}</span>
-                  </li>
-                ))}
-              </ol>
-              <p className="mt-1 border-t border-line pt-2.5 text-[11px] text-mid">{result.attribution}</p>
-            </>
-          ) : (
-            <p className="py-4 text-small text-mute">{MESSAGES[result.status]}</p>
-          )}
-        </div>
-        <div className={`mt-4 grid shrink-0 gap-2 ${goTo ? "grid-cols-2" : "grid-cols-1"}`}>
-          <button type="button" onClick={onClose} className={buttonClass("quiet", "h-12 text-body")}>
-            닫기
-          </button>
-          {goTo && (
-            <Link href={goTo} className={buttonClass("line", "h-12 text-body")}>
-              {verseRef.chapter}장 본문으로
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }

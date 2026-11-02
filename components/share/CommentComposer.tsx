@@ -21,7 +21,7 @@ import {
   toRanges,
   type VerseRef,
 } from "@/lib/share/verseRef";
-import { VerseSheet } from "./VerseRefText";
+import { VerseInline } from "./VerseRefText";
 
 const ERRORS: Record<string, string> = {
   invalid: "내용을 적어 주세요.",
@@ -298,12 +298,17 @@ export function ComposerDock({
 }) {
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const [sheet, setSheet] = useState<VerseRef | null>(null);
+  // 칩을 눌러 펼친 구절(나눔 카드와 같은 펼침)
+  const [peek, setPeek] = useState<VerseRef | null>(null);
   // 시트가 떠 있을 때 Esc 는 시트만 닫는다
   const sheetOpen = useRef(false);
   useEffect(() => {
-    sheetOpen.current = sheet !== null;
-  }, [sheet]);
+    sheetOpen.current = peek !== null;
+    if (!peek) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPeek(null);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [peek]);
   // 절을 누르면 textarea 가 포커스를 잃으므로 마지막 커서 자리를 기억해 둔다
   const caret = useRef<number | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -478,23 +483,24 @@ export function ComposerDock({
       </div>
       {(refs.length > 0 || hlRanges.length > 0) && (
         <ul aria-label="고른 구절" className="mt-2 flex flex-wrap gap-1.5">
-          {refs.map((r) => (
-            <li key={formatVerseRef(r)} className="animate-[rise_.25s_ease-out]">
-              <button
-                type="button"
-                onClick={() => setSheet(r)}
-                aria-haspopup="dialog"
-                aria-label={`여호수아 ${formatVerseRef(r)} 본문 보기`}
-                className="inline-flex h-8 items-center gap-1 rounded-chip bg-soft px-3 text-caption font-bold text-main"
-              >
-                {formatVerseRef(r)}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="size-3.5 text-mute" aria-hidden>
-                  <path d="M4 12s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" />
-                  <circle cx="12" cy="12" r="2.2" />
-                </svg>
-              </button>
-            </li>
-          ))}
+          {refs.map((r) => {
+            const on = peek !== null && formatVerseRef(peek) === formatVerseRef(r);
+            return (
+              <li key={formatVerseRef(r)} className="animate-[rise_.25s_ease-out]">
+                <button
+                  type="button"
+                  onClick={() => setPeek(on ? null : r)}
+                  aria-expanded={on}
+                  aria-label={`여호수아 ${formatVerseRef(r)} 본문 ${on ? "접기" : "펼치기"}`}
+                  className={`inline-flex h-8 items-center rounded-chip px-3 text-caption font-bold transition-colors ${
+                    on ? "bg-main text-surface" : "bg-soft text-main"
+                  }`}
+                >
+                  {formatVerseRef(r)}
+                </button>
+              </li>
+            );
+          })}
           {/* 아직 넣지 않은 내 형광펜 — 본문과 같은 노란색, 누르면 커서 자리에 들어간다 */}
           {hlRanges.map((r) => (
             <li key={`hl-${formatVerseRef(r)}`}>
@@ -515,12 +521,16 @@ export function ComposerDock({
           ))}
         </ul>
       )}
+      {/* 고른 구절 본문 — 입력창 안에서 짧게 펼쳐(길면 스크롤) 쓰던 글을 가리지 않는다 */}
+      {peek && refs.some((r) => formatVerseRef(r) === formatVerseRef(peek)) && (
+        <VerseInline key={formatVerseRef(peek)} verseRef={peek} onClose={() => setPeek(null)} className="mt-2 max-h-[28dvh] overflow-y-auto" />
+      )}
       <div className="relative mt-2 overflow-hidden rounded-[12px] bg-bg">
         {/* 강조용 뒷면: 글자는 투명, 구절 부분만 배경색 — 위 textarea 글자와 위치가 겹친다 */}
         <div ref={backdropRef} aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden text-transparent ${FIELD_TEXT}`}>
           {splitVerseRefs(text).map((s, i) =>
             s.ref ? (
-              <mark key={i} className="rounded-[4px] bg-water/45 text-transparent">
+              <mark key={i} className="rounded-[4px] bg-line text-transparent">
                 {s.text}
               </mark>
             ) : (
@@ -575,7 +585,6 @@ export function ComposerDock({
           {error}
         </p>
       )}
-      {sheet && <VerseSheet verseRef={sheet} onClose={() => setSheet(null)} />}
     </form>
   );
 }
