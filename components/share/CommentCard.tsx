@@ -10,7 +10,8 @@ import type { SharedComment } from "@/lib/data/comments";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
 import { shareAnchor } from "@/lib/share/anchor";
 import { isJustPosted } from "@/lib/share/justPosted";
-import { ComposerDock } from "./CommentComposer";
+import { addVerses } from "@/lib/share/verseRef";
+import { ComposerDock, type QuoteDetail, useQuoteListener } from "./CommentComposer";
 import { VerseRefText } from "./VerseRefText";
 
 /** 나눔 한 개: 작성자 · 내용 · 공감 · (내 나눔이면) 수정/삭제 · (운영자면) 숨김/복구 */
@@ -52,6 +53,18 @@ export function CommentCard({
     }, 200);
     return () => window.clearTimeout(t);
   }, [comment.id]);
+  // 본문 도구의 "내 나눔에 넣기"(한 장에 나눔 하나, ADR-034) — 고치는 중이 아니면 지금 내용에서 시작해 구절을 덧붙인다
+  const onQuote = useCallback(
+    ({ chapter, verses }: QuoteDetail) => {
+      setDraft((d) => {
+        const base = editing ? d : comment.content;
+        return addVerses(base, base.length, chapter, verses, maxLength).text;
+      });
+      setEditing(true);
+    },
+    [editing, comment.content, maxLength],
+  );
+  useQuoteListener(comment.mine && quoting, onQuote);
   const closeEdit = useCallback(() => {
     setEditing(false);
     setError(null);

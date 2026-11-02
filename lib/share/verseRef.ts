@@ -183,3 +183,52 @@ function clamp(head: string, after: string, maxLength: number) {
   const text = (head + after).slice(0, maxLength);
   return { text, caret: Math.min(head.length, text.length) };
 }
+
+/** 절 번호들 → 이어진 범위(정렬·중복 제거, 한 범위는 MAX_RANGE 절까지) */
+export function toRanges(chapter: number, verses: Iterable<number>): VerseRef[] {
+  const runs: VerseRef[] = [];
+  for (const v of [...new Set(verses)].sort((a, b) => a - b)) {
+    const last = runs.at(-1);
+    if (last && v === last.to + 1 && v - last.from < MAX_RANGE) last.to = v;
+    else runs.push({ chapter, from: v, to: v });
+  }
+  return runs;
+}
+
+/** "3:1-2, 5" — 고른 절·형광펜 절을 짧게 보여 줄 때 */
+export function formatVerseList(chapter: number, verses: Iterable<number>): string {
+  return toRanges(chapter, verses)
+    .map((r, i) => (i === 0 ? formatVerseRef(r) : r.from === r.to ? `${r.from}` : `${r.from}-${r.to}`))
+    .join(", ");
+}
+
+/**
+ * 여러 절을 한꺼번에 넣는다(본문에서 고른 절·형광펜 → 나눔). 이미 글에 있는 절은 건너뛰고, 넣은 뒤 이어진 절은 한 범위로 정리한다.
+ */
+export function addVerses(
+  text: string,
+  caret: number,
+  chapter: number,
+  verses: Iterable<number>,
+  maxLength: number,
+): { text: string; caret: number } {
+  let r = { text, caret: outsideRef(text, caret) };
+  const have = referencedVerses(text, chapter);
+  for (const v of [...new Set(verses)].sort((a, b) => a - b)) {
+    if (have.has(v)) continue;
+    r = insertVerse(r.text, r.caret, chapter, v, maxLength);
+  }
+  const next = normalizeRefs(r.text, chapter);
+  return { text: next, caret: outsideRef(next, Math.min(r.caret, next.length)) };
+}
+
+/**
+ * 본문 복사용 글 — 갓피플 성경처럼 "여호수아 1:8-9" 머리 + 절(여러 절이면 번호를 붙여서).
+ * 떨어진 절을 함께 고르면 머리는 "1:2, 5" 로 쓴다.
+ */
+export function copyText(bookName: string, chapter: number, verses: { number: number; text: string }[]): string {
+  const sorted = [...verses].sort((a, b) => a.number - b.number);
+  const head = `${bookName} ${formatVerseList(chapter, sorted.map((v) => v.number))}`;
+  const body = sorted.length === 1 ? sorted[0].text : sorted.map((v) => `${v.number} ${v.text}`).join("\n");
+  return `${head}\n${body}`;
+}

@@ -43,6 +43,13 @@
       "when": 1793550310493,
       "tag": "0005_one_share_per_day",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793642827940,
+      "tag": "0006_verse_highlight",
+      "breakpoints": true
     }
   ]
 }

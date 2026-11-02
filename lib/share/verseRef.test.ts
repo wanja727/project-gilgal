@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { insertVerse, normalizeRefs, referencedVerses, removeVerse, splitVerseRefs, tapVerse } from "./verseRef";
+import { addVerses, copyText, formatVerseList, insertVerse, normalizeRefs, referencedVerses, removeVerse, splitVerseRefs, tapVerse } from "./verseRef";
 
 describe("나눔 속 구절 표기", () => {
   it("장:절·장:절-절 을 찾는다", () => {
@@ -101,5 +101,26 @@ describe("절을 여러 번 눌렀다 뺐다 해도 표기가 깨지지 않는�
     for (const v of [7, 8, 5, 6, 8, 7, 6]) r = tapVerse(r.text, r.caret, 16, v, 1000);
     expect(r.text.replace(/16:\S+/g, "").replace(/\s+/g, " ").trim()).toBe("라합의 믿음 그리고 기도");
     expect(referencedVerses(r.text, 16).size).toBe(0);
+  });
+});
+
+describe("여러 절 고르기(본문 도구·형광펜)", () => {
+  it("이어진 절은 범위로, 떨어진 절은 쉼표로", () => {
+    expect(formatVerseList(3, [5, 1, 2, 2])).toBe("3:1-2, 5");
+    expect(formatVerseList(3, [7])).toBe("3:7");
+    expect(formatVerseList(3, [1, 2, 3, 9, 10])).toBe("3:1-3, 9-10");
+  });
+
+  it("여러 절을 한꺼번에 넣고, 이미 있는 절은 건너뛴다", () => {
+    expect(addVerses("", 0, 3, [2, 1, 5], 1000).text).toBe("3:1-2 3:5 ");
+    expect(addVerses("좋았던 3:2 말씀", 6, 3, [2, 3], 1000).text).toBe("좋았던 3:2-3 말씀");
+    const r = addVerses("마음에 남은 ", 7, 3, [4], 1000);
+    expect(r.text).toBe("마음에 남은 3:4 ");
+    expect(r.caret).toBe(r.text.length);
+  });
+
+  it("복사 글: 한 절은 본문만, 여러 절은 번호를 붙여서", () => {
+    expect(copyText("여호수아", 1, [{ number: 8, text: "가" }])).toBe("여호수아 1:8\n가");
+    expect(copyText("여호수아", 1, [{ number: 9, text: "나" }, { number: 8, text: "가" }])).toBe("여호수아 1:8-9\n8 가\n9 나");
   });
 });

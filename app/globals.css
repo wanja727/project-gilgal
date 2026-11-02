@@ -19,6 +19,7 @@
   --color-sea: #e3e9f1; /* 지도 바다 */
   --color-water: #b7c6d9; /* 지도 강·호수 */
   --color-scrim: rgb(10 14 22 / 0.36); /* 시트 뒤 어둡게 */
+  --color-hl: #fbe7a1; /* 형광펜(본문 절) — 남색 글자 대비를 해치지 않는 옅은 노랑 */
 
   /* 글꼴: 제목·성경 본문 = 고운바탕, 나머지 = Pretendard */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
@@ -87,6 +88,7 @@ body {
   --color-text: #3d3426;
   --color-sea: #e8dfcb;
   --color-water: #c9b896;
+  --color-hl: #f0d98c;
 }
 [data-reader-theme="dark"] {
   --color-bg: #11151c;
@@ -101,6 +103,7 @@ body {
   --color-sea: #1f2632;
   --color-water: #3a4a61;
   --color-white: #11151c;
+  --color-hl: #4d4426;
 }
 /* 본문 화면이 어둡거나 종이색이면 화면 끝(넘겨 당김 등)도 같은 색으로 */
 body:has(#reader-root[data-reader-theme="sepia"]) {
@@ -116,23 +119,54 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   font-weight: var(--reader-weight, 400);
   line-height: var(--reader-leading, 2.05);
 }
-/* 나눔 입력창이 열려 있으면(DockComposer) 절을 눌러 구절 번호를 넣을 수 있다 — 누를 수 있다는 표시 + 입력창에 가리지 않게 아래 여백 */
+/*
+ * 본문 절 누르기(2026-11-03): 평소엔 절을 눌러 고르면 아래 도구(형광펜·복사·나눔에 넣기, VerseTools)가 뜨고,
+ * 나눔 입력창이 열려 있으면(ComposerDock) 누른 절이 구절 번호로 들어간다. 아래 바·입력창에 가리지 않게 여백을 둔다.
+ */
+#reader-root [data-verse] {
+  cursor: pointer;
+}
 #reader-root[data-quoting] {
   padding-bottom: 260px;
 }
-#reader-root[data-quoting] [data-verse] {
-  cursor: pointer;
-}
-/* 쓰는 중인 글에 적힌 절 */
-#reader-root[data-quoting] [data-verse][data-picked] {
-  background: var(--color-soft);
-  border-radius: 10px;
-  box-shadow: 0 0 0 6px var(--color-soft);
+#reader-root[data-quoting="compact"],
+#reader-root[data-selecting] {
+  padding-bottom: 150px;
 }
 #reader-root[data-quoting] .reader-num {
   color: var(--color-main);
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
+}
+/* 형광펜: 글자 줄에만 칠해(줄 간격은 비움) 실제 형광펜처럼 — 줄이 바뀌어도 줄마다 둥글게 */
+#reader-root [data-hl] .verse-text {
+  background-color: var(--color-hl);
+  border-radius: 3px;
+  padding: 0.08em 0.1em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/*
+ * 고른 절(도구)·글에 넣은 절(입력창): 배경을 깔면 글자가 흐려 보여(2026-11-03 피드백) 밑줄과 절 번호 표시로 바꾼다.
+ * 형광펜과 겹쳐도 구분된다.
+ */
+#reader-root [data-selected] .verse-text,
+#reader-root[data-quoting] [data-picked] .verse-text {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-main);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.32em;
+}
+#reader-root[data-quoting] [data-picked] .verse-text {
+  text-decoration-style: dashed;
+}
+#reader-root [data-selected] .reader-num,
+#reader-root[data-quoting] [data-picked] .reader-num {
+  color: var(--color-main);
+  font-weight: 800;
+}
+#reader-root [data-selected] .reader-num > span,
+#reader-root[data-quoting] [data-picked] .reader-num > span {
+  background: var(--color-main);
+  color: var(--color-surface);
 }
 /* 절 번호: 본문 첫 줄과 같은 줄 높이로 세로 가운데를 맞춘다 */
 .reader-num {

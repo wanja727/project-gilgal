@@ -2,15 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { getVersesAction, type VersesResult } from "@/app/actions/bible";
 import { buttonClass } from "@/components/ui";
 import { parseReaderSettings, READER_COOKIE, readerCssVars } from "@/lib/reading/settings";
 import { formatVerseRef, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
 
-/** 나눔 내용 — "16:1-2" 같은 구절 표기를 누르면 그 절 본문을 시트로 보여 준다(2026-10-29) */
+/**
+ * 나눔 내용 — "16:1-2" 같은 구절 표기를 누르면 그 절 본문을 나눔 바로 아래에 펼친다.
+ * 예전에는 화면 아래 시트로 띄웠는데 나눔 글을 가려서, 글과 본문을 함께 보도록 바꿨다(2026-11-03).
+ * 같은 표기를 다시 누르거나 "접기"로 닫고, 다른 표기를 누르면 그 구절로 바뀐다.
+ */
 export function VerseRefText({ content, className = "" }: { content: string; className?: string }) {
-  const [open, setOpen] = useState<VerseRef | null>(null);
+  const [open, setOpen] = useState<{ index: number; ref: VerseRef } | null>(null);
+  const panelId = useId();
 
   return (
     <>
@@ -20,10 +25,13 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
             <button
               key={i}
               type="button"
-              onClick={() => setOpen(s.ref!)}
-              aria-haspopup="dialog"
-              aria-label={`여호수아 ${formatVerseRef(s.ref)} 본문 보기`}
-              className="rounded-[6px] bg-soft px-1 font-semibold text-main underline decoration-dotted underline-offset-[3px]"
+              onClick={() => setOpen((o) => (o?.index === i ? null : { index: i, ref: s.ref! }))}
+              aria-expanded={open?.index === i}
+              aria-controls={panelId}
+              aria-label={`여호수아 ${formatVerseRef(s.ref)} 본문 ${open?.index === i ? "접기" : "펼치기"}`}
+              className={`rounded-[6px] px-1 font-semibold underline decoration-dotted underline-offset-[3px] transition-colors ${
+                open?.index === i ? "bg-main text-surface" : "bg-soft text-main"
+              }`}
             >
               {s.text}
             </button>
@@ -32,9 +40,69 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
           ),
         )}
       </p>
-      {open && <VerseSheet verseRef={open} onClose={() => setOpen(null)} />}
+      {open && <VerseInline key={open.index} id={panelId} verseRef={open.ref} onClose={() => setOpen(null)} />}
     </>
   );
+}
+
+/** 나눔 카드 안에 펼치는 구절 본문 */
+function VerseInline({ id, verseRef, onClose }: { id: string; verseRef: VerseRef; onClose: () => void }) {
+  const pathname = usePathname();
+  const [readerVars] = useState(readerVarsFromCookie);
+  const result = useVerses(verseRef);
+  const title = `여호수아 ${formatVerseRef(verseRef)}`;
+  const goTo = result?.status === "ok" && pathname !== `/day/${result.dayNo}` ? `/day/${result.dayNo}` : null;
+
+  return (
+    <section id={id} aria-label={title} className="mt-2.5 animate-[rise_.25s_ease-out] rounded-[14px] border-l-[3px] border-main bg-bg py-2.5 pr-2 pl-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-serif text-[15px] font-bold tracking-[-0.02em] text-main">{title}</h3>
+        <button type="button" onClick={onClose} className="min-h-9 shrink-0 px-2 text-caption font-semibold text-mute">
+          접기
+        </button>
+      </div>
+      {!result ? (
+        <p className="py-2 text-small text-mute">본문을 불러오는 중…</p>
+      ) : result.status === "ok" ? (
+        <>
+          {/* 카드 안이라 줄 간격만 조금 좁힌다(글꼴·크기는 본문 읽기 설정 그대로) */}
+          <ol style={{ ...readerVars, "--reader-leading": 1.8 } as React.CSSProperties} className="reader-text mt-1 pr-1.5 text-text">
+            {result.verses.map((v) => (
+              <li key={v.number} className="mb-1.5 grid grid-cols-[22px_1fr]">
+                <span className="reader-num font-sans text-[11px] font-bold text-mid">{v.number}</span>
+                <span>{v.text}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-1 flex items-center justify-between gap-2 pr-1.5">
+            <p className="text-[11px] text-mid">{result.attribution}</p>
+            {goTo && (
+              <Link href={goTo} className="shrink-0 py-1 text-caption font-semibold text-main">
+                {verseRef.chapter}장 본문으로 →
+              </Link>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="py-2 text-small text-mute">{MESSAGES[result.status]}</p>
+      )}
+    </section>
+  );
+}
+
+/** 구절 본문 불러오기 — 시트·카드 안 펼침이 함께 쓴다 */
+function useVerses(verseRef: VerseRef): VersesResult | null {
+  const [result, setResult] = useState<VersesResult | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getVersesAction(verseRef)
+      .then((r) => alive && setResult(r))
+      .catch(() => alive && setResult({ status: "unavailable" }));
+    return () => {
+      alive = false;
+    };
+  }, [verseRef]);
+  return result;
 }
 
 const MESSAGES: Record<Exclude<VersesResult["status"], "ok">, string> = {
@@ -61,22 +129,12 @@ function readerVarsFromCookie(): React.CSSProperties {
   return readerCssVars(parseReaderSettings(value)) as React.CSSProperties;
 }
 
-/** 구절 본문 시트 — 나눔 카드의 구절 표기, 입력창의 고른 구절 칩이 함께 쓴다 */
+/** 구절 본문 시트 — 입력창의 고른 구절 칩(입력창 위에 뜨므로 글을 가리지 않는다) */
 export function VerseSheet({ verseRef, onClose }: { verseRef: VerseRef; onClose: () => void }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const [readerVars] = useState(readerVarsFromCookie);
-  const [result, setResult] = useState<VersesResult | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    getVersesAction(verseRef)
-      .then((r) => alive && setResult(r))
-      .catch(() => alive && setResult({ status: "unavailable" }));
-    return () => {
-      alive = false;
-    };
-  }, [verseRef]);
+  const result = useVerses(verseRef);
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;

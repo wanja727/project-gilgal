@@ -308,3 +308,26 @@ export const trailNotes = pgTable(
     ),
   ],
 ).enableRLS();
+
+// ─── 형광펜 (2026-11-03, ADR-035) ─────────────────────────────────────
+
+/**
+ * 본문을 읽으며 마음에 든 절에 긋는 개인 형광펜 — 본인에게만 보이고, 나눔을 쓸 때 구절로 바로 넣을 수 있다.
+ * 장·절만 남기고 본문 글자는 저장하지 않는다(번역문 저장 최소화). 캠페인과 무관하게 그 사람의 성경에 남는다.
+ */
+export const verseHighlights = pgTable(
+  "verse_highlight",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    chapter: smallint("chapter").notNull(),
+    verse: smallint("verse").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (h) => [
+    primaryKey({ columns: [h.userId, h.chapter, h.verse] }),
+    check("verse_highlight_chapter_chk", sql`${h.chapter} BETWEEN 1 AND 24`),
+    check("verse_highlight_verse_chk", sql`${h.verse} BETWEEN 1 AND 200`),
+  ],
+).enableRLS();

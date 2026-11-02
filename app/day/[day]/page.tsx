@@ -5,11 +5,13 @@ import { ChapterReader } from "@/components/ChapterReader";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { READER_ROOT_ID, ReaderSettingsButton } from "@/components/reading/ReaderSettingsButton";
 import { StickyBar } from "@/components/reading/StickyBar";
+import { VerseTools } from "@/components/reading/VerseTools";
 import { CommentCard } from "@/components/share/CommentCard";
 import { CommentComposer } from "@/components/share/CommentComposer";
 import { ButtonLink, CardHead, ChevronLeft, EmptyState } from "@/components/ui";
 import { getJoshuaChapter } from "@/lib/bible";
 import { COMMENT_MAX_LENGTH, type CommentSort, countComments, listComments, toShared } from "@/lib/data/comments";
+import { listHighlights } from "@/lib/data/highlights";
 import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { formatDate } from "@/lib/format";
 import { campaignSlug, JOSHUA_2026 } from "@/lib/journey/campaign";
@@ -142,10 +144,11 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
   }
 
   const day = access.day;
-  const [chapter, comments, commentCount] = await Promise.all([
+  const [chapter, comments, commentCount, highlights] = await Promise.all([
     getJoshuaChapter(day.chapter),
     listComments(member, day.day, sort),
     countComments(day.day),
+    listHighlights(member.userId, day.chapter),
   ]);
   const done = new Set(completed);
   const next = nextToRead(done, today);
@@ -175,7 +178,16 @@ export default async function DayPage({ params, searchParams }: PageProps<"/day/
       <ChapterIntro day={day} />
 
       {chapter ? (
-        <ChapterReader text={chapter} />
+        <>
+          <ChapterReader text={chapter} highlights={highlights} />
+          {/* 절을 누르면 뜨는 형광펜·복사·나눔에 넣기(2026-11-03) */}
+          <VerseTools
+            chapter={day.chapter}
+            bookName={JOSHUA_2026.book.name}
+            initialHighlights={highlights}
+            hasShare={shared.some((c) => c.mine)}
+          />
+        </>
       ) : (
         <div className="mx-gutter mt-5 rounded-card bg-surface">
           <EmptyState title="본문을 준비하고 있어요">
