@@ -590,6 +590,11 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 }
 
 /* 화면 요소가 아래에서 떠오르는 연출 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
 @keyframes rise {
   from {
     opacity: 0;

@@ -21,7 +21,7 @@ import {
   toRanges,
   type VerseRef,
 } from "@/lib/share/verseRef";
-import { VerseInline } from "./VerseRefText";
+import { VersePeek } from "./VerseRefText";
 
 const ERRORS: Record<string, string> = {
   invalid: "내용을 적어 주세요.",
@@ -300,6 +300,7 @@ export function ComposerDock({
   const backdropRef = useRef<HTMLDivElement>(null);
   // 칩을 눌러 펼친 구절(나눔 카드와 같은 펼침)
   const [peek, setPeek] = useState<VerseRef | null>(null);
+  const closePeek = useCallback(() => setPeek(null), []);
   // 시트가 떠 있을 때 Esc 는 시트만 닫는다
   const sheetOpen = useRef(false);
   useEffect(() => {
@@ -554,9 +555,12 @@ export function ComposerDock({
         </ul>
       )}
       {/* 고른 구절 본문 — 입력창 안에서 짧게 펼쳐(길면 스크롤) 쓰던 글을 가리지 않는다 */}
-      {peek && refs.some((r) => formatVerseRef(r) === formatVerseRef(peek)) && (
-        <VerseInline key={formatVerseRef(peek)} verseRef={peek} onClose={() => setPeek(null)} className="mt-2 max-h-[28dvh] overflow-y-auto" />
-      )}
+      <VersePeek
+        verseRef={peek && refs.some((r) => formatVerseRef(r) === formatVerseRef(peek)) ? peek : null}
+        onClose={closePeek}
+        className="pt-2"
+        panelClass="max-h-[28dvh] overflow-y-auto"
+      />
       <div className="relative mt-2 overflow-hidden rounded-[12px] bg-bg">
         {/* 강조용 뒷면: 글자는 투명, 구절 부분만 배경색 — 위 textarea 글자와 위치가 겹친다 */}
         <div ref={backdropRef} aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden text-transparent ${FIELD_TEXT}`}>

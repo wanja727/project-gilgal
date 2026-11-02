@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { getVersesAction, type VersesResult } from "@/app/actions/bible";
 import { parseReaderSettings, READER_COOKIE, readerCssVars } from "@/lib/reading/settings";
 import { formatVerseRef, splitVerseRefs, type VerseRef } from "@/lib/share/verseRef";
@@ -15,6 +15,7 @@ import { formatVerseRef, splitVerseRefs, type VerseRef } from "@/lib/share/verse
 export function VerseRefText({ content, className = "" }: { content: string; className?: string }) {
   const [open, setOpen] = useState<{ index: number; ref: VerseRef } | null>(null);
   const panelId = useId();
+  const close = () => setOpen(null);
 
   return (
     <>
@@ -24,6 +25,8 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
             <button
               key={i}
               type="button"
+              // 손가락이 닿는 순간 본문을 미리 불러와 펼칠 때 빈 자리가 덜 보이게
+              onPointerDown={() => void loadVerses(s.ref!)}
               onClick={() => setOpen((o) => (o?.index === i ? null : { index: i, ref: s.ref! }))}
               aria-expanded={open?.index === i}
               aria-controls={panelId}
@@ -39,34 +42,104 @@ export function VerseRefText({ content, className = "" }: { content: string; cla
           ),
         )}
       </p>
-      {open && <VerseInline key={open.index} id={panelId} verseRef={open.ref} onClose={() => setOpen(null)} />}
+      <VersePeek id={panelId} verseRef={open?.ref ?? null} onClose={close} className="pt-2.5" />
     </>
   );
 }
 
 /**
  * 그 자리에 펼치는 구절 본문 — 나눔 카드와 입력창(고른 구절 칩)이 같은 모양으로 쓴다(2026-11-03, 하단 시트 대신).
- * className: 놓이는 자리에 맞춘 여백·높이 제한(입력창에서는 짧게 잘라 스크롤)
+ * 열고 닫기·다른 구절로 바꾸기·본문이 도착해 길어지기를 모두 높이 전환으로 부드럽게 잇는다 —
+ * 예전에는 "불러오는 중" 한 줄로 떴다가 본문이 오면 툭 늘어나 깜박이는 것처럼 보였다.
+ * verseRef 가 null 이면 접는다(접히는 동안은 마지막 구절을 그대로 보여 준다).
+ * className: 바깥 여백(접히면 함께 사라지도록 안쪽에 둔다), panelClass: 높이 제한 등 본문 상자에 줄 것
  */
-export function VerseInline({
+export function VersePeek({
   id,
   verseRef,
   onClose,
-  className = "mt-2.5",
+  className = "",
+  panelClass = "",
 }: {
   id?: string;
-  verseRef: VerseRef;
+  verseRef: VerseRef | null;
   onClose: () => void;
   className?: string;
+  panelClass?: string;
 }) {
+  const [shown, setShown] = useState(verseRef);
+  // 열려 있는 동안은 지금 구절, 접히는 동안은 마지막 구절
+  if (verseRef && verseRef !== shown) setShown(verseRef);
+  return (
+    <Reveal show={verseRef !== null} onHidden={() => setShown(null)}>
+      {shown && (
+        <div className={className}>
+          <VerseInline id={id} verseRef={shown} onClose={onClose} className={panelClass} />
+        </div>
+      )}
+    </Reveal>
+  );
+}
+
+/** 안쪽 높이를 따라 바깥 높이를 전환한다 — 열고 닫을 때·내용이 바뀔 때 모두 */
+function Reveal({ show, onHidden, children }: { show: boolean; onHidden: () => void; children: React.ReactNode }) {
+  const inner = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+  const [mounted, setMounted] = useState(show);
+  if (show && !mounted) setMounted(true);
+
+  useLayoutEffect(() => {
+    const el = inner.current;
+    if (!mounted || !el) return;
+    // 처음엔 0 으로 한 번 그려진 뒤에 높이를 줘야 전환이 보인다
+    const raf = requestAnimationFrame(() => setHeight(el.offsetHeight));
+    const ro = new ResizeObserver(() => setHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [mounted]);
+
+  // 움직임 줄이기 설정이면 전환 없이 바로 닫는다(전환 끝 알림이 오지 않으므로). 그려진 뒤(브라우저)에만 닿는 자리
+  if (!show && mounted && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    setMounted(false);
+    setHeight(0);
+  }
+
+  if (!mounted) return null;
+  return (
+    <div
+      style={{ height: show ? height : 0, opacity: show ? 1 : 0 }}
+      className="overflow-hidden transition-[height,opacity] duration-300 ease-[var(--ease-sheet)] motion-reduce:transition-none"
+      onTransitionEnd={(e) => {
+        if (e.target !== e.currentTarget || e.propertyName !== "height" || show) return;
+        setMounted(false);
+        // 다시 펼칠 때 지난 높이에서 시작하지 않게(0 에서 자라도록)
+        setHeight(0);
+        onHidden();
+      }}
+    >
+      <div ref={inner}>{children}</div>
+    </div>
+  );
+}
+
+function VerseInline({ id, verseRef, onClose, className }: { id?: string; verseRef: VerseRef; onClose: () => void; className: string }) {
   const pathname = usePathname();
   const [readerVars] = useState(readerVarsFromCookie);
-  const result = useVerses(verseRef);
-  const title = `여호수아 ${formatVerseRef(verseRef)}`;
+  const fresh = useVerses(verseRef);
+  // 다른 구절로 바꿀 때 새 본문이 오기 전까지는 앞 구절을 그대로 — "불러오는 중"으로 줄었다 늘어나는 출렁임 없이 한 번에 바뀐다
+  const [last, setLast] = useState<{ ref: VerseRef; result: VersesResult } | null>(null);
+  if (fresh && last?.result !== fresh) setLast({ ref: verseRef, result: fresh });
+  const view = fresh ? { ref: verseRef, result: fresh } : last;
+  const result = view?.result ?? null;
+  const ref = view?.ref ?? verseRef;
+  const title = `여호수아 ${formatVerseRef(ref)}`;
   const goTo = result?.status === "ok" && pathname !== `/day/${result.dayNo}` ? `/day/${result.dayNo}` : null;
 
   return (
-    <section id={id} aria-label={title} className={`animate-[rise_.25s_ease-out] rounded-[14px] border-l-[3px] border-main bg-bg py-2.5 pr-2 pl-3.5 ${className}`}>
+    <section id={id} aria-label={title} className={`rounded-[14px] border-l-[3px] border-main bg-bg py-2.5 pr-2 pl-3.5 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-serif text-[15px] font-bold tracking-[-0.02em] text-main">{title}</h3>
         <button type="button" onClick={onClose} className="min-h-9 shrink-0 px-2 text-caption font-semibold text-mute">
@@ -78,7 +151,11 @@ export function VerseInline({
       ) : result.status === "ok" ? (
         <>
           {/* 카드 안이라 줄 간격만 조금 좁힌다(글꼴·크기는 본문 읽기 설정 그대로) */}
-          <ol style={{ ...readerVars, "--reader-leading": 1.8 } as React.CSSProperties} className="reader-text mt-1 pr-1.5 text-text">
+          <ol
+            key={formatVerseRef(ref)}
+            style={{ ...readerVars, "--reader-leading": 1.8 } as React.CSSProperties}
+            className="reader-text mt-1 animate-[fade-in_.25s_ease-out] pr-1.5 text-text"
+          >
             {result.verses.map((v) => (
               <li key={v.number} className="mb-1.5 grid grid-cols-[22px_1fr]">
                 <span className="reader-num font-sans text-[11px] font-bold text-mid">{v.number}</span>
@@ -90,7 +167,7 @@ export function VerseInline({
             <p className="text-[11px] text-mid">{result.attribution}</p>
             {goTo && (
               <Link href={goTo} className="shrink-0 py-1 text-caption font-semibold text-main">
-                {verseRef.chapter}장 본문으로 →
+                {ref.chapter}장 본문으로 →
               </Link>
             )}
           </div>
@@ -102,19 +179,43 @@ export function VerseInline({
   );
 }
 
-/** 구절 본문 불러오기 */
+/**
+ * 구절 본문 불러오기 — 한 번 불러온 구절은 기억해 다시 펼치면 바로 보인다(같은 화면 안, 새로고침하면 비워진다).
+ * 실패는 기억하지 않아 다음에 다시 시도한다.
+ */
+const verseCache = new Map<string, VersesResult>();
+const verseLoading = new Map<string, Promise<VersesResult>>();
+
+function loadVerses(ref: VerseRef): Promise<VersesResult> {
+  const key = formatVerseRef(ref);
+  const hit = verseCache.get(key);
+  if (hit) return Promise.resolve(hit);
+  let p = verseLoading.get(key);
+  if (!p) {
+    p = getVersesAction(ref)
+      .then((r) => {
+        if (r.status !== "unavailable") verseCache.set(key, r);
+        return r;
+      })
+      .catch((): VersesResult => ({ status: "unavailable" }))
+      .finally(() => verseLoading.delete(key));
+    verseLoading.set(key, p);
+  }
+  return p;
+}
+
 function useVerses(verseRef: VerseRef): VersesResult | null {
-  const [result, setResult] = useState<VersesResult | null>(null);
+  const key = formatVerseRef(verseRef);
+  const [loaded, setLoaded] = useState<{ key: string; result: VersesResult } | null>(null);
   useEffect(() => {
+    if (verseCache.has(key)) return;
     let alive = true;
-    getVersesAction(verseRef)
-      .then((r) => alive && setResult(r))
-      .catch(() => alive && setResult({ status: "unavailable" }));
+    loadVerses(verseRef).then((result) => alive && setLoaded({ key, result }));
     return () => {
       alive = false;
     };
-  }, [verseRef]);
-  return result;
+  }, [key, verseRef]);
+  return verseCache.get(key) ?? (loaded?.key === key ? loaded.result : null);
 }
 
 const MESSAGES: Record<Exclude<VersesResult["status"], "ok">, string> = {
