@@ -163,14 +163,14 @@ function VerseInline({ id, verseRef, onClose, className }: { id?: string; verseR
               </li>
             ))}
           </ol>
-          <div className="mt-1 flex items-center justify-between gap-2 pr-1.5">
-            <p className="text-[11px] text-mid">{result.attribution}</p>
-            {goTo && (
-              <Link href={goTo} className="shrink-0 py-1 text-caption font-semibold text-main">
+          {/* 출처 표기는 본문 화면 끝에 있고, 펼침은 짧게 두려 여기서는 뺀다(2026-11-03) */}
+          {goTo && (
+            <div className="flex justify-end pr-1.5">
+              <Link href={goTo} className="py-1 text-caption font-semibold text-main">
                 {ref.chapter}장 본문으로 →
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </>
       ) : (
         <p className="py-2 text-small text-mute">{MESSAGES[result.status]}</p>

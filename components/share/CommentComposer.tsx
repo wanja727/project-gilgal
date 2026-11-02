@@ -8,7 +8,6 @@ import { flashLift } from "@/components/motion/flashLift";
 import { shareAnchor } from "@/lib/share/anchor";
 import { markJustPosted } from "@/lib/share/justPosted";
 import { Avatar } from "@/components/Avatar";
-import { CHAPTER_TEXT_ID } from "@/components/ChapterReader";
 import { READER_ROOT_ID } from "@/components/reading/ReaderSettingsButton";
 import { buttonClass, CloseIcon } from "@/components/ui";
 import { highlightStore } from "@/lib/reading/highlightStore";
@@ -228,8 +227,6 @@ export function CommentComposer({
           submitLabel="나눔 남기기"
           pendingLabel="남기는 중…"
           quoting
-          // 홈 말풍선 카드에 소개된다는 걸 미리 알려, 나중에 "내 글이 홈에?" 하고 놀라지 않게(ADR-029)
-          notice="남긴 나눔은 홈에서도 동행자들에게 소개돼요"
           chapter={chapter}
           maxLength={maxLength}
           text={text}
@@ -258,8 +255,9 @@ export const DOCK_EVENT = "gilgal:dock-open";
  * 들어간 구절은 입력칸 위 칩으로도 보이고(누르면 그 절 본문 시트), 입력칸 안에서도 배경색으로 강조한다 —
  * 입력칸은 일반 textarea 그대로 두고 같은 글을 뒤에 겹쳐 구절 부분만 칠한다(한글 입력에 영향 없음, 2026-10-29).
  *
- * 모바일에서 구절 고르기(2026-11-03): 자판이 떠 있으면 본문이 가려 구절을 고르기 어렵다. 본문 쪽을 끌어 넘기거나
- * "본문에서 고르기"를 누르면 자판을 내리고 입력창을 한 줄(쓰던 글·고른 구절)로 접는다. "이어 쓰기"로 다시 펼친다.
+ * 모바일에서 구절 고르기(2026-11-03): 자판이 떠 있으면 본문이 가려 구절을 고르기 어렵다. 본문 쪽을 끌어 넘기면
+ * 자판을 내리고 입력창을 한 줄(쓰던 글)로 접는다. "이어 쓰기"로 다시 펼친다.
+ * (따로 두었던 "본문에서 고르기" 버튼은 버튼 없이도 고를 수 있어 헷갈린다는 의견으로 뺐다)
  * 내 형광펜(ADR-035)이 있으면 칩으로 보여 줘 누르면 바로 구절로 들어간다.
  */
 export function ComposerDock({
@@ -268,7 +266,6 @@ export function ComposerDock({
   submitLabel,
   pendingLabel = "저장하는 중…",
   quoting = false,
-  notice,
   chapter,
   maxLength,
   text,
@@ -284,8 +281,6 @@ export function ComposerDock({
   submitLabel: string;
   pendingLabel?: string;
   quoting?: boolean;
-  /** 제목 아래 덧붙이는 안내(새 나눔이면 홈에 소개된다는 것) */
-  notice?: string;
   chapter: number;
   maxLength: number;
   text: string;
@@ -329,19 +324,6 @@ export function ComposerDock({
     const c = Math.min(caret.current ?? a.value.length, a.value.length);
     a.setSelectionRange(c, c);
   };
-  // "본문에서 고르기": 접고, 본문이 화면에 없으면 고른 절(없으면 본문 처음)로 올라간다
-  const browse = () => {
-    collapse();
-    const verses = [...document.querySelectorAll<HTMLElement>(`#${READER_ROOT_ID} [data-verse]`)];
-    const inView = verses.some((el) => {
-      const r = el.getBoundingClientRect();
-      return r.bottom > 80 && r.top < window.innerHeight - 160;
-    });
-    if (inView) return;
-    const picked = verses.find((el) => el.hasAttribute("data-picked"));
-    (picked ?? document.getElementById(CHAPTER_TEXT_ID))?.scrollIntoView({ block: picked ? "center" : "start", behavior: "smooth" });
-  };
-
   /**
    * 고른 구절 칩 누르기 — "본문이 화면에 있으면 거기로, 없으면 펼쳐서"(2026-11-03).
    * 이 장 본문 화면이면 입력창을 접고 그 절로 데려가 잠깐 반짝인다(앞뒤 흐름을 보고, 거기서 바로 빼거나 늘릴 수 있게).
@@ -509,7 +491,6 @@ export function ComposerDock({
             {title}
           </label>
           {quoting && <p className="mt-0.5 text-caption text-mute">본문의 절을 누르면 구절이 들어가고, 다시 누르면 빠져요</p>}
-          {notice && <p className="mt-0.5 text-caption text-mute">{notice}</p>}
         </div>
         <button type="button" onClick={onClose} aria-label={`${title} 닫기`} className="-mr-2 grid size-11 shrink-0 place-items-center text-mute">
           <CloseIcon className="size-5" />
@@ -599,19 +580,6 @@ export function ComposerDock({
         <span className="text-caption whitespace-nowrap text-mid tabular-nums" aria-live="polite">
           {text.length} / {maxLength}
         </span>
-        {/* 자판을 내리고 입력창을 접어 본문에서 구절을 고른다 */}
-        {quoting && (
-          <button
-            type="button"
-            onClick={browse}
-            className="ml-auto inline-flex h-11 shrink-0 items-center gap-1 rounded-btn px-2 text-small font-semibold text-main"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4" aria-hidden>
-              <path d="M12 19V5M6 11l6-6 6 6" />
-            </svg>
-            본문에서 고르기
-          </button>
-        )}
         <button type="submit" disabled={pending || !text.trim()} className={buttonClass("main", "h-11 !w-auto shrink-0 px-5 text-body")}>
           {pending ? pendingLabel : submitLabel}
         </button>
