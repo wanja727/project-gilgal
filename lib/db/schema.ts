@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -330,4 +331,24 @@ export const verseHighlights = pgTable(
     check("verse_highlight_chapter_chk", sql`${h.chapter} BETWEEN 1 AND 24`),
     check("verse_highlight_verse_chk", sql`${h.verse} BETWEEN 1 AND 200`),
   ],
+).enableRLS();
+
+// ─── 방문 기록 (2026-11-03, ADR-036) ─────────────────────────────────────
+
+/**
+ * 하루(서비스 날짜, 새벽 4시 기준)에 한 번 — 관리자 지표의 "오늘 방문자"·날짜별 방문 추이.
+ * 온보딩을 마친 사용자가 화면을 열면 응답을 보낸 뒤(after) 기록한다. 몇 번 열었는지·무엇을 봤는지는 남기지 않는다.
+ * campaign: 로컬·Preview 방문이 운영 지표에 섞이지 않게(읽기 기록과 같은 기준).
+ */
+export const dailyVisits = pgTable(
+  "daily_visit",
+  {
+    campaign: text("campaign").notNull(),
+    visitDate: date("visit_date", { mode: "string" }).notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    firstAt: timestamp("first_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (v) => [primaryKey({ columns: [v.campaign, v.visitDate, v.userId] }), index("daily_visit_user_idx").on(v.userId)],
 ).enableRLS();

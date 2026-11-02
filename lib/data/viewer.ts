@@ -1,10 +1,12 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { type AvatarParts, encodeAvatarKey, parseAvatarParts } from "@/lib/avatarParts";
 import { getCompletedDays } from "@/lib/data/progress";
+import { recordVisit } from "@/lib/data/visits";
 import { db } from "@/lib/db";
 import { cells, profiles } from "@/lib/db/schema";
 
@@ -78,6 +80,9 @@ export async function requireViewer(): Promise<Viewer> {
 export async function requireMember(): Promise<Member> {
   const viewer = await requireViewer();
   if (!viewer.onboarded) redirect("/onboarding");
+  // 오늘 방문 기록(관리자 지표, ADR-036) — 응답을 보낸 뒤에 남겨 화면을 늦추지 않는다
+  const { userId } = viewer;
+  after(() => recordVisit(userId));
   return viewer as Member;
 }
 

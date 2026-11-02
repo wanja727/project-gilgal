@@ -84,6 +84,7 @@ pnpm이 전역 설치되어 있지 않으면 `corepack pnpm <명령>` 으로 실
 - `pnpm db:generate` → SQL 리뷰 → `pnpm db:migrate` (마이그레이션은 `drizzle/`, `push` 금지)
 - `pnpm import:selah [--dry] [--delete-csv]` — `data/private/A.csv`(Selah 회원), `B.csv`(cell_roster) → `cell`/`roster_entry`
 - `pnpm bible:load <파일> [--dry]` — 본문 텍스트 → `bible_verse` (형식은 `lib/bible/parse.ts`)
+- 관리자 부여(ADR-036): Supabase SQL 로 `UPDATE profile SET is_admin = true WHERE ...` — 화면에서 권한을 주는 기능은 없다. 관리자 화면은 `/me/admin`
 - `pnpm test-user create [--pending] [--name 이름] [--done 1-3,5] [--cell 셀] [--campaign slug] | crowd <명수> --upto <장> [--lag] [--cell 셀] [--campaign slug] | shares <장> | list | delete` — 카카오 없이 화면을 확인하는 `is_test` 계정·세션 쿠키·읽기 기록(shares: 그 장을 읽은 테스트 계정이 예시 나눔을 남김)
 
 ## 검증

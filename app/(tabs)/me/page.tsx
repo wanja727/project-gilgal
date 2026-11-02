@@ -60,6 +60,24 @@ export default async function MePage() {
         </Link>
       </Card>
 
+      {/* 관리자에게만(profile.is_admin, DB 에서 직접 부여 — ADR-036) */}
+      {member.isAdmin && (
+        <Card className="!p-0">
+          <Link href="/me/admin" className="flex items-center gap-4 px-5 py-4">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-soft text-main" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5">
+                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-title font-bold text-main">관리자</span>
+              <span className="mt-0.5 block text-caption text-mute">참여·읽기 지표, 셀·개인별 진행</span>
+            </span>
+            <ChevronRight />
+          </Link>
+        </Card>
+      )}
+
       <Card aria-labelledby="me-info">
         <CardHead id="me-info" title="알려 드려요" />
         <ul className="mt-3 space-y-2 text-small leading-6 text-mute">

@@ -20,10 +20,14 @@ import { addDays, type IsoDate, isPrelaunchTest, nowKst, serviceDayStart } from 
  */
 /** 공동체 집계·목록에 들어가는 사람(테스트 캠페인·오픈 전 테스트면 그에 맞게) */
 export function communityMember() {
-  const onboarded = and(isNotNull(profiles.realName), isNotNull(profiles.cellId));
-  if (campaignSlug() === "joshua-2026-test") return and(eq(profiles.isTest, true), onboarded);
-  if (isPrelaunchTest(process.env, new Date())) return onboarded;
-  return and(eq(profiles.isTest, false), onboarded);
+  return and(communityPopulation(), isNotNull(profiles.realName), isNotNull(profiles.cellId));
+}
+
+/** 온보딩 여부와 상관없이 집계 대상 계정(테스트 계정 구분만) — 관리자 지표의 "온보딩 대기" 수에도 쓴다 */
+export function communityPopulation() {
+  if (campaignSlug() === "joshua-2026-test") return eq(profiles.isTest, true);
+  if (isPrelaunchTest(process.env, new Date())) return sql`true`;
+  return eq(profiles.isTest, false);
 }
 
 /** 내가 완료한 DAY 번호 (오름차순) */
