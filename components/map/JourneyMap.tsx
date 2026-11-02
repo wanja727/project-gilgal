@@ -64,7 +64,10 @@ export type JourneyMapProps = {
   className?: string;
 };
 
-const AVATAR_R = 9.5;
+// 내 아바타 반지름 — 모바일에서 장소 아이콘(13.5)보다 작아 잘 안 보여 키웠다(9.5 → 14, 2026-11-03)
+const AVATAR_R = 14;
+/** 장소별 아바타 자리(locations.ts avatarOffset)는 9.5 기준으로 맞춘 값 — 커진 만큼 아이콘에서 더 떨어뜨린다 */
+const AVATAR_GROW = AVATAR_R - 9.5;
 const MY_PLACE = "내 위치";
 
 /**
@@ -427,7 +430,9 @@ function Flag({ x, y, label }: { x: number; y: number; label: string | null }) {
 function avatarOffset(site: SiteId): { x: number; y: number } {
   const s = SITES[site];
   const off = ("avatarOffset" in s ? s.avatarOffset : undefined) ?? DEFAULT_AVATAR_OFFSET;
-  return { x: off.dx, y: off.dy };
+  const len = Math.hypot(off.dx, off.dy) || 1;
+  const k = (len + AVATAR_GROW) / len;
+  return { x: off.dx * k, y: off.dy * k };
 }
 
 /** "내 위치" 이름표는 장소 아이콘 반대편: 아바타가 아이콘 아래에 있으면 아바타 아래로 */

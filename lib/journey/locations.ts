@@ -42,7 +42,8 @@ export const SITES = {
     name: "길갈", x: 242, y: 314, label: { dx: -12, dy: 4, anchor: "end" },
     scene: "열두 돌",
     description: "요단 가운데서 가져온 열두 돌을 세워 하나님이 하신 일을 기억하게 했어요.",
-    avatarOffset: { dx: 26, dy: -2 },
+    // 아래 요단강 아이콘에 닿지 않게 오른쪽 위로(아바타를 키운 뒤, 2026-11-03)
+    avatarOffset: { dx: 24, dy: -12 },
   },
   jericho: {
     name: "여리고", x: 210, y: 376, label: { dx: 0, dy: 21, anchor: "middle" },
