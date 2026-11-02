@@ -341,6 +341,39 @@ export function ComposerDock({
     (picked ?? document.getElementById(CHAPTER_TEXT_ID))?.scrollIntoView({ block: picked ? "center" : "start", behavior: "smooth" });
   };
 
+  /**
+   * 고른 구절 칩 누르기 — "본문이 화면에 있으면 거기로, 없으면 펼쳐서"(2026-11-03).
+   * 이 장 본문 화면이면 입력창을 접고 그 절로 데려가 잠깐 반짝인다(앞뒤 흐름을 보고, 거기서 바로 빼거나 늘릴 수 있게).
+   * 다른 장 구절이나 본문이 없는 화면(나눔 탭에서 고치기)은 입력창 안에 펼친다.
+   */
+  const showRef = (r: VerseRef) => {
+    const rows =
+      quoting && r.chapter === chapter
+        ? [...document.querySelectorAll<HTMLElement>(`#${READER_ROOT_ID} [data-verse]`)].filter((el) => {
+            const v = Number(el.dataset.verse);
+            return v >= r.from && v <= r.to;
+          })
+        : [];
+    if (rows.length === 0) {
+      setPeek((p) => (p && formatVerseRef(p) === formatVerseRef(r) ? null : r));
+      return;
+    }
+    setPeek(null);
+    collapse();
+    // 접혀 아래 여백이 바뀐 뒤에 위치를 잰다
+    requestAnimationFrame(() => {
+      rows[0].scrollIntoView({ block: rows.length > 2 ? "start" : "center", behavior: "smooth" });
+      window.setTimeout(() => {
+        rows.forEach((el) => {
+          el.removeAttribute("data-flash");
+          void el.offsetWidth; // 같은 절을 다시 눌러도 처음부터
+          el.setAttribute("data-flash", "");
+          el.addEventListener("animationend", () => el.removeAttribute("data-flash"), { once: true });
+        });
+      }, 350);
+    });
+  };
+
   // 입력창 밖(본문)을 손가락으로 끌면 접는다 — 자판이 올라오며 생기는 스크롤에는 반응하지 않게 터치 이동만 본다
   useEffect(() => {
     if (!quoting) return;
@@ -489,9 +522,8 @@ export function ComposerDock({
               <li key={formatVerseRef(r)} className="animate-[rise_.25s_ease-out]">
                 <button
                   type="button"
-                  onClick={() => setPeek(on ? null : r)}
-                  aria-expanded={on}
-                  aria-label={`여호수아 ${formatVerseRef(r)} 본문 ${on ? "접기" : "펼치기"}`}
+                  onClick={() => showRef(r)}
+                  aria-label={`여호수아 ${formatVerseRef(r)} 본문 보기`}
                   className={`inline-flex h-8 items-center rounded-chip px-3 text-caption font-bold transition-colors ${
                     on ? "bg-main text-surface" : "bg-soft text-main"
                   }`}

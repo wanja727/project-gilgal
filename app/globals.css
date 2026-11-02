@@ -162,6 +162,22 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   background: var(--color-main);
   color: var(--color-surface);
 }
+/* 입력창의 구절 칩을 눌러 데려온 절 — 어디인지 잠깐 알린다 */
+#reader-root [data-flash] {
+  animation: verse-flash 1.6s ease-out;
+  border-radius: 10px;
+}
+@keyframes verse-flash {
+  0%,
+  35% {
+    background-color: color-mix(in srgb, var(--color-main) 10%, transparent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-main) 10%, transparent);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
 /* 절 번호: 본문 첫 줄과 같은 줄 높이로 세로 가운데를 맞춘다 */
 .reader-num {
   line-height: calc(var(--verse-size, var(--text-verse)) * var(--reader-leading, 2.05));
