@@ -28,6 +28,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   themeColor: "#f1f3f6",
   viewportFit: "cover",
+  // 안드로이드 크롬(108~)은 기본값이 자판을 화면 위에 덮기만 해서(resizes-visual) 아래 붙은 나눔 입력창이 자판 뒤에 가려진다.
+  // 자판만큼 화면을 줄이게 해 입력창이 자판 바로 위에 붙도록(카카오톡 인앱 브라우저와 같은 동작, 2026-11-03). iOS 사파리는 이 값을 무시한다
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
