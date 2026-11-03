@@ -342,8 +342,7 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 .fx-pop-dot,
 .fx-appear,
 .fx-land,
-.fx-fall,
-.fx-ray {
+.fx-fall {
   opacity: 0;
   animation-delay: calc(var(--fx-delay) + var(--t, 0s));
   animation-fill-mode: forwards;
@@ -394,14 +393,16 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation-duration: 0.9s;
   animation-timing-function: ease-in;
 }
-.fx-ray {
-  animation-name: fx-ray;
-  animation-duration: 1.6s;
+/* 사건 이름표: 톡 떠서 3초쯤 머물다 사라진다 */
+.fx-caption {
+  opacity: 0;
+  animation: fx-caption 3.6s calc(var(--fx-delay) + var(--t, 0s)) ease-out forwards;
 }
-.fx-draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: map-draw 0.8s calc(var(--fx-delay) + var(--t, 0s)) var(--ease-journey) forwards;
+@keyframes fx-caption {
+  0% { opacity: 0; transform: translateY(4px); }
+  8% { opacity: 1; transform: none; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
 }
 @keyframes fx-travel {
   0% { opacity: 0; transform: none; }
@@ -429,11 +430,6 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0% { opacity: 0; transform: none; }
   15% { opacity: 1; }
   100% { opacity: 0; transform: translateY(var(--dy, 12px)); }
-}
-@keyframes fx-ray {
-  0% { opacity: 0; }
-  30% { opacity: 1; }
-  100% { opacity: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fx { display: none; }

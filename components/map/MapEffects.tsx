@@ -12,18 +12,12 @@ import { EFFECT_SPOTS, REFUGE_CITIES, SITES, type SiteId, TERRAIN, TERRITORIES, 
  * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위
  */
 export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
-  "depart",
   "spies",
   "cross-jordan",
   "twelve-stones",
   "manna-ends",
   "walls-fall",
-  "retreat",
-  "law-reading",
-  "treaty",
   "sun-moon",
-  "kings",
-  "overview",
   "land-east",
   "land-caleb",
   "land-judah",
@@ -33,7 +27,6 @@ export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
   "land-seven",
   "refuge-cities",
   "levite-cities",
-  "return-east",
   "gather",
   "arrive-final",
 ];
@@ -50,13 +43,47 @@ const LAND: Partial<Record<MapEffect, TerritoryId[]>> = {
   "land-seven": ["north", "benjamin"],
 };
 
+/**
+ * 사건 이름표 — 그림만으로는 무엇인지 모를 수 있어 연출과 함께 짧은 사건 이름을 3초쯤 띄운다(2026-11-04 운영자 의견).
+ * 본문 속 사건 이름만 쓰고 해석은 붙이지 않는다. 지파 땅은 지파 이름이 이미 떠서 따로 두지 않는다.
+ * x·y 는 이름표 가운데 — 장소 아이콘·아바타·지명을 피한 자리, t 는 그 사건이 보이는 때.
+ */
+const CAPTIONS: Partial<Record<MapEffect, { text: string; x: number; y: number; t: number }>> = {
+  spies: { text: "두 정탐꾼", x: 248, y: 286, t: 0.2 },
+  "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
+  "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
+  "manna-ends": { text: "만나가 그침", x: 242, y: 266, t: 0.3 },
+  "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
+  "sun-moon": { text: "해와 달이 머묾", x: 118, y: 280, t: 0.3 },
+  "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
+  "refuge-cities": { text: "도피성 여섯 곳", x: 210, y: 176, t: 0.4 },
+  "levite-cities": { text: "레위인의 성읍 48", x: 170, y: 30, t: 0.3 },
+  gather: { text: "온 이스라엘이 모임", x: 180, y: 182, t: 0.4 },
+  "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
+};
+
 export function MapEffectLayer({ kind, layer, delay }: { kind: MapEffect; layer: "under" | "over"; delay: number }) {
   const style = { "--fx-delay": `${delay}s` } as Style;
   const body = layer === "under" ? under(kind) : over(kind);
-  if (!body) return null;
+  const caption = layer === "over" ? CAPTIONS[kind] : undefined;
+  if (!body && !caption) return null;
   return (
     <g aria-hidden className="fx" style={style} pointerEvents="none">
       {body}
+      {caption && <Caption {...caption} />}
+    </g>
+  );
+}
+
+/** 사건 이름표: 옅은 바탕 알약 + 굵은 글자. 글자 폭은 한글 기준으로 어림한다 */
+function Caption({ text, x, y, t }: { text: string; x: number; y: number; t: number }) {
+  const w = [...text].reduce((n, ch) => n + (ch === " " ? 3.4 : /[0-9]/.test(ch) ? 6.2 : 10.4), 0) + 14;
+  return (
+    <g className="fx-caption" style={T(t)}>
+      <rect x={x - w / 2} y={y - 9} width={w} height="18" rx="9" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.2" />
+      <text x={x} y={y + 3.8} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="var(--color-main)">
+        {text}
+      </text>
     </g>
   );
 }
@@ -70,8 +97,6 @@ function under(kind: MapEffect): React.ReactNode {
 
 function over(kind: MapEffect): React.ReactNode {
   switch (kind) {
-    case "depart":
-      return <Depart />;
     case "spies":
       return [0, 0.18].map((t, i) => (
         <Traveler key={i} from={offset(SITES.shittim, -2 + i * 5, -4)} to={offset(SITES.jericho, 0, -2)} t={t} dur={1.1} round />
@@ -82,25 +107,8 @@ function over(kind: MapEffect): React.ReactNode {
       return <TwelveStones />;
     case "manna-ends":
       return <MannaEnds />;
-    case "retreat":
-      return <Retreat />;
-    case "law-reading":
-      return <Rays at={SITES.ebal} />;
-    case "treaty":
-      return (
-        <>
-          {[0, 0.15, 0.3].map((t, i) => (
-            <Traveler key={i} from={offset(SITES.gibeon, 0, -4 + i * 4)} to={offset(SITES.gilgal, -14, 2)} t={t} dur={1.4} />
-          ))}
-          <Pulse at={SITES.gilgal} t={1.6} />
-        </>
-      );
     case "sun-moon":
       return <SunMoon />;
-    case "kings":
-      return <Kings />;
-    case "overview":
-      return <Overview upTo={12} />;
     case "move-base":
       return <MoveBase />;
     case "land-caleb":
@@ -109,8 +117,6 @@ function over(kind: MapEffect): React.ReactNode {
       return <RefugeCities />;
     case "levite-cities":
       return <LeviteCities />;
-    case "return-east":
-      return <ReturnEast />;
     case "gather":
       return <Gather />;
     case "arrive-final":
@@ -189,28 +195,6 @@ function Land({ id, t }: { id: TerritoryId; t: number }) {
 }
 
 // ─── 장별 ────────────────────────────────────────────────
-
-/** 1장: 싯딤에서 부름이 퍼지고, 건널 요단 쪽으로 길이 그려진다(1:2) */
-function Depart() {
-  const a = SITES.shittim;
-  const b = SITES.jordan;
-  return (
-    <>
-      <Pulse at={a} t={0} />
-      <Pulse at={a} t={0.35} />
-      <path
-        className="fx-draw"
-        d={`M${a.x - 14},${a.y + 4} L${b.x + 16},${b.y - 4}`}
-        pathLength={1}
-        fill="none"
-        stroke="var(--color-main)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        style={T(0.5)}
-      />
-    </>
-  );
-}
 
 /** 3장: 건너는 자리 위에 물이 쌓이고 아래 물길이 마른다(3:16) → 다 건넌 뒤 다시 흐른다(4:18) */
 function JordanStops() {
@@ -308,55 +292,6 @@ function JerichoWalls() {
   );
 }
 
-/** 7장: 무리가 아이로 올라가다 물러나고(7:4), 아골 골짜기에 돌무더기가 쌓인다(7:26) */
-function Retreat() {
-  const from = offset(SITES.jericho, 6, -16);
-  const to = { x: (SITES.jericho.x + SITES.ai.x) / 2 - 6, y: (SITES.jericho.y + SITES.ai.y) / 2 };
-  const heap = EFFECT_SPOTS.achor;
-  const heapStones = [
-    [0, 0],
-    [-4, 0],
-    [4, 0],
-    [-2, -3.2],
-    [2, -3.2],
-    [0, -6.4],
-  ];
-  return (
-    <>
-      {[0, 0.12, 0.24].map((t, i) => (
-        <Traveler key={i} from={offset(from, i * 4 - 4, i * 2)} to={offset(to, i * 4 - 4, i * 2)} t={t} dur={0.9} round />
-      ))}
-      {heapStones.map(([dx, dy], i) => (
-        <Pop key={i} at={{ x: heap.x + dx * 1.3, y: heap.y + dy * 1.3 }} t={2.1 + i * 0.1}>
-          <Stone w={5} h={3.8} />
-        </Pop>
-      ))}
-    </>
-  );
-}
-
-/** 8장: 에발산에서 빛줄기가 퍼진다(율법 낭독) */
-function Rays({ at }: { at: Pt }) {
-  return Array.from({ length: 10 }, (_, i) => {
-    const a = (i / 10) * Math.PI * 2;
-    const [c, s] = [Math.cos(a), Math.sin(a)];
-    return (
-      <line
-        key={i}
-        className="fx-ray"
-        x1={at.x + c * 18}
-        y1={at.y + s * 18}
-        x2={at.x + c * 27}
-        y2={at.y + s * 27}
-        stroke="var(--color-main)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        style={T(i * 0.05)}
-      />
-    );
-  });
-}
-
 /** 10장: 기브온 위에 해, 아얄론 골짜기에 달 — 떠서 멈춰 있다 */
 function SunMoon() {
   const sun = offset(SITES.gibeon, 8, -34);
@@ -389,23 +324,12 @@ function SunMoon() {
   );
 }
 
-/** 11장: 북쪽 왕들이 메롬 물가로 모여들었다가(11:5) 흩어진다 */
-function Kings() {
-  const c = EFFECT_SPOTS.merom;
-  return Array.from({ length: 8 }, (_, i) => {
-    const a = (i / 8) * Math.PI * 2 + 0.3;
-    const from = { x: c.x + Math.cos(a) * 46, y: c.y + Math.sin(a) * 40 };
-    const to = { x: c.x + Math.cos(a) * 7, y: c.y + Math.sin(a) * 6 };
-    return <Traveler key={i} from={from} to={to} t={(i % 4) * 0.08} dur={1.1} r={2.2} round />;
-  });
-}
-
 /** 지금까지 머문 장소들(장 순서, 중복 없이) */
 function sitesUpTo(day: number): SiteId[] {
   return [...new Set(JOURNEY_DAYS.slice(0, day).map((d) => d.site))];
 }
 
-/** 12장: 지나온 장소들이 차례로 반짝인다 */
+/** 지나온 장소들이 차례로 반짝인다(24장 완주) */
 function Overview({ upTo }: { upTo: number }) {
   return sitesUpTo(upTo).map((id, i) => <Pulse key={id} at={SITES[id]} t={i * 0.14} />);
 }
@@ -489,23 +413,6 @@ function levitePoints(): Pt[] {
   }
   for (let i = 0; i < 12; i++) pts.push({ x: 286 + rnd() * 52, y: 140 + (i / 12) * 240 + rnd() * 12 });
   return pts;
-}
-
-/** 22장: 동쪽 지파가 요단을 건너 돌아가고, 요단 가에 제단이 선다(22:10) */
-function ReturnEast() {
-  const a = offset(SITES.shiloh, 14, 2);
-  const b = offset(SITES.east, -10, 4);
-  return (
-    <>
-      {[0, 0.15, 0.3].map((t, i) => (
-        <Traveler key={i} from={offset(a, 0, i * 5 - 5)} to={offset(b, 0, i * 5 - 5)} t={t} dur={1.4} />
-      ))}
-      <Pop at={EFFECT_SPOTS.jordanAltar} t={1.3}>
-        <rect x="-5" y="-4" width="10" height="8" rx="1.2" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.5" />
-        <path d="M-5,-1 H5" stroke="var(--color-main)" strokeWidth="1" />
-      </Pop>
-    </>
-  );
 }
 
 /** 23장: 사방에서 백성이 세겜으로 모인다(23:2) */

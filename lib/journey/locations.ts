@@ -207,10 +207,7 @@ export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId 
   { name: "베셀", x: 306, y: 372 },
 ];
 
-/** 11장 메롬 물가(왕들이 모인 곳), 7장 아골 골짜기(돌무더기), 10장 아얄론 골짜기(달), 22장 요단 가 제단 */
+/** 10장 아얄론 골짜기(달이 머문 곳) */
 export const EFFECT_SPOTS = {
-  merom: { x: 236, y: 104 },
-  achor: { x: 190, y: 344 },
   aijalon: { x: 82, y: 372 },
-  jordanAltar: { x: 252, y: 226 },
 } as const;
