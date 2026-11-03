@@ -409,10 +409,20 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation-duration: 0.9s;
   animation-timing-function: ease-in;
 }
+/* 21장: 온 땅이 한 번 빛났다가 잦아든다 */
+.fx-glow {
+  opacity: 0;
+  animation: fx-glow 2.4s calc(var(--fx-delay) + var(--t, 0s)) ease-in-out forwards;
+}
+@keyframes fx-glow {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
 /* 사건 이름표: 톡 떠서 3초쯤 머물다 사라진다 */
 .fx-caption {
   opacity: 0;
-  animation: fx-caption 3.6s calc(var(--fx-delay) + var(--t, 0s)) ease-out forwards;
+  animation: fx-caption var(--cap-dur, 3.6s) calc(var(--fx-delay) + var(--t, 0s)) ease-out forwards;
 }
 @keyframes fx-caption {
   0% { opacity: 0; transform: translateY(4px); }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
-import { PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
+import { landsBefore, PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { SiteGlyph } from "@/components/map/SiteGlyph";
 import { ChevronLeft, ChevronRight } from "@/components/ui";
@@ -132,6 +132,7 @@ export function JourneyExplorer({
               }}
               walker={{ from: prevSite, to: site, key: String(chapter) }}
               effect={effectFor(chapter, statuses[chapter - 1] !== "locked")}
+              lands={landsBefore(chapter)}
               revealed={revealed}
               onSelectSite={selectSite}
               ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${lastOpen ? `${chapter}장: ${legFrom(chapter) === site ? SITES[site].name : `${SITES[legFrom(chapter)].name}에서 ${SITES[site].name}까지`}. ` : ""}장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}

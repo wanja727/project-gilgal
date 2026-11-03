@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { JourneyMap } from "@/components/map/JourneyMap";
+import { landsBefore } from "@/components/map/MapEffects";
 import { ButtonLink, Card, CardHead, ChevronLeft } from "@/components/ui";
 import { BRAND } from "@/lib/brand";
 import { getCompletionTimes } from "@/lib/data/progress";
@@ -31,7 +32,8 @@ export default async function FinalePage() {
       </div>
 
       <div className="mx-gutter overflow-hidden rounded-[28px] bg-surface">
-        <JourneyMap view={view} avatarKey={member.avatarKey} ariaLabel="지금까지 걸어온 여정 전체 지도" className="!h-auto" />
+        {/* 완주: 걸어온 길(1~12장)과 다 채워진 땅(13~19장)을 함께 */}
+        <JourneyMap view={view} avatarKey={member.avatarKey} lands={landsBefore(JOSHUA_2026.totalDays + 1)} ariaLabel="지금까지 걸어온 여정 전체 지도" className="!h-auto" />
       </div>
       <p className="pt-2 text-center text-[11px] text-mid">{BRAND.mapCaption}</p>
 

@@ -44,11 +44,34 @@ const LAND: Partial<Record<MapEffect, TerritoryId[]>> = {
 };
 
 /**
+ * 그 장을 볼 때 이미 나뉘어 있는 땅(2026-11-04): 13장부터 앞 장들에서 받은 땅이 옅게 쌓인다 — 후반은 "걸음"이 아니라 "채워짐".
+ * 그 장에서 새로 받는 땅은 연출(Land)이 따로 그리므로 뺀다. 19장 뒤로는 모든 땅.
+ */
+export function landsBefore(chapter: number): TerritoryId[] {
+  return JOURNEY_DAYS.slice(0, Math.max(0, chapter - 1)).flatMap((d) => (d.mapEffect ? (LAND[d.mapEffect] ?? []) : []));
+}
+
+/** 이미 받은 땅: 이름 없이 옅게 — 경계는 실선으로 아주 옅게(띠가 서로 맞물려 지파마다 구분만) */
+export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
+  // 갈렙 땅(헤브론)은 유다 땅 안이라 유다가 나뉜 뒤에는 겹쳐 칠하지 않는다 — 헤브론만 진한 동그라미로 보이지 않게
+  const shown = ids.includes("judah") ? ids.filter((id) => id !== "caleb") : ids;
+  if (shown.length === 0) return null;
+  return (
+    <g aria-hidden pointerEvents="none">
+      {shown.map((id) => (
+        <LandShape key={id} id={id} clipId={`land-clip-${id}`} paint={{ fill: "var(--color-main)", fillOpacity: 0.07, stroke: "var(--color-main)", strokeOpacity: 0.16, strokeWidth: 1 }} />
+      ))}
+    </g>
+  );
+}
+
+/**
  * 사건 이름표 — 그림만으로는 무엇인지 모를 수 있어 연출과 함께 짧은 사건 이름을 3초쯤 띄운다(2026-11-04 운영자 의견).
  * 본문 속 사건 이름만 쓰고 해석은 붙이지 않는다. 지파 땅은 지파 이름이 이미 떠서 따로 두지 않는다.
  * x·y 는 이름표 가운데 — 장소 아이콘·아바타·지명을 피한 자리, t 는 그 사건이 보이는 때.
  */
-const CAPTIONS: Partial<Record<MapEffect, { text: string; x: number; y: number; t: number }>> = {
+type Cap = { text: string; x: number; y: number; t: number; dur?: number };
+const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   spies: { text: "두 정탐꾼", x: 248, y: 286, t: 0.2 },
   "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
   "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
@@ -58,7 +81,11 @@ const CAPTIONS: Partial<Record<MapEffect, { text: string; x: number; y: number; 
   "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
   // 세겜 위는 20장 깃발·"내 위치" 이름표 자리라 지도 왼쪽 위 빈 곳에
   "refuge-cities": { text: "도피성 여섯 곳", x: 128, y: 84, t: 0.4 },
-  "levite-cities": { text: "레위인의 성읍 48", x: 170, y: 30, t: 0.3 },
+  "levite-cities": [
+    { text: "레위인의 성읍 48", x: 170, y: 30, t: 0.3, dur: 2.2 },
+    // 21:43 — 레위 성읍까지 나뉘고 나서 온 땅이 함께 빛난다(AllLandGlow 와 같은 때)
+    { text: "온 땅을 다 주심", x: 170, y: 30, t: 2.6 },
+  ],
   gather: { text: "온 이스라엘이 모임", x: 180, y: 182, t: 0.4 },
   "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
 };
@@ -66,21 +93,23 @@ const CAPTIONS: Partial<Record<MapEffect, { text: string; x: number; y: number; 
 export function MapEffectLayer({ kind, layer, delay }: { kind: MapEffect; layer: "under" | "over"; delay: number }) {
   const style = { "--fx-delay": `${delay}s` } as Style;
   const body = layer === "under" ? under(kind) : over(kind);
-  const caption = layer === "over" ? CAPTIONS[kind] : undefined;
-  if (!body && !caption) return null;
+  const caps = layer === "over" ? [CAPTIONS[kind] ?? []].flat() : [];
+  if (!body && caps.length === 0) return null;
   return (
     <g aria-hidden className="fx" style={style} pointerEvents="none">
       {body}
-      {caption && <Caption {...caption} />}
+      {caps.map((c) => (
+        <Caption key={c.text} {...c} />
+      ))}
     </g>
   );
 }
 
 /** 사건 이름표: 옅은 바탕 알약 + 굵은 글자. 글자 폭은 한글 기준으로 어림한다 */
-function Caption({ text, x, y, t }: { text: string; x: number; y: number; t: number }) {
+function Caption({ text, x, y, t, dur }: Cap) {
   const w = [...text].reduce((n, ch) => n + (ch === " " ? 3.4 : /[0-9]/.test(ch) ? 6.2 : 10.4), 0) + 14;
   return (
-    <g className="fx-caption" style={T(t)}>
+    <g className="fx-caption" style={T(t, dur ? { "--cap-dur": `${dur}s` } : undefined)}>
       <rect x={x - w / 2} y={y - 9} width={w} height="18" rx="9" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.2" />
       <text x={x} y={y + 3.8} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="var(--color-main)">
         {text}
@@ -91,6 +120,7 @@ function Caption({ text, x, y, t }: { text: string; x: number; y: number; t: num
 
 function under(kind: MapEffect): React.ReactNode {
   if (kind === "cross-jordan") return <JordanStops />;
+  if (kind === "levite-cities") return <AllLandGlow t={2.4} />;
   const land = LAND[kind];
   if (land) return land.map((id, i) => <Land key={id} id={id} t={i * 0.5} />);
   return null;
@@ -168,26 +198,46 @@ function Stone({ w = 4.6, h = 3.4 }: { w?: number; h?: number }) {
   return <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="1" fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
 }
 
-/** 나뉜 땅: 옅게 채워지고 이름이 뜬다(그 장을 보는 동안 남는다) */
+/** 땅 모양 하나(띠는 가나안 모양으로 자른다) */
+function LandShape({ id, clipId, paint }: { id: TerritoryId; clipId: string; paint: React.SVGProps<SVGElement> }) {
+  const land = TERRITORIES[id];
+  const p = paint as React.SVGProps<SVGRectElement> & React.SVGProps<SVGPathElement> & React.SVGProps<SVGCircleElement>;
+  if ("band" in land) {
+    return (
+      <>
+        <defs>
+          <clipPath id={clipId}>
+            <path d={TERRAIN.canaan} />
+          </clipPath>
+        </defs>
+        <rect x="0" y={land.band[0]} width="360" height={land.band[1] - land.band[0]} clipPath={`url(#${clipId})`} {...p} />
+      </>
+    );
+  }
+  return "d" in land ? <path d={land.d} {...p} /> : <circle {...land.circle} {...p} />;
+}
+
+/** 21장: 레위 성읍까지 나뉜 뒤 온 땅이 함께 한 번 빛난다(21:43 "온 땅을 다 주셨으므로") */
+function AllLandGlow({ t }: { t: number }) {
+  return (
+    <g className="fx-glow" style={T(t)}>
+      {(Object.keys(TERRITORIES) as TerritoryId[]).map((id) => (
+        <LandShape key={id} id={id} clipId={`glow-clip-${id}`} paint={{ fill: "var(--color-main)", fillOpacity: 0.16 }} />
+      ))}
+    </g>
+  );
+}
+
+/** 그 장에서 새로 나뉜 땅: 옅게 채워지고 이름이 뜬다(그 장을 보는 동안 남는다) */
 function Land({ id, t }: { id: TerritoryId; t: number }) {
   const land = TERRITORIES[id];
-  const paint = { fill: "var(--color-main)", fillOpacity: 0.13, stroke: "var(--color-main)", strokeOpacity: 0.4, strokeWidth: 1, strokeDasharray: "3 3" };
   return (
     <g className="fx-land" style={T(t)}>
-      {"band" in land ? (
-        <>
-          <defs>
-            <clipPath id={`fx-clip-${id}`}>
-              <path d={TERRAIN.canaan} />
-            </clipPath>
-          </defs>
-          <rect x="0" y={land.band[0]} width="360" height={land.band[1] - land.band[0]} clipPath={`url(#fx-clip-${id})`} {...paint} />
-        </>
-      ) : "d" in land ? (
-        <path d={land.d} {...paint} />
-      ) : (
-        <circle {...land.circle} {...paint} />
-      )}
+      <LandShape
+        id={id}
+        clipId={`fx-clip-${id}`}
+        paint={{ fill: "var(--color-main)", fillOpacity: 0.13, stroke: "var(--color-main)", strokeOpacity: 0.4, strokeWidth: 1, strokeDasharray: "3 3" }}
+      />
       <text className="map-label" x={land.label.x} y={land.label.y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--color-main)">
         {land.name}
       </text>

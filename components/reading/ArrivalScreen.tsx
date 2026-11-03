@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
+import { landsBefore, PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { CountUp } from "@/components/motion/CountUp";
 import { buttonClass } from "@/components/ui";
@@ -117,6 +117,7 @@ export function ArrivalScreen({
               ? { kind: day.mapEffect, key: `arrive-${day.day}`, delay: day.mapEffect === "cross-jordan" ? 0 : 1.9 }
               : null
           }
+          lands={landsBefore(day.day)}
           revealed={revealedSites(today)}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
         />

@@ -9,7 +9,8 @@ import {
 } from "@/lib/journey/locations";
 import { type MapView, ROUTE_LAST_DAY, routeTrail } from "@/lib/journey/mapState";
 import type { MapEffect } from "@/lib/journey/days";
-import { MapEffectLayer } from "./MapEffects";
+import type { TerritoryId } from "@/lib/journey/locations";
+import { GivenLands, MapEffectLayer } from "./MapEffects";
 import { MovingAvatar } from "./MovingAvatar";
 import { SiteGlyphPaths } from "./SiteGlyph";
 
@@ -64,6 +65,8 @@ export type JourneyMapProps = {
    * 도착 화면은 아바타가 도착한 뒤, 여정 탭은 장을 고르고 길이 그려진 뒤.
    */
   effect?: { kind: MapEffect; key: string; delay: number } | null;
+  /** 이미 나뉜 땅(옅게, landsBefore) — 13장부터 땅이 한 조각씩 쌓여 보이게 */
+  lands?: readonly TerritoryId[];
   /** 드러난 장소만 그린다(revealedSites — 길은 그날 열린다). 없으면 모든 장소 */
   revealed?: readonly SiteId[] | null;
   onSelectSite?: (id: SiteId) => void;
@@ -128,6 +131,7 @@ export function JourneyMap({
   leg,
   walker = null,
   effect = null,
+  lands = [],
   revealed = null,
   onSelectSite,
   ariaLabel,
@@ -228,6 +232,7 @@ export function JourneyMap({
         </g>
       )}
 
+      {!focused && <GivenLands ids={lands} />}
       {effect && !focused && <MapEffectLayer key={`u-${effect.key}`} kind={effect.kind} layer="under" delay={effect.delay} />}
 
       {/* 지나온 길(옅은 실선) · 진한 구간. 아직 걷지 않은 길은 그리지 않는다 */}
