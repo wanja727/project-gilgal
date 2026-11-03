@@ -255,6 +255,90 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation: map-fade-out 0.8s 1.4s forwards;
 }
 
+/*
+ * 장소 사건 연출(components/map/MapEffects.tsx, 2026-11-04). 시간은 --fx-delay(길·아바타가 도착한 뒤) 기준.
+ * 시작 전에는 보이지 않게 기본 투명 + forwards, 움직임 줄이기면 아예 그리지 않는다.
+ */
+/* 요단: 아래 물길이 마르고 위에 물이 쌓였다가, 다 건넌 뒤 다시 흐른다 */
+.fx-jordan-dry {
+  opacity: 0;
+  animation: fx-hold 3s var(--fx-delay) var(--ease-journey) forwards;
+}
+.fx-jordan-heap {
+  transform-box: view-box;
+  transform: scaleY(0);
+  animation: fx-heap 3s var(--fx-delay) var(--ease-journey) forwards;
+}
+@keyframes fx-hold {
+  0% { opacity: 0; }
+  15%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes fx-heap {
+  0% { transform: scaleY(0); }
+  20%, 78% { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
+}
+/* 여리고: 행렬이 일곱 바퀴(2초) → 외침이 퍼지고 → 아이콘이 흔들리며 조각이 떨어진다 */
+.fx-track {
+  opacity: 0;
+  animation: fx-hold 2.5s var(--fx-delay) forwards;
+}
+.fx-orbit {
+  transform-box: view-box;
+  opacity: 0;
+  animation:
+    fx-in 0.25s calc(var(--fx-delay) + 0.1s) both,
+    fx-orbit 2s calc(var(--fx-delay) + 0.1s) cubic-bezier(0.45, 0, 0.55, 1) both,
+    fx-out 0.3s calc(var(--fx-delay) + 2s) forwards;
+}
+.fx-shout {
+  transform-box: view-box;
+  opacity: 0;
+  animation: fx-shout 0.8s calc(var(--fx-delay) + 2.1s) ease-out forwards;
+}
+.fx-shake {
+  /* 아이콘 제자리에서 흔들리게(SVG 기본 기준점은 지도 왼쪽 위) */
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fx-shake 0.5s calc(var(--fx-delay) + 2.15s) ease-in-out;
+}
+.fx-rubble {
+  opacity: 0;
+  animation: fx-rubble 0.7s ease-in forwards;
+}
+@keyframes fx-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fx-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes fx-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(2520deg); }
+}
+@keyframes fx-shout {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+@keyframes fx-shake {
+  0%, 100% { transform: none; }
+  15% { transform: translate(-1.6px, 0.4px) rotate(-3deg); }
+  35% { transform: translate(1.5px, 0.8px) rotate(2.5deg); }
+  55% { transform: translate(-1px, 1.2px) rotate(-1.5deg); }
+  75% { transform: translate(0.6px, 1px) rotate(1deg); }
+}
+@keyframes fx-rubble {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx { display: none; }
+  .fx-shake { animation: none; }
+}
+
 /* 홈 진행도(2026-10-30): 걸은 길이 그려지고, 칸이 톡 채워지고, 아바타가 한 칸씩 통통 걷는다 */
 .path-draw {
   stroke-dasharray: 1 2;

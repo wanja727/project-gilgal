@@ -20,6 +20,7 @@ export type MapMode = "journey" | "territory" | "review";
 export type MapEffect =
   | "depart"
   | "cross-jordan"
+  | "walls-fall"
   | "overview"
   | "fill-territory"
   | "move-base"
@@ -123,7 +124,7 @@ const CONTENT: DayContent[] = [
     completion: { headline: "길갈에 머물렀어요" } },
 
   // ─── ACT 2 — 약속의 땅을 정복하다 (6~12장) ───
-  { title: "성벽이 무너지다", place: "여리고", site: "jericho", mapMode: "journey",
+  { title: "성벽이 무너지다", place: "여리고", site: "jericho", mapMode: "journey", mapEffect: "walls-fall",
     completion: { headline: "여리고에 도착했어요" } },
   { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey",
     completion: { headline: "아이 앞에서 잠시 멈추었어요" } },

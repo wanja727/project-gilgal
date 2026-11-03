@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { CountUp } from "@/components/motion/CountUp";
 import { buttonClass } from "@/components/ui";
@@ -110,6 +111,12 @@ export function ArrivalScreen({
           avatarKey={avatarKey}
           crop={cropAroundLeg(previousSite(day.day), day.site)}
           arrival={{ crossJordan: day.day === 3, from: previousSite(day.day) }}
+          // 사건 연출: 요단은 아바타가 건너기 전에 물이 멈추고, 여리고는 도착한 뒤 행렬이 돈다
+          effect={
+            day.mapEffect && PLAYABLE_EFFECTS.includes(day.mapEffect)
+              ? { kind: day.mapEffect, key: `arrive-${day.day}`, delay: day.mapEffect === "cross-jordan" ? 0 : 1.9 }
+              : null
+          }
           revealed={revealedSites(today)}
           ariaLabel={`${day.chapter}장 완료: ${site.name}에 도착한 지도`}
         />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
+import { PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { SiteGlyph } from "@/components/map/SiteGlyph";
 import { ChevronLeft, ChevronRight } from "@/components/ui";
@@ -129,6 +130,7 @@ export function JourneyExplorer({
                 prev: prevSite,
               }}
               walker={{ from: prevSite, to: site, key: String(chapter) }}
+              effect={effectFor(chapter, statuses[chapter - 1] !== "locked")}
               revealed={revealed}
               onSelectSite={selectSite}
               ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${lastOpen ? `${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. ` : ""}장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
@@ -329,4 +331,12 @@ function ChapterList({
       })}
     </div>
   );
+}
+
+/** 고른 장의 사건 연출 — 열린 장이고 연출이 준비된 장만(MapEffects) */
+function effectFor(chapter: number, open: boolean) {
+  const kind = JOURNEY_DAYS[chapter - 1].mapEffect;
+  if (!open || !kind || !PLAYABLE_EFFECTS.includes(kind)) return null;
+  // 요단은 아바타가 건너는 동안 물이 멈춰 있어야 해서 바로, 나머지는 길(0.6초)이 다 그려진 뒤
+  return { kind, key: String(chapter), delay: kind === "cross-jordan" ? 0 : 0.65 };
 }

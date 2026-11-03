@@ -8,6 +8,8 @@ import {
   type SiteId,
 } from "@/lib/journey/locations";
 import type { MapView } from "@/lib/journey/mapState";
+import type { MapEffect } from "@/lib/journey/days";
+import { MapEffectLayer } from "./MapEffects";
 import { MovingAvatar } from "./MovingAvatar";
 import { SiteGlyphPaths } from "./SiteGlyph";
 
@@ -57,6 +59,11 @@ export type JourneyMapProps = {
    * 다음 장이면 진하게 그려지는 길을 함께 따라가고, 뒤로 가면 그 길을 되돌아간다. "내 위치" 이름표는 실제 내 위치에 섰을 때만.
    */
   walker?: { from: SiteId | null; to: SiteId; key: string } | null;
+  /**
+   * 장소 사건 연출(MapEffects, 2026-11-04): delay 초 뒤 한 번 재생. key 가 바뀌면 다시 재생된다.
+   * 도착 화면은 아바타가 도착한 뒤, 여정 탭은 장을 고르고 길이 그려진 뒤.
+   */
+  effect?: { kind: MapEffect; key: string; delay: number } | null;
   /** 드러난 장소만 그린다(revealedSites — 길은 그날 열린다). 없으면 모든 장소 */
   revealed?: readonly SiteId[] | null;
   onSelectSite?: (id: SiteId) => void;
@@ -104,6 +111,7 @@ export function JourneyMap({
   arrival = null,
   leg,
   walker = null,
+  effect = null,
   revealed = null,
   onSelectSite,
   ariaLabel,
@@ -201,6 +209,8 @@ export function JourneyMap({
         </g>
       )}
 
+      {effect && !focused && <MapEffectLayer key={`u-${effect.key}`} kind={effect.kind} layer="under" delay={effect.delay} />}
+
       {/* 지나온 길(옅은 실선) · 진한 구간. 아직 걷지 않은 길은 그리지 않는다 */}
       <g fill="none" strokeLinecap="round" stroke="var(--color-main)">
         {walked.map((site, i) =>
@@ -249,16 +259,23 @@ export function JourneyMap({
                 className={leg?.prev ? "map-fade-in" : undefined}
               />
             )}
-            {popClass && on ? (
-              <>
-                <Marker id={id} tone={beforeTone} />
-                <g className={popClass}>
-                  <Marker id={id} tone="on" />
-                </g>
-              </>
-            ) : (
-              <Marker id={id} tone={on ? "on" : ring ? "ring" : "off"} />
-            )}
+            {/* 여리고 연출: 행렬이 다 돈 뒤 아이콘이 흔들린다 */}
+            <g
+              key={shakes(effect, id) ? `shake-${effect!.key}` : "still"}
+              className={shakes(effect, id) ? "fx-shake" : undefined}
+              style={shakes(effect, id) ? ({ "--fx-delay": `${effect!.delay}s` } as React.CSSProperties) : undefined}
+            >
+              {popClass && on ? (
+                <>
+                  <Marker id={id} tone={beforeTone} />
+                  <g className={popClass}>
+                    <Marker id={id} tone="on" />
+                  </g>
+                </>
+              ) : (
+                <Marker id={id} tone={on ? "on" : ring ? "ring" : "off"} />
+              )}
+            </g>
             {/* 바로 전 강조를 그 위에 겹쳐 두고 가운데로 오므라들며 사라지게 한다 — 도착할 때 가운데에서 차오르는 것의 반대 */}
             {fading === id && (
               <g key={`fade-${fadeKey}`} aria-hidden pointerEvents="none">
@@ -307,6 +324,8 @@ export function JourneyMap({
         );
       })}
 
+      {effect && !focused && <MapEffectLayer key={`o-${effect.key}`} kind={effect.kind} layer="over" delay={effect.delay} />}
+
       {/* 깃발 */}
       {/* 깃발과 내 위치가 같은 장소면 이름표가 겹치지 않게 깃발 하나로 합친다 */}
       {!focused && view.flag && (
@@ -332,6 +351,10 @@ export function JourneyMap({
       )}
     </svg>
   );
+}
+
+function shakes(effect: JourneyMapProps["effect"], id: SiteId): boolean {
+  return effect?.kind === "walls-fall" && id === "jericho";
 }
 
 /** 장소 아이콘: on 채움(내 위치·강조) / ring 테두리(지나온 곳) / off 흐림 */
