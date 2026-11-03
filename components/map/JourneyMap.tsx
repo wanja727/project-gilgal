@@ -346,7 +346,7 @@ export function JourneyMap({
       {!focused && view.me && avatarKey && !walker && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
           <MovingAvatar d={curve(strong.from, strong.to, 1)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
-            <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} />
+            <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} tagDx={tagDx(view.me)} />
           </MovingAvatar>
         ) : (
           <MapAvatar site={view.me} avatarKey={avatarKey} tag={!meAtFlag} />
@@ -466,12 +466,17 @@ function tagSide(site: SiteId): "above" | "below" {
   return avatarOffset(site).y > 0 ? "below" : "above";
 }
 
+function tagDx(site: SiteId): number {
+  const s = SITES[site];
+  return "tagDx" in s ? s.tagDx : 0;
+}
+
 function MapAvatar({ site, avatarKey, tag }: { site: SiteId; avatarKey: string; tag: boolean }) {
   const s = SITES[site];
   const off = avatarOffset(site);
   return (
     <g transform={`translate(${s.x + off.x} ${s.y + off.y})`}>
-      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(site) : null} />
+      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(site) : null} tagDx={tagDx(site)} />
     </g>
   );
 }
@@ -504,18 +509,18 @@ function Walker({
       delayMs={delayMs}
       durationMs={600}
     >
-      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(to) : null} />
+      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(to) : null} tagDx={tagDx(to)} />
     </MovingAvatar>
   );
 }
 
 /** (0,0) 을 중심으로 그린 아바타와 이름표 */
-function AvatarMark({ avatarKey, tag }: { avatarKey: string; tag: "above" | "below" | null }) {
+function AvatarMark({ avatarKey, tag, tagDx = 0 }: { avatarKey: string; tag: "above" | "below" | null; tagDx?: number }) {
   return (
     <g aria-hidden>
       <circle r={AVATAR_R + 2.5} fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="2" />
       <image href={avatarUrl(avatarKey)} x={-AVATAR_R} y={-AVATAR_R} width={AVATAR_R * 2} height={AVATAR_R * 2} />
-      {tag && <Tag x={0} y={tag === "below" ? AVATAR_R + 20 : -AVATAR_R - 5} text={MY_PLACE} tone="solid" clamp={false} />}
+      {tag && <Tag x={tagDx} y={tag === "below" ? AVATAR_R + 20 : -AVATAR_R - 5} text={MY_PLACE} tone="solid" clamp={false} />}
     </g>
   );
 }

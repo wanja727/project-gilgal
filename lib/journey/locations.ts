@@ -22,6 +22,8 @@ export type Site = {
   description: string;
   /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게). dy > 0 이면 "내 위치" 이름표는 아바타 아래 */
   avatarOffset?: { dx: number; dy: number };
+  /** "내 위치" 이름표를 아바타 기준 가로로 옮길 때(옆 장소 아이콘에 걸리는 자리) */
+  tagDx?: number;
 };
 
 export const SITES = {
@@ -35,7 +37,10 @@ export const SITES = {
     name: "요단강", x: 263, y: 340, label: { dx: 10, dy: 16, anchor: "start" },
     scene: "언약궤와 멈춘 강물",
     description: "언약궤를 멘 제사장들의 발이 물에 닿자 흐르던 물이 멈추었어요.",
-    avatarOffset: { dx: 0, dy: 26 },
+    // 강을 건넜다는 게 보이게 강줄기에서 비켜 서쪽 기슭(가나안 쪽, 아이콘 왼쪽 아래)에 선다(2026-11-04).
+    // 이름표는 아래 여리고 아이콘에 걸리지 않게 오른쪽으로
+    avatarOffset: { dx: -26, dy: 10 },
+    tagDx: 12,
   },
   gilgal: {
     // 오른쪽엔 아바타와 "내 위치" 이름표가 오므로 지명은 왼쪽에 둔다
