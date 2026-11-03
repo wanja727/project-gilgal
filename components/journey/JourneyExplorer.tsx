@@ -11,7 +11,7 @@ import { BRAND } from "@/lib/brand";
 import { formatDate } from "@/lib/format";
 import { ACTS, JOURNEY_DAYS, type ActNo } from "@/lib/journey/days";
 import { EXPLORER_CROP, SITES, type SiteId } from "@/lib/journey/locations";
-import { type ChapterStatus, type MapView, previousSite } from "@/lib/journey/mapState";
+import { type ChapterStatus, legFrom, type MapView, routeTrail } from "@/lib/journey/mapState";
 
 type ViewMode = "map" | "list";
 const REVEAL_SEEN_KEY = "gilgal_reveal_seen";
@@ -116,14 +116,15 @@ export function JourneyExplorer({
               지도는 세로로 긴 그림이라 폭보다 높이가 크기를 정한다. 장소 아이콘 설명은 장 카드(아이콘 + 장소 이름)가 대신한다 */}
           <div ref={mapRef} className="mx-gutter mt-3 h-[clamp(260px,calc(100dvh-392px),620px)] overflow-hidden rounded-map bg-surface">
             <JourneyMap
-              view={view}
+              // 지나온 길은 고른 장까지만 — 앞 장을 되짚을 때 그 뒤의 길까지 보이지 않게(ADR-038)
+              view={{ ...view, walked: routeTrail(chapter) }}
               avatarKey={avatarKey}
               flagLabel={flagLabel}
               selected={site}
               crop={EXPLORER_CROP}
               fit="meet"
               leg={{
-                from: previousSite(chapter),
+                from: legFrom(chapter),
                 to: site,
                 locked: statuses[chapter - 1] === "locked",
                 key: String(chapter),
@@ -133,7 +134,7 @@ export function JourneyExplorer({
               effect={effectFor(chapter, statuses[chapter - 1] !== "locked")}
               revealed={revealed}
               onSelectSite={selectSite}
-              ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${lastOpen ? `${chapter}장의 길: ${SITES[previousSite(chapter)].name}에서 ${SITES[site].name}까지. ` : ""}장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
+              ariaLabel={`여호수아 여정 지도. ${view.me ? `${SITES.shittim.name}에서 ${SITES[view.me].name}까지 걸어온 길. ` : ""}${lastOpen ? `${chapter}장: ${legFrom(chapter) === site ? SITES[site].name : `${SITES[legFrom(chapter)].name}에서 ${SITES[site].name}까지`}. ` : ""}장소를 누르면 그 장소의 장으로 옮겨요. ${BRAND.mapCaption}`}
             />
           </div>
           <ChapterCard chapter={chapter} statuses={statuses} flagDay={flagDay} lastOpen={lastOpen} onChange={setChapter} />
@@ -171,7 +172,7 @@ function ChapterCard({
   const st = statuses[chapter - 1];
   const total = JOURNEY_DAYS.length;
   const place = SITES[day.site];
-  const from = SITES[previousSite(chapter)].name;
+  const from = SITES[legFrom(chapter)].name;
   const arrow =
     "grid size-11 shrink-0 place-items-center rounded-full bg-soft text-main disabled:bg-transparent disabled:text-line";
   const hidden = st === "locked";

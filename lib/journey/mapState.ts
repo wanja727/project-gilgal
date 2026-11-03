@@ -52,6 +52,22 @@ export function trail(from: number, to: number): SiteId[] {
   return out;
 }
 
+/**
+ * 길(선)로 잇는 마지막 장(2026-11-04, ADR-038): 1~12장은 실제로 걸은 길, 13장부터는 땅을 나누는 장이라
+ * 지도 대표 장소(요단 동쪽·헤브론·실로·세겜)를 오가는 선이 실제 이동처럼 보이고 거미줄처럼 엉킨다 — 그 장들은 선 없이 장소만 강조한다.
+ */
+export const ROUTE_LAST_DAY = JOURNEY_DAYS.findIndex((d) => d.mapMode === "territory");
+
+/** 1장~upTo 장까지 지도에 선으로 그리는 길(ROUTE_LAST_DAY 까지만) */
+export function routeTrail(upTo: number): SiteId[] {
+  return upTo > 0 ? trail(1, Math.min(upTo, ROUTE_LAST_DAY)) : [];
+}
+
+/** 그 장의 진한 구간 출발점: 길로 잇는 장이면 이전 장소, 땅을 나누는 장(13장~)이면 제자리(선 없음) */
+export function legFrom(day: number): SiteId {
+  return day > ROUTE_LAST_DAY ? JOURNEY_DAYS[day - 1].site : previousSite(day);
+}
+
 export type MapView = {
   /**
    * 1장~내 위치까지 걸은 길 (옅은 실선).
@@ -86,8 +102,9 @@ export function mapView({
   flag: number | null;
 }): MapView {
   const done = new Set(completed);
-  const walked = position > 0 ? trail(1, position) : [];
-  const visited = new Set<SiteId>(walked);
+  const walked = routeTrail(position);
+  // 채운 아이콘은 선과 상관없이 지나온 모든 장소
+  const visited = new Set<SiteId>(position > 0 ? trail(1, position) : []);
   for (const d of JOURNEY_DAYS) if (done.has(d.day)) visited.add(d.site);
   return {
     walked,

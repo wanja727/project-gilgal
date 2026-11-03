@@ -10,7 +10,7 @@ import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
 import { goal, journeyProgress } from "@/lib/journey/guide";
 import { cropAroundLeg, SITES } from "@/lib/journey/locations";
-import { type MapView, previousSite, revealedSites, trail } from "@/lib/journey/mapState";
+import { legFrom, type MapView, revealedSites, routeTrail, trail } from "@/lib/journey/mapState";
 
 /**
  * 도착 화면 — 읽기 완료를 처음 저장했을 때만 뜬다(다시 읽기·이미 완료한 장에서는 뜨지 않음).
@@ -57,10 +57,10 @@ export function ArrivalScreen({
   }, [onClose]);
 
   const p = journeyProgress(completed, today);
-  const walked = trail(1, day.day);
+  // 선은 길로 잇는 장(1~12장)까지만, 채운 아이콘은 지나온 모든 장소(ADR-038)
   const view: MapView = {
-    walked,
-    visited: walked,
+    walked: routeTrail(day.day),
+    visited: trail(1, day.day),
     me: day.site,
     // 도착 장면은 이번 걸음에만 집중한다 — 깃발은 그리지 않는다(남은 장 수는 아래 문구로)
     flag: null,
@@ -109,8 +109,8 @@ export function ArrivalScreen({
         <JourneyMap
           view={view}
           avatarKey={avatarKey}
-          crop={cropAroundLeg(previousSite(day.day), day.site)}
-          arrival={{ crossJordan: day.day === 3, from: previousSite(day.day) }}
+          crop={cropAroundLeg(legFrom(day.day), day.site)}
+          arrival={{ crossJordan: day.day === 3, from: legFrom(day.day) }}
           // 사건 연출: 요단은 아바타가 건너기 전에 물이 멈추고, 여리고는 도착한 뒤 행렬이 돈다
           effect={
             day.mapEffect && PLAYABLE_EFFECTS.includes(day.mapEffect)

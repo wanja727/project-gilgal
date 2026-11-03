@@ -4,10 +4,13 @@ import {
   chapterStatus,
   contiguousPosition,
   flagDay,
+  legFrom,
   mapView,
   revealedSites,
   nextToRead,
   previousSite,
+  ROUTE_LAST_DAY,
+  routeTrail,
   trail,
 } from "./mapState";
 
@@ -109,5 +112,28 @@ describe("드러난 장소", () => {
   });
   it("다 열리면 모든 장소", () => {
     expect(new Set(revealedSites("2026-12-31")).size).toBe(new Set(JOURNEY_DAYS.map((d) => d.site)).size);
+  });
+});
+
+describe("지도에 선으로 그리는 길(ADR-038)", () => {
+  it("12장까지만 선으로 잇는다", () => {
+    expect(ROUTE_LAST_DAY).toBe(12);
+    expect(routeTrail(0)).toEqual([]);
+    expect(routeTrail(4)).toEqual(["shittim", "jordan", "gilgal"]);
+    expect(routeTrail(20)).toEqual(routeTrail(12));
+    expect(routeTrail(12).at(-1)).toBe("gilgal");
+  });
+
+  it("땅을 나누는 장(13장~)은 제자리에서 강조만 — 진한 구간이 없다", () => {
+    expect(legFrom(6)).toBe("gilgal");
+    expect(legFrom(13)).toBe("east");
+    expect(legFrom(18)).toBe("shiloh");
+  });
+
+  it("선은 줄어도 채운 아이콘은 지나온 모든 장소", () => {
+    const v = mapView({ completed: Array.from({ length: 18 }, (_, i) => i + 1), position: 18, flag: null });
+    expect(v.walked).toEqual(routeTrail(12));
+    expect(v.visited).toEqual(expect.arrayContaining(["east", "hebron", "shiloh"]));
+    expect(v.me).toBe("shiloh");
   });
 });
