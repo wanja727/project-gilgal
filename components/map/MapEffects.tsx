@@ -21,6 +21,9 @@ import { SiteGlyphPaths } from "./SiteGlyph";
  *
  * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위
  */
+/** 땅 전체에 걸친 연출 — 도착 화면에서도 확대하지 않고 땅 전체를 보여 준다(확대하면 이름표·땅이 잘린다) */
+export const WIDE_EFFECTS: readonly MapEffect[] = ["land-seven", "refuge-cities", "levite-cities"];
+
 export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
   "spies",
   "cross-jordan",
@@ -86,9 +89,11 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
   "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
   "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
-  "manna-ends": { text: "만나가 그침", x: 242, y: 266, t: 0.3 },
+  // 아래는 길갈 아바타의 "내 위치" 이름표 자리라 그 위로
+  "manna-ends": { text: "만나가 그침", x: 248, y: 248, t: 0.3 },
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
-  "sun-moon": { text: "해와 달이 머묾", x: 118, y: 280, t: 0.3 },
+  // 왼쪽 위는 기브온 아바타의 "내 위치" 이름표 자리라 기브온 오른쪽 아래로
+  "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: 0.3 },
   "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
   // 세겜 위는 20장 깃발·"내 위치" 이름표 자리라 지도 왼쪽 위 빈 곳에
   "refuge-cities": { text: "도피성 여섯 곳", x: 128, y: 84, t: 0.4 },
@@ -275,7 +280,8 @@ function LandShape({ id, clipId, paint }: { id: TerritoryId; clipId: string; pai
 function AllLandGlow({ t }: { t: number }) {
   return (
     <g className="fx-glow" style={T(t)}>
-      {(Object.keys(TERRITORIES) as TerritoryId[]).map((id) => (
+      {/* 갈렙·시므온은 유다 땅 안이라 겹쳐 칠하면 진한 점으로 보인다 */}
+      {(Object.keys(TERRITORIES) as TerritoryId[]).filter((id) => id !== "caleb" && id !== "simeon").map((id) => (
         <LandShape key={id} id={id} clipId={`glow-clip-${id}`} paint={{ fill: "var(--color-main)", fillOpacity: 0.16 }} />
       ))}
     </g>
@@ -401,7 +407,8 @@ function JerichoWalls() {
 
 /** 10장: 기브온 위에 해, 아얄론 골짜기에 달 — 떠서 멈춰 있다 */
 function SunMoon() {
-  const sun = offset(SITES.gibeon, 8, -34);
+  // 기브온 위 — 아바타의 "내 위치" 이름표(왼쪽 위)보다 높이
+  const sun = offset(SITES.gibeon, 6, -66);
   const moon = EFFECT_SPOTS.aijalon;
   return (
     <>

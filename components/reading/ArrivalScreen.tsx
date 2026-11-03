@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { landsBefore, PLAYABLE_EFFECTS } from "@/components/map/MapEffects";
+import { landsBefore, PLAYABLE_EFFECTS, WIDE_EFFECTS } from "@/components/map/MapEffects";
 import { JourneyMap } from "@/components/map/JourneyMap";
 import { CountUp } from "@/components/motion/CountUp";
 import { buttonClass } from "@/components/ui";
 import { JOSHUA_2026 } from "@/lib/journey/campaign";
 import type { JourneyDay } from "@/lib/journey/days";
 import { goal, journeyProgress } from "@/lib/journey/guide";
-import { cropAroundLeg, SITES } from "@/lib/journey/locations";
+import { cropAroundLeg, EXPLORER_CROP, SITES } from "@/lib/journey/locations";
 import { legFrom, type MapView, revealedSites, routeTrail, trail } from "@/lib/journey/mapState";
 
 /**
@@ -68,6 +68,7 @@ export function ArrivalScreen({
   };
 
   const site = SITES[day.site];
+  const wide = !!day.mapEffect && WIDE_EFFECTS.includes(day.mapEffect);
   let suffix = "";
   if (!p.finished) {
     if (p.unread.length > 0) {
@@ -109,7 +110,9 @@ export function ArrivalScreen({
         <JourneyMap
           view={view}
           avatarKey={avatarKey}
-          crop={cropAroundLeg(legFrom(day.day), day.site)}
+          // 땅 전체에 걸친 장(19·20·21장)은 확대하지 않고 여정 탭처럼 땅 전체를
+          crop={wide ? EXPLORER_CROP : cropAroundLeg(legFrom(day.day), day.site)}
+          fit={wide ? "meet" : undefined}
           arrival={{ crossJordan: day.day === 3, from: legFrom(day.day) }}
           // 사건 연출: 요단은 아바타가 건너기 전에 물이 멈추고, 여리고는 도착한 뒤 행렬이 돈다
           effect={
