@@ -54,8 +54,9 @@ export const SITES = {
     name: "여리고", x: 210, y: 376, label: { dx: 0, dy: 21, anchor: "middle" },
     scene: "여리고 성벽",
     description: "칠 일 동안 성을 돌고 나팔을 불며 외치자 성벽이 무너졌어요.",
-    // 아래는 지명 자리라 이름표가 위로 가게 살짝 위로
-    avatarOffset: { dx: -26, dy: -2 },
+    // 아래는 지명 자리라 이름표가 위로 가게 살짝 위로. 6장 연출(행렬이 반지름 25로 성을 돈다)과 겹치지 않게
+    // 행렬 바깥에 선다(2026-11-04)
+    avatarOffset: { dx: -44, dy: -4 },
   },
   ai: {
     name: "아이", x: 170, y: 300, label: { dx: -12, dy: 4, anchor: "end" },
