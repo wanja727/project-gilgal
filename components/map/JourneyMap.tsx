@@ -7,7 +7,7 @@ import {
   TERRAIN,
   type SiteId,
 } from "@/lib/journey/locations";
-import type { MapView } from "@/lib/journey/mapState";
+import { type MapView, ROUTE_LAST_DAY, routeTrail } from "@/lib/journey/mapState";
 import type { MapEffect } from "@/lib/journey/days";
 import { MapEffectLayer } from "./MapEffects";
 import { MovingAvatar } from "./MovingAvatar";
@@ -81,6 +81,22 @@ const MY_PLACE = "내 위치";
  * 두 지점을 잇는 완만한 곡선. 구간마다 휘는 방향을 번갈아 겹치지 않게 한다.
  * 긴 구간(예: 하솔 ↔ 길갈)은 휘는 정도를 줄여 지도 밖으로 크게 부풀지 않게 한다.
  */
+/** 1~12장 길의 구간 순서 — 같은 구간은 어디서 그려도(옅은 길·진한 구간·아바타) 같은 곡선이 되게 */
+const ROUTE = routeTrail(ROUTE_LAST_DAY);
+
+/**
+ * a → b 구간을 지나온 길과 같은 곡선으로. 휘는 방향은 길에서 그 구간의 순서로 정해진다 —
+ * 예전에는 진한 구간을 늘 같은 방향으로 휘게 그려, 순서가 짝수인 구간(7장 여리고→아이 등)에서 선이 두 갈래로 보였다(2026-11-04).
+ * 거꾸로(b → a) 그리면 같은 선이 되도록 휘는 방향도 뒤집는다. 길에 없는 구간은 기본 방향.
+ */
+function legCurve(a: SiteId, b: SiteId): string {
+  for (let i = 1; i < ROUTE.length; i++) {
+    if (ROUTE[i - 1] === a && ROUTE[i] === b) return curve(a, b, i);
+    if (ROUTE[i - 1] === b && ROUTE[i] === a) return curve(a, b, i + 1);
+  }
+  return curve(a, b, 1);
+}
+
 function curve(a: SiteId, b: SiteId, i: number): string {
   const A = SITES[a];
   const B = SITES[b];
@@ -224,7 +240,7 @@ export function JourneyMap({
         {strong && strong.from !== strong.to && (
           <path
             key={strong.key}
-            d={curve(strong.from, strong.to, 1)}
+            d={legCurve(strong.from, strong.to)}
             strokeWidth="2.8"
             strokeDasharray={strong.locked ? "4 4" : undefined}
             {...(arrival || leg
@@ -345,7 +361,7 @@ export function JourneyMap({
       )}
       {!focused && view.me && avatarKey && !walker && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
-          <MovingAvatar d={curve(strong.from, strong.to, 1)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
+          <MovingAvatar d={legCurve(strong.from, strong.to)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
             <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} tagDx={tagDx(view.me)} />
           </MovingAvatar>
         ) : (
@@ -502,7 +518,7 @@ function Walker({
   return (
     <MovingAvatar
       key={walker.key}
-      d={forward ? curve(from, to, 1) : curve(to, from, 1)}
+      d={forward ? legCurve(from, to) : legCurve(to, from)}
       reverse={!forward}
       fromOffset={avatarOffset(from)}
       toOffset={avatarOffset(to)}
