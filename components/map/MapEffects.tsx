@@ -361,18 +361,6 @@ function MoveBase() {
 function RefugeCities() {
   return REFUGE_CITIES.map((c, i) => {
     const t = i * 0.18;
-    // 지도 장소(세겜·헤브론)는 아이콘에 테두리를 하나 더 — 따로 등불을 두면 깃발·선택 테두리와 부딪힌다.
-    // 굵기는 다른 도피성 등불 테두리와 같게(같은 표시로 읽히게)
-    if (c.site) {
-      return (
-        <g key={c.name}>
-          <Pulse at={c} t={t} r={16} />
-          <g transform={`translate(${c.x} ${c.y})`}>
-            <circle className="fx-pop" r="22" fill="none" stroke="var(--color-main)" strokeWidth="1.4" style={T(t)} />
-          </g>
-        </g>
-      );
-    }
     const right = c.label === "right";
     return (
       <g key={c.name}>
@@ -380,18 +368,21 @@ function RefugeCities() {
           <circle r="5.5" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.4" />
           <circle r="2.4" fill="var(--color-main)" />
         </Pop>
-        <text
-          className="fx-appear map-label"
-          x={right ? c.x + 9 : c.x}
-          y={right ? c.y + 3.5 : c.y + 15}
-          textAnchor={right ? "start" : "middle"}
-          fontSize="9.5"
-          fontWeight="600"
-          fill="var(--color-mute)"
-          style={T(t + 0.2)}
-        >
-          {c.name}
-        </text>
+        {/* 지도 장소(세겜·헤브론)는 지명이 이미 있어 이름을 따로 달지 않는다 */}
+        {!c.site && (
+          <text
+            className="fx-appear map-label"
+            x={right ? c.x + 9 : c.x}
+            y={right ? c.y + 3.5 : c.y + 15}
+            textAnchor={right ? "start" : "middle"}
+            fontSize="9.5"
+            fontWeight="600"
+            fill="var(--color-mute)"
+            style={T(t + 0.2)}
+          >
+            {c.name}
+          </text>
+        )}
       </g>
     );
   });

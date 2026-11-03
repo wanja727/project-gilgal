@@ -204,13 +204,14 @@ export const TERRITORIES: Record<
 };
 
 /**
- * 20장 도피성 여섯 곳(요단 서쪽 셋·동쪽 셋). 세겜·헤브론은 지도 장소라 따로 등불을 두지 않고 그 아이콘에 빛 테를 두른다.
+ * 20장 도피성 여섯 곳(요단 서쪽 셋·동쪽 셋) — 모두 같은 등불(점)로 찍는다.
+ * 세겜·헤브론은 지도 장소라 등불을 아이콘 오른쪽 아래 가장자리에 붙이고(위쪽은 깃발 자리), 이름은 지도 지명이 대신한다.
  * label: 이름 자리 — 동쪽은 지명(요단 동쪽·요단강)과 부딪히지 않게 오른쪽
  */
 export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId; label?: "below" | "right" }[] = [
   { name: "게데스", x: 200, y: 94, label: "below" },
-  { name: "세겜", x: 180, y: 216, site: "shechem" },
-  { name: "헤브론", x: 152, y: 452, site: "hebron" },
+  { name: "세겜", x: 189, y: 231, site: "shechem" },
+  { name: "헤브론", x: 161, y: 467, site: "hebron" },
   { name: "골란", x: 300, y: 140, label: "right" },
   { name: "라못", x: 306, y: 280, label: "right" },
   { name: "베셀", x: 306, y: 376, label: "right" },
