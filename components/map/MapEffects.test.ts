@@ -14,7 +14,7 @@ describe("이미 나뉜 땅(누적)", () => {
   });
 
   it("19장 뒤로는 모든 땅", () => {
-    const all = ["east", "caleb", "judah", "ephraim", "manasseh", "north", "benjamin"];
+    const all = ["east", "caleb", "judah", "ephraim", "manasseh", "north", "benjamin", "dan", "simeon"];
     expect(landsBefore(20)).toEqual(all);
     expect(landsBefore(25)).toEqual(all);
   });

@@ -182,11 +182,15 @@ function round(n: number): number {
  * 장소 사건 연출용 지형(MapEffects, ADR-037) — 지파 땅·도피성은 개념도라 경계·위치는 대략이다.
  * 요단 서쪽 땅은 가로 띠(위·아래 y 범위)를 가나안 모양으로 잘라 그리고, 요단 동쪽은 강을 따라 그린 영역 하나.
  */
-export type TerritoryId = "east" | "caleb" | "judah" | "ephraim" | "manasseh" | "north" | "benjamin";
+export type TerritoryId = "east" | "caleb" | "judah" | "ephraim" | "manasseh" | "north" | "benjamin" | "dan" | "simeon";
 
 export const TERRITORIES: Record<
   TerritoryId,
-  { name: string; label: { x: number; y: number } } & ({ band: [number, number] } | { d: string } | { circle: { cx: number; cy: number; r: number } })
+  { name: string; label: { x: number; y: number }; fontSize?: number } & (
+    | { band: [number, number]; x?: [number, number] }
+    | { d: string }
+    | { circle: { cx: number; cy: number; r: number } }
+  )
 > = {
   // 르우벤·갓·므낫세 반 지파 — 요단 동쪽(강 바로 동쪽부터)
   east: {
@@ -198,9 +202,13 @@ export const TERRITORIES: Record<
   judah: { name: "유다", label: { x: 96, y: 404 }, band: [382, 500] },
   ephraim: { name: "에브라임", label: { x: 104, y: 270 }, band: [236, 292] },
   manasseh: { name: "므낫세", label: { x: 112, y: 182 }, band: [168, 236] },
-  // 19장의 일곱 지파 중 지도에 크게 보이는 두 덩어리: 북쪽(스불론·잇사갈·아셀·납달리)과 베냐민
-  north: { name: "북쪽 지파", label: { x: 136, y: 104 }, band: [38, 168] },
-  benjamin: { name: "베냐민", label: { x: 162, y: 348 }, band: [292, 382] },
+  // 19장 나머지 일곱 지파: 북쪽 넷(스불론·잇사갈·아셀·납달리) + 베냐민 + 단(베냐민 서쪽 해안) + 시므온(유다 땅 안 남쪽).
+  // 단·시므온은 따로 띠를 늘리지 않고 베냐민 띠의 서쪽 끝·유다 땅 남쪽에 작게 — 지도가 복잡해지지 않게(2026-11-04)
+  north: { name: "스불론 · 잇사갈 · 아셀 · 납달리", label: { x: 160, y: 104 }, fontSize: 10, band: [38, 168] },
+  benjamin: { name: "베냐민", label: { x: 162, y: 348 }, band: [292, 382], x: [108, 360] },
+  // 아얄론 골짜기(10장 달)가 단의 땅 안에 들어간다
+  dan: { name: "단", label: { x: 90, y: 318 }, band: [292, 382], x: [0, 108] },
+  simeon: { name: "시므온", label: { x: 112, y: 472 }, fontSize: 10, circle: { cx: 112, cy: 468, r: 14 } },
 };
 
 /**
@@ -217,7 +225,8 @@ export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId;
   { name: "베셀", x: 306, y: 376, label: "right" },
 ];
 
-/** 10장 아얄론 골짜기(달이 머문 곳) */
+/** 10장 아얄론 골짜기(달이 머문 곳), 23장 온 이스라엘이 모인 곳(본문에 장소가 없어 땅 가운데 빈 곳) */
 export const EFFECT_SPOTS = {
   aijalon: { x: 82, y: 372 },
+  assembly: { x: 228, y: 246 },
 } as const;

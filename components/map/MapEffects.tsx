@@ -40,7 +40,7 @@ const LAND: Partial<Record<MapEffect, TerritoryId[]>> = {
   "land-judah": ["judah"],
   "land-ephraim": ["ephraim"],
   "land-manasseh": ["manasseh"],
-  "land-seven": ["north", "benjamin"],
+  "land-seven": ["north", "benjamin", "dan", "simeon"],
 };
 
 /**
@@ -53,8 +53,8 @@ export function landsBefore(chapter: number): TerritoryId[] {
 
 /** 이미 받은 땅: 이름 없이 옅게 — 경계는 실선으로 아주 옅게(띠가 서로 맞물려 지파마다 구분만) */
 export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
-  // 갈렙 땅(헤브론)은 유다 땅 안이라 유다가 나뉜 뒤에는 겹쳐 칠하지 않는다 — 헤브론만 진한 동그라미로 보이지 않게
-  const shown = ids.includes("judah") ? ids.filter((id) => id !== "caleb") : ids;
+  // 갈렙(헤브론)·시므온 땅은 유다 땅 안이라 유다가 나뉜 뒤에는 겹쳐 칠하지 않는다 — 진한 동그라미로 보이지 않게
+  const shown = ids.includes("judah") ? ids.filter((id) => id !== "caleb" && id !== "simeon") : ids;
   if (shown.length === 0) return null;
   return (
     <g aria-hidden pointerEvents="none">
@@ -86,7 +86,8 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
     // 21:43 — 레위 성읍까지 나뉘고 나서 온 땅이 함께 빛난다(AllLandGlow 와 같은 때)
     { text: "온 땅을 다 주심", x: 170, y: 30, t: 2.6 },
   ],
-  gather: { text: "온 이스라엘이 모임", x: 180, y: 182, t: 0.4 },
+  // 23장은 모인 장소가 본문에 없어 세겜이 아니라 땅 가운데로 모인다
+  gather: { text: "온 이스라엘을 불러 모음", x: 264, y: 196, t: 0.4 },
   "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
 };
 
@@ -210,7 +211,14 @@ function LandShape({ id, clipId, paint }: { id: TerritoryId; clipId: string; pai
             <path d={TERRAIN.canaan} />
           </clipPath>
         </defs>
-        <rect x="0" y={land.band[0]} width="360" height={land.band[1] - land.band[0]} clipPath={`url(#${clipId})`} {...p} />
+        <rect
+          x={land.x?.[0] ?? 0}
+          y={land.band[0]}
+          width={(land.x?.[1] ?? 360) - (land.x?.[0] ?? 0)}
+          height={land.band[1] - land.band[0]}
+          clipPath={`url(#${clipId})`}
+          {...p}
+        />
       </>
     );
   }
@@ -238,7 +246,7 @@ function Land({ id, t }: { id: TerritoryId; t: number }) {
         clipId={`fx-clip-${id}`}
         paint={{ fill: "var(--color-main)", fillOpacity: 0.13, stroke: "var(--color-main)", strokeOpacity: 0.4, strokeWidth: 1, strokeDasharray: "3 3" }}
       />
-      <text className="map-label" x={land.label.x} y={land.label.y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--color-main)">
+      <text className="map-label" x={land.label.x} y={land.label.y} textAnchor="middle" fontSize={land.fontSize ?? 11} fontWeight="700" fill="var(--color-main)">
         {land.name}
       </text>
     </g>
@@ -470,10 +478,10 @@ function levitePoints(): Pt[] {
   return pts;
 }
 
-/** 23장: 사방에서 백성이 세겜으로 모인다(23:2) */
+/** 23장: 여호수아가 온 이스라엘을 불러 모은다(23:2) — 모인 장소는 본문에 없어 땅 가운데 빈 곳으로(특정 성읍을 가리키지 않게) */
 function Gather() {
-  const c = SITES.shechem;
-  const from: SiteId[] = ["hazor", "east", "gilgal", "jericho", "gibeon", "hebron", "shiloh", "ebal"];
+  const c = EFFECT_SPOTS.assembly;
+  const from: SiteId[] = ["hazor", "east", "gilgal", "jericho", "gibeon", "hebron", "shechem", "ebal"];
   return from.map((id, i) => <Traveler key={id} from={SITES[id]} to={c} t={i * 0.07} dur={1.3} />);
 }
 
