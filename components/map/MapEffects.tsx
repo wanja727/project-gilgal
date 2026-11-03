@@ -56,7 +56,8 @@ const CAPTIONS: Partial<Record<MapEffect, { text: string; x: number; y: number; 
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
   "sun-moon": { text: "해와 달이 머묾", x: 118, y: 280, t: 0.3 },
   "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
-  "refuge-cities": { text: "도피성 여섯 곳", x: 210, y: 176, t: 0.4 },
+  // 세겜 위는 20장 깃발·"내 위치" 이름표 자리라 지도 왼쪽 위 빈 곳에
+  "refuge-cities": { text: "도피성 여섯 곳", x: 128, y: 84, t: 0.4 },
   "levite-cities": { text: "레위인의 성읍 48", x: 170, y: 30, t: 0.3 },
   gather: { text: "온 이스라엘이 모임", x: 180, y: 182, t: 0.4 },
   "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
@@ -359,27 +360,37 @@ function MoveBase() {
 /** 20장: 도피성 여섯 곳에 등불이 켜진다 */
 function RefugeCities() {
   return REFUGE_CITIES.map((c, i) => {
-    const at = c.site ? offset(c, 13, -12) : c;
+    const t = i * 0.18;
+    // 지도 장소(세겜·헤브론)는 아이콘에 빛 테 — 따로 등불을 두면 깃발·선택 테두리와 부딪힌다
+    if (c.site) {
+      return (
+        <g key={c.name}>
+          <Pulse at={c} t={t} r={16} />
+          <g transform={`translate(${c.x} ${c.y})`}>
+            <circle className="fx-pop" r="21.5" fill="none" stroke="var(--color-main)" strokeWidth="1.6" strokeDasharray="2.5 2.5" style={T(t)} />
+          </g>
+        </g>
+      );
+    }
+    const right = c.label === "right";
     return (
       <g key={c.name}>
-        <Pop at={at} t={i * 0.18}>
+        <Pop at={c} t={t}>
           <circle r="5.5" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.4" />
           <circle r="2.4" fill="var(--color-main)" />
         </Pop>
-        {!c.site && (
-          <text
-            className="fx-appear map-label"
-            x={c.x}
-            y={c.y + 15}
-            textAnchor="middle"
-            fontSize="9.5"
-            fontWeight="600"
-            fill="var(--color-mute)"
-            style={T(i * 0.18 + 0.2)}
-          >
-            {c.name}
-          </text>
-        )}
+        <text
+          className="fx-appear map-label"
+          x={right ? c.x + 9 : c.x}
+          y={right ? c.y + 3.5 : c.y + 15}
+          textAnchor={right ? "start" : "middle"}
+          fontSize="9.5"
+          fontWeight="600"
+          fill="var(--color-mute)"
+          style={T(t + 0.2)}
+        >
+          {c.name}
+        </text>
       </g>
     );
   });

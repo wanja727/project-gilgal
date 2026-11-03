@@ -203,14 +203,17 @@ export const TERRITORIES: Record<
   benjamin: { name: "베냐민", label: { x: 162, y: 348 }, band: [292, 382] },
 };
 
-/** 20장 도피성 여섯 곳(요단 서쪽 셋·동쪽 셋). 세겜·헤브론은 지도 장소와 같은 자리 */
-export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId }[] = [
-  { name: "게데스", x: 200, y: 94 },
+/**
+ * 20장 도피성 여섯 곳(요단 서쪽 셋·동쪽 셋). 세겜·헤브론은 지도 장소라 따로 등불을 두지 않고 그 아이콘에 빛 테를 두른다.
+ * label: 이름 자리 — 동쪽은 지명(요단 동쪽·요단강)과 부딪히지 않게 오른쪽
+ */
+export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId; label?: "below" | "right" }[] = [
+  { name: "게데스", x: 200, y: 94, label: "below" },
   { name: "세겜", x: 180, y: 216, site: "shechem" },
   { name: "헤브론", x: 152, y: 452, site: "hebron" },
-  { name: "골란", x: 300, y: 140 },
-  { name: "라못", x: 322, y: 272 },
-  { name: "베셀", x: 306, y: 372 },
+  { name: "골란", x: 300, y: 140, label: "right" },
+  { name: "라못", x: 306, y: 280, label: "right" },
+  { name: "베셀", x: 306, y: 376, label: "right" },
 ];
 
 /** 10장 아얄론 골짜기(달이 머문 곳) */
