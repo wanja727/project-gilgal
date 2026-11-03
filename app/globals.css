@@ -334,6 +334,107 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(14px); }
 }
+/* 장별 연출이 함께 쓰는 조각들 — 요소마다 --t 만큼 늦게 시작 */
+.fx-travel,
+.fx-roundtrip,
+.fx-pulse,
+.fx-pop,
+.fx-pop-dot,
+.fx-appear,
+.fx-land,
+.fx-fall,
+.fx-ray {
+  opacity: 0;
+  animation-delay: calc(var(--fx-delay) + var(--t, 0s));
+  animation-fill-mode: forwards;
+}
+/* 사람·무리: a → b 로 걷고 끝나면 사라진다(fx-keep 이면 도착해서 남는다) */
+.fx-travel {
+  animation-name: fx-travel;
+  animation-duration: var(--dur, 1.2s);
+  animation-timing-function: var(--ease-journey);
+}
+.fx-travel.fx-keep {
+  animation-name: fx-travel-keep;
+}
+/* 갔다가 돌아온다(정탐·물러남·모였다 흩어짐) */
+.fx-roundtrip {
+  animation-name: fx-roundtrip;
+  animation-duration: calc(var(--dur, 1.2s) * 2);
+  animation-timing-function: ease-in-out;
+}
+.fx-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: fx-shout;
+  animation-duration: 0.9s;
+  animation-timing-function: ease-out;
+}
+/* 톡 나타나 남는 것(돌·등불·해와 달·성읍) */
+.fx-pop,
+.fx-pop-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: fx-pop;
+  animation-duration: 0.45s;
+  animation-timing-function: var(--ease-sheet);
+}
+.fx-appear {
+  animation-name: fx-in;
+  animation-duration: 0.5s;
+}
+/* 나뉜 땅: 천천히 채워져 남는다 */
+.fx-land {
+  animation-name: fx-in;
+  animation-duration: 0.9s;
+  animation-timing-function: ease-out;
+}
+.fx-fall {
+  animation-name: fx-fall;
+  animation-duration: 0.9s;
+  animation-timing-function: ease-in;
+}
+.fx-ray {
+  animation-name: fx-ray;
+  animation-duration: 1.6s;
+}
+.fx-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: map-draw 0.8s calc(var(--fx-delay) + var(--t, 0s)) var(--ease-journey) forwards;
+}
+@keyframes fx-travel {
+  0% { opacity: 0; transform: none; }
+  10%, 85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+}
+@keyframes fx-travel-keep {
+  0% { opacity: 0; transform: none; }
+  10% { opacity: 1; }
+  100% { opacity: 1; transform: translate(var(--dx), var(--dy)); }
+}
+@keyframes fx-roundtrip {
+  0% { opacity: 0; transform: none; }
+  8% { opacity: 1; }
+  50% { transform: translate(var(--dx), var(--dy)); }
+  92% { opacity: 1; }
+  100% { opacity: 0; transform: none; }
+}
+@keyframes fx-pop {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes fx-fall {
+  0% { opacity: 0; transform: none; }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 12px)); }
+}
+@keyframes fx-ray {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
 @media (prefers-reduced-motion: reduce) {
   .fx { display: none; }
   .fx-shake { animation: none; }

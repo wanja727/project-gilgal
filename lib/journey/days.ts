@@ -16,16 +16,34 @@ export type ActNo = 1 | 2 | 3 | 4;
 /** journey: 이동 / territory: 땅이 채워짐 / review: 지나온 길 돌아보기 */
 export type MapMode = "journey" | "territory" | "review";
 
-/** 장별 지도 연출 (Phase 2에서 표현) */
+/**
+ * 장별 지도 연출(components/map/MapEffects.tsx, ADR-037). 장에서 있었던 사건을 짧은 그림으로만 보여 준다.
+ * land-*: 그 장에서 나뉜 땅(lib/journey/locations.ts TERRITORIES)
+ */
 export type MapEffect =
   | "depart"
+  | "spies"
   | "cross-jordan"
+  | "twelve-stones"
+  | "manna-ends"
   | "walls-fall"
+  | "retreat"
+  | "law-reading"
+  | "treaty"
+  | "sun-moon"
+  | "kings"
   | "overview"
-  | "fill-territory"
+  | "land-east"
+  | "land-caleb"
+  | "land-judah"
+  | "land-ephraim"
+  | "land-manasseh"
   | "move-base"
+  | "land-seven"
   | "refuge-cities"
+  | "levite-cities"
   | "return-east"
+  | "gather"
   | "arrive-final";
 
 export type CompletionMessage = {
@@ -108,55 +126,55 @@ const SUMMARIES: string[] = [
 /*
  * 장소·제목은 디자인 시안 v5 의 장별 데이터를 기준으로 한다(2026-10-24).
  * 13~22장(땅 분배)은 지금은 대표 장소(헤브론·실로·세겜·요단 동쪽)에 묶어 둔다.
- * TODO(Phase 2): 지파별 영역을 지도에 채우는 표현(mapEffect "fill-territory").
+ * 지파별 땅은 장소 사건 연출(mapEffect "land-*")로 그 장을 볼 때 채워 보여 준다(ADR-037).
  */
 const CONTENT: DayContent[] = [
   // ─── ACT 1 — 약속의 땅으로 들어가다 (1~5장) ───
   { title: "여호수아를 세우심", place: "싯딤", site: "shittim", mapMode: "journey", mapEffect: "depart",
     completion: { headline: "여정을 시작했어요" } },
-  { title: "라합과 정탐꾼", place: "여리고", site: "shittim", mapMode: "journey",
+  { title: "라합과 정탐꾼", place: "여리고", site: "shittim", mapMode: "journey", mapEffect: "spies",
     completion: { headline: "여리고를 살피고 돌아왔어요" } },
   { title: "요단을 건너다", place: "요단강", site: "jordan", mapMode: "journey", mapEffect: "cross-jordan",
     completion: { headline: "요단을 건너 가나안에 들어왔어요", body: "흐르던 강물이 멈추고, 약속의 땅에 첫발을 디뎠어요." } },
-  { title: "열두 돌을 세우다", place: "길갈", site: "gilgal", mapMode: "journey",
+  { title: "열두 돌을 세우다", place: "길갈", site: "gilgal", mapMode: "journey", mapEffect: "twelve-stones",
     completion: { headline: "길갈에 열두 돌을 세웠어요" } },
-  { title: "할례와 유월절", place: "길갈", site: "gilgal", mapMode: "journey",
+  { title: "할례와 유월절", place: "길갈", site: "gilgal", mapMode: "journey", mapEffect: "manna-ends",
     completion: { headline: "길갈에 머물렀어요" } },
 
   // ─── ACT 2 — 약속의 땅을 정복하다 (6~12장) ───
   { title: "성벽이 무너지다", place: "여리고", site: "jericho", mapMode: "journey", mapEffect: "walls-fall",
     completion: { headline: "여리고에 도착했어요" } },
-  { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey",
+  { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey", mapEffect: "retreat",
     completion: { headline: "아이 앞에서 잠시 멈추었어요" } },
-  { title: "아이 성 승리, 율법 낭독", place: "에발산", site: "ebal", mapMode: "journey",
+  { title: "아이 성 승리, 율법 낭독", place: "에발산", site: "ebal", mapMode: "journey", mapEffect: "law-reading",
     completion: { headline: "에발산에 이르렀어요" } },
-  { title: "기브온과의 조약", place: "길갈", site: "gilgal", mapMode: "journey",
+  { title: "기브온과의 조약", place: "길갈", site: "gilgal", mapMode: "journey", mapEffect: "treaty",
     completion: { headline: "다시 길갈로 돌아왔어요" } },
-  { title: "해와 달이 멈추다", place: "기브온", site: "gibeon", mapMode: "journey",
+  { title: "해와 달이 멈추다", place: "기브온", site: "gibeon", mapMode: "journey", mapEffect: "sun-moon",
     completion: { headline: "기브온에 이르렀어요" } },
-  { title: "북쪽 왕들과의 싸움", place: "하솔", site: "hazor", mapMode: "journey",
+  { title: "북쪽 왕들과의 싸움", place: "하솔", site: "hazor", mapMode: "journey", mapEffect: "kings",
     completion: { headline: "북쪽 하솔까지 이르렀어요" } },
   { title: "정복한 서른한 왕", place: "길갈", site: "gilgal", mapMode: "review", mapEffect: "overview",
     completion: { headline: "지나온 길을 돌아보았어요" } },
 
   // ─── ACT 3 — 약속의 땅을 분배하다 (13~21장) ───
-  { title: "동쪽 지파의 기업", place: "요단 동쪽", site: "east", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "동쪽 지파의 기업", place: "요단 동쪽", site: "east", mapMode: "territory", mapEffect: "land-east",
     completion: { headline: "요단 동쪽 땅이 나뉘었어요" } },
-  { title: "갈렙의 기업", place: "헤브론", site: "hebron", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "갈렙의 기업", place: "헤브론", site: "hebron", mapMode: "territory", mapEffect: "land-caleb",
     completion: { headline: "갈렙이 헤브론을 받았어요" } },
-  { title: "유다 지파의 기업", place: "유다", site: "hebron", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "유다 지파의 기업", place: "유다", site: "hebron", mapMode: "territory", mapEffect: "land-judah",
     completion: { headline: "유다의 땅이 나뉘었어요" } },
-  { title: "에브라임의 기업", place: "에브라임", site: "shiloh", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "에브라임의 기업", place: "에브라임", site: "shiloh", mapMode: "territory", mapEffect: "land-ephraim",
     completion: { headline: "에브라임의 땅이 나뉘었어요" } },
-  { title: "므낫세의 기업", place: "므낫세", site: "shechem", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "므낫세의 기업", place: "므낫세", site: "shechem", mapMode: "territory", mapEffect: "land-manasseh",
     completion: { headline: "므낫세의 땅이 나뉘었어요" } },
   { title: "회막과 남은 땅", place: "실로", site: "shiloh", mapMode: "territory", mapEffect: "move-base",
     completion: { headline: "실로에 도착했어요" } },
-  { title: "나머지 지파의 기업", place: "일곱 지파", site: "shiloh", mapMode: "territory", mapEffect: "fill-territory",
+  { title: "나머지 지파의 기업", place: "일곱 지파", site: "shiloh", mapMode: "territory", mapEffect: "land-seven",
     completion: { headline: "모든 지파의 땅이 나뉘었어요" } },
   { title: "도피성을 정하다", place: "도피성", site: "shechem", mapMode: "territory", mapEffect: "refuge-cities",
     completion: { headline: "도피성이 정해졌어요" } },
-  { title: "레위인의 성읍", place: "레위 성읍", site: "shiloh", mapMode: "territory",
+  { title: "레위인의 성읍", place: "레위 성읍", site: "shiloh", mapMode: "territory", mapEffect: "levite-cities",
     completion: { headline: "레위인의 성읍이 정해졌어요" } },
 
   // ─── ACT 4 — 언약을 새롭게 하다 (22~24장) ───
@@ -164,7 +182,7 @@ const CONTENT: DayContent[] = [
   { title: "엣 제단", place: "요단 가", site: "east", mapMode: "territory", mapEffect: "return-east",
     completion: { headline: "요단 동쪽 지파가 집으로 돌아갔어요" } },
 
-  { title: "여호수아의 마지막 권면", place: "이스라엘", site: "shechem", mapMode: "review", mapEffect: "overview",
+  { title: "여호수아의 마지막 권면", place: "이스라엘", site: "shechem", mapMode: "review", mapEffect: "gather",
     completion: { headline: "지나온 모든 길을 바라보았어요" } },
   { title: "세겜 언약", place: "세겜", site: "shechem", mapMode: "review", mapEffect: "arrive-final",
     completion: { headline: "여정을 완주했어요", body: "24일 동안 함께 걸어 주셔서 고맙습니다." } },

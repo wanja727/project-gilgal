@@ -171,3 +171,46 @@ export function cropAroundLeg(from: SiteId, to: SiteId, width = 300, height = 25
 function round(n: number): number {
   return Math.round(n * 10) / 10;
 }
+
+/**
+ * 장소 사건 연출용 지형(MapEffects, ADR-037) — 지파 땅·도피성은 개념도라 경계·위치는 대략이다.
+ * 요단 서쪽 땅은 가로 띠(위·아래 y 범위)를 가나안 모양으로 잘라 그리고, 요단 동쪽은 강을 따라 그린 영역 하나.
+ */
+export type TerritoryId = "east" | "caleb" | "judah" | "ephraim" | "manasseh" | "north" | "benjamin";
+
+export const TERRITORIES: Record<
+  TerritoryId,
+  { name: string; label: { x: number; y: number } } & ({ band: [number, number] } | { d: string } | { circle: { cx: number; cy: number; r: number } })
+> = {
+  // 르우벤·갓·므낫세 반 지파 — 요단 동쪽(강 바로 동쪽부터)
+  east: {
+    name: "르우벤 · 갓 · 므낫세 반",
+    label: { x: 318, y: 186 },
+    d: "M262,128 C272,170 252,210 264,250 S278,300 272,340 S280,372 278,392 L350,398 L352,124Z",
+  },
+  caleb: { name: "갈렙", label: { x: 186, y: 424 }, circle: { cx: 152, cy: 452, r: 34 } },
+  judah: { name: "유다", label: { x: 96, y: 404 }, band: [382, 500] },
+  ephraim: { name: "에브라임", label: { x: 104, y: 270 }, band: [236, 292] },
+  manasseh: { name: "므낫세", label: { x: 112, y: 182 }, band: [168, 236] },
+  // 19장의 일곱 지파 중 지도에 크게 보이는 두 덩어리: 북쪽(스불론·잇사갈·아셀·납달리)과 베냐민
+  north: { name: "북쪽 지파", label: { x: 136, y: 104 }, band: [38, 168] },
+  benjamin: { name: "베냐민", label: { x: 162, y: 348 }, band: [292, 382] },
+};
+
+/** 20장 도피성 여섯 곳(요단 서쪽 셋·동쪽 셋). 세겜·헤브론은 지도 장소와 같은 자리 */
+export const REFUGE_CITIES: { name: string; x: number; y: number; site?: SiteId }[] = [
+  { name: "게데스", x: 200, y: 94 },
+  { name: "세겜", x: 180, y: 216, site: "shechem" },
+  { name: "헤브론", x: 152, y: 452, site: "hebron" },
+  { name: "골란", x: 300, y: 140 },
+  { name: "라못", x: 322, y: 272 },
+  { name: "베셀", x: 306, y: 372 },
+];
+
+/** 11장 메롬 물가(왕들이 모인 곳), 7장 아골 골짜기(돌무더기), 10장 아얄론 골짜기(달), 22장 요단 가 제단 */
+export const EFFECT_SPOTS = {
+  merom: { x: 236, y: 104 },
+  achor: { x: 190, y: 344 },
+  aijalon: { x: 82, y: 372 },
+  jordanAltar: { x: 252, y: 226 },
+} as const;

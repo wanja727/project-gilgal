@@ -1,31 +1,222 @@
 import type { MapEffect } from "@/lib/journey/days";
-import { SITES, TERRAIN } from "@/lib/journey/locations";
+import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { EFFECT_SPOTS, REFUGE_CITIES, SITES, type SiteId, TERRAIN, TERRITORIES, type TerritoryId } from "@/lib/journey/locations";
 
 /**
- * 장소 사건 연출(2026-11-04, ADR-037 · implementation-plan T23). 지도 위에 1~3초 한 번 재생된다.
+ * 장소 사건 연출(ADR-037 · implementation-plan T23). 장을 볼 때 지도 위에 1~3초 한 번 재생된다.
  * 사건을 그림으로 보여 줄 뿐 의미를 설명하지 않는다(본문 해석 금지 원칙). 정복 장면은 무너짐 정도로만 부드럽게.
- * 시간은 CSS 변수 --fx-delay(길 그리기·아바타 도착 뒤) 기준이고, 움직임 줄이기 설정이면 그리지 않는다(globals.css .fx).
- * 훅이 없어 JourneyMap 과 같이 서버·클라이언트 어디서든 그린다. key 가 바뀌면 다시 재생된다.
+ * 남는 그림(나뉜 땅·해와 달·등불·돌)은 그 장을 보는 동안 그대로 두고, 움직임(행렬·사람들)은 끝나면 사라진다.
+ * 시간은 CSS 변수 --fx-delay(길 그리기·아바타 도착 뒤) 기준, 요소마다 --t 만큼 더 늦게(globals.css .fx-*).
+ * 움직임 줄이기 설정이면 그리지 않는다. 훅이 없어 JourneyMap 과 같이 서버·클라이언트 어디서든 그린다.
  *
- * layer: under = 강·길 위, 장소 아이콘 아래(요단 물길) / over = 장소 아이콘 위(행렬·외침)
+ * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위
  */
-export const PLAYABLE_EFFECTS: readonly MapEffect[] = ["cross-jordan", "walls-fall"];
+export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
+  "depart",
+  "spies",
+  "cross-jordan",
+  "twelve-stones",
+  "manna-ends",
+  "walls-fall",
+  "retreat",
+  "law-reading",
+  "treaty",
+  "sun-moon",
+  "kings",
+  "overview",
+  "land-east",
+  "land-caleb",
+  "land-judah",
+  "land-ephraim",
+  "land-manasseh",
+  "move-base",
+  "land-seven",
+  "refuge-cities",
+  "levite-cities",
+  "return-east",
+  "gather",
+  "arrive-final",
+];
+
+type Style = React.CSSProperties;
+type Pt = { x: number; y: number };
+
+const LAND: Partial<Record<MapEffect, TerritoryId[]>> = {
+  "land-east": ["east"],
+  "land-caleb": ["caleb"],
+  "land-judah": ["judah"],
+  "land-ephraim": ["ephraim"],
+  "land-manasseh": ["manasseh"],
+  "land-seven": ["north", "benjamin"],
+};
 
 export function MapEffectLayer({ kind, layer, delay }: { kind: MapEffect; layer: "under" | "over"; delay: number }) {
-  const style = { "--fx-delay": `${delay}s` } as React.CSSProperties;
-  if (kind === "cross-jordan" && layer === "under") return <JordanStops style={style} />;
-  if (kind === "walls-fall" && layer === "over") return <JerichoWalls style={style} />;
+  const style = { "--fx-delay": `${delay}s` } as Style;
+  const body = layer === "under" ? under(kind) : over(kind);
+  if (!body) return null;
+  return (
+    <g aria-hidden className="fx" style={style} pointerEvents="none">
+      {body}
+    </g>
+  );
+}
+
+function under(kind: MapEffect): React.ReactNode {
+  if (kind === "cross-jordan") return <JordanStops />;
+  const land = LAND[kind];
+  if (land) return land.map((id, i) => <Land key={id} id={id} t={i * 0.5} />);
   return null;
 }
 
-/**
- * 3장: 건너는 자리 아래 물길이 마르고(바닥만 점선으로 남음) 위쪽에 물이 쌓였다가(3:16),
- * 다 건넌 뒤 물이 다시 흐른다(4:18).
- */
-function JordanStops({ style }: { style: React.CSSProperties }) {
+function over(kind: MapEffect): React.ReactNode {
+  switch (kind) {
+    case "depart":
+      return <Depart />;
+    case "spies":
+      return [0, 0.18].map((t, i) => (
+        <Traveler key={i} from={offset(SITES.shittim, -2 + i * 5, -4)} to={offset(SITES.jericho, 0, -2)} t={t} dur={1.1} round />
+      ));
+    case "walls-fall":
+      return <JerichoWalls />;
+    case "twelve-stones":
+      return <TwelveStones />;
+    case "manna-ends":
+      return <MannaEnds />;
+    case "retreat":
+      return <Retreat />;
+    case "law-reading":
+      return <Rays at={SITES.ebal} />;
+    case "treaty":
+      return (
+        <>
+          {[0, 0.15, 0.3].map((t, i) => (
+            <Traveler key={i} from={offset(SITES.gibeon, 0, -4 + i * 4)} to={offset(SITES.gilgal, -14, 2)} t={t} dur={1.4} />
+          ))}
+          <Pulse at={SITES.gilgal} t={1.6} />
+        </>
+      );
+    case "sun-moon":
+      return <SunMoon />;
+    case "kings":
+      return <Kings />;
+    case "overview":
+      return <Overview upTo={12} />;
+    case "move-base":
+      return <MoveBase />;
+    case "land-caleb":
+      return <Pulse at={SITES.hebron} t={0.6} />;
+    case "refuge-cities":
+      return <RefugeCities />;
+    case "levite-cities":
+      return <LeviteCities />;
+    case "return-east":
+      return <ReturnEast />;
+    case "gather":
+      return <Gather />;
+    case "arrive-final":
+      return <ArriveFinal />;
+    default:
+      return null;
+  }
+}
+
+// ─── 공통 조각 ─────────────────────────────────────────────
+
+const T = (t: number, extra?: Record<string, string>): Style => ({ "--t": `${t}s`, ...extra }) as Style;
+const offset = (p: Pt, dx: number, dy: number): Pt => ({ x: p.x + dx, y: p.y + dy });
+
+/** a → b 로 걷는 작은 점(round 면 갔다가 돌아온다). 끝나면 사라진다 */
+function Traveler({ from, to, t = 0, dur = 1.2, r = 2.4, round = false }: { from: Pt; to: Pt; t?: number; dur?: number; r?: number; round?: boolean }) {
+  return (
+    <circle
+      className={round ? "fx-roundtrip" : "fx-travel"}
+      cx={from.x}
+      cy={from.y}
+      r={r}
+      fill="var(--color-main)"
+      stroke="var(--color-surface)"
+      strokeWidth="1"
+      style={T(t, { "--dx": `${to.x - from.x}px`, "--dy": `${to.y - from.y}px`, "--dur": `${dur}s` })}
+    />
+  );
+}
+
+/** 장소에서 퍼지는 동그라미 한 번 */
+function Pulse({ at, t = 0, r = 14 }: { at: Pt; t?: number; r?: number }) {
+  return <circle className="fx-pulse" cx={at.x} cy={at.y} r={r} fill="none" stroke="var(--color-main)" strokeWidth="1.8" style={T(t)} />;
+}
+
+/** 톡 나타나 남는 것(돌·등불 등). children 은 (0,0) 기준 */
+function Pop({ at, t = 0, children }: { at: Pt; t?: number; children: React.ReactNode }) {
+  return (
+    <g transform={`translate(${at.x} ${at.y})`}>
+      <g className="fx-pop" style={T(t)}>
+        {children}
+      </g>
+    </g>
+  );
+}
+
+function Stone({ w = 4.6, h = 3.4 }: { w?: number; h?: number }) {
+  return <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="1" fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
+}
+
+/** 나뉜 땅: 옅게 채워지고 이름이 뜬다(그 장을 보는 동안 남는다) */
+function Land({ id, t }: { id: TerritoryId; t: number }) {
+  const land = TERRITORIES[id];
+  const paint = { fill: "var(--color-main)", fillOpacity: 0.13, stroke: "var(--color-main)", strokeOpacity: 0.4, strokeWidth: 1, strokeDasharray: "3 3" };
+  return (
+    <g className="fx-land" style={T(t)}>
+      {"band" in land ? (
+        <>
+          <defs>
+            <clipPath id={`fx-clip-${id}`}>
+              <path d={TERRAIN.canaan} />
+            </clipPath>
+          </defs>
+          <rect x="0" y={land.band[0]} width="360" height={land.band[1] - land.band[0]} clipPath={`url(#fx-clip-${id})`} {...paint} />
+        </>
+      ) : "d" in land ? (
+        <path d={land.d} {...paint} />
+      ) : (
+        <circle {...land.circle} {...paint} />
+      )}
+      <text className="map-label" x={land.label.x} y={land.label.y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--color-main)">
+        {land.name}
+      </text>
+    </g>
+  );
+}
+
+// ─── 장별 ────────────────────────────────────────────────
+
+/** 1장: 싯딤에서 부름이 퍼지고, 건널 요단 쪽으로 길이 그려진다(1:2) */
+function Depart() {
+  const a = SITES.shittim;
+  const b = SITES.jordan;
+  return (
+    <>
+      <Pulse at={a} t={0} />
+      <Pulse at={a} t={0.35} />
+      <path
+        className="fx-draw"
+        d={`M${a.x - 14},${a.y + 4} L${b.x + 16},${b.y - 4}`}
+        pathLength={1}
+        fill="none"
+        stroke="var(--color-main)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        style={T(0.5)}
+      />
+    </>
+  );
+}
+
+/** 3장: 건너는 자리 위에 물이 쌓이고 아래 물길이 마른다(3:16) → 다 건넌 뒤 다시 흐른다(4:18) */
+function JordanStops() {
   const heap = TERRAIN.jordanHeap;
   return (
-    <g aria-hidden className="fx" style={style}>
+    <>
       <g className="fx-jordan-dry">
         {/* 물길을 바탕색으로 덮고, 마른 강바닥을 점선으로 */}
         <path d={TERRAIN.jordanBelowCrossing} fill="none" stroke="var(--color-surface)" strokeWidth="4" strokeLinecap="round" />
@@ -40,15 +231,46 @@ function JordanStops({ style }: { style: React.CSSProperties }) {
         fill="var(--color-water)"
         style={{ transformOrigin: `${heap.x}px ${heap.y + 10}px` }}
       />
-    </g>
+    </>
   );
 }
 
-/**
- * 6장: 작은 행렬이 성 둘레를 일곱 바퀴 돌고(6:15), 외치는 소리가 퍼지고, 성벽 조각이 떨어진다(6:20).
- * 아이콘 흔들림은 JourneyMap 이 장소 아이콘에 .fx-shake 를 붙인다.
- */
-function JerichoWalls({ style }: { style: React.CSSProperties }) {
+/** 4장: 길갈에 돌 열두 개(5·4·3 단)가 하나씩 쌓인다 */
+function TwelveStones() {
+  const base = offset(SITES.gilgal, -14, -30);
+  const rows = [5, 4, 3];
+  const stones: { at: Pt; n: number }[] = [];
+  rows.forEach((count, row) => {
+    for (let i = 0; i < count; i++) {
+      stones.push({ at: { x: base.x + (i - (count - 1) / 2) * 7.2, y: base.y - row * 5.4 }, n: stones.length });
+    }
+  });
+  return stones.map((s) => (
+    <Pop key={s.n} at={s.at} t={s.n * 0.11}>
+      <Stone w={6.6} h={4.8} />
+    </Pop>
+  ));
+}
+
+/** 5장: 내리던 만나가 그친다(5:12) — 작은 알갱이가 내리다 멈춘다 */
+function MannaEnds() {
+  const g = SITES.gilgal;
+  const xs = [-18, -11, -4, 3, 10, 17, -14, 7, -7, 14];
+  return xs.map((dx, i) => (
+    <circle
+      key={i}
+      className="fx-fall"
+      cx={g.x + dx}
+      cy={g.y - 34 + (i % 3) * 4}
+      r="2.2"
+      fill="var(--color-mute)"
+      style={T(i * 0.14 * (1 + i * 0.12), { "--dy": "16px" })}
+    />
+  ));
+}
+
+/** 6장: 행렬이 성 둘레를 일곱 바퀴(6:15) → 외침이 퍼진다 → 아이콘이 흔들리고 조각이 떨어진다(6:20) */
+function JerichoWalls() {
   const { x, y } = SITES.jericho;
   // 선택 테두리(18) 바깥을 돈다
   const R = 25;
@@ -61,7 +283,7 @@ function JerichoWalls({ style }: { style: React.CSSProperties }) {
   const rubble = [-11, -6, -1, 4, 9].map((dx, i) => ({ x: x + dx, y: y + 12 + Math.abs(dx) * -0.25 + (i % 2) * 2, d: i * 0.05 }));
   const origin = { transformOrigin: `${x}px ${y}px` };
   return (
-    <g aria-hidden className="fx" style={style} pointerEvents="none">
+    <>
       <circle className="fx-track" cx={x} cy={y} r={R} fill="none" stroke="var(--color-mid)" strokeWidth="1.2" strokeDasharray="2 4" />
       <g className="fx-orbit" style={origin}>
         {marchers.map((m, i) => (
@@ -82,6 +304,226 @@ function JerichoWalls({ style }: { style: React.CSSProperties }) {
           style={{ animationDelay: `calc(var(--fx-delay) + ${2.25 + r.d}s)` }}
         />
       ))}
-    </g>
+    </>
+  );
+}
+
+/** 7장: 무리가 아이로 올라가다 물러나고(7:4), 아골 골짜기에 돌무더기가 쌓인다(7:26) */
+function Retreat() {
+  const from = offset(SITES.jericho, 6, -16);
+  const to = { x: (SITES.jericho.x + SITES.ai.x) / 2 - 6, y: (SITES.jericho.y + SITES.ai.y) / 2 };
+  const heap = EFFECT_SPOTS.achor;
+  const heapStones = [
+    [0, 0],
+    [-4, 0],
+    [4, 0],
+    [-2, -3.2],
+    [2, -3.2],
+    [0, -6.4],
+  ];
+  return (
+    <>
+      {[0, 0.12, 0.24].map((t, i) => (
+        <Traveler key={i} from={offset(from, i * 4 - 4, i * 2)} to={offset(to, i * 4 - 4, i * 2)} t={t} dur={0.9} round />
+      ))}
+      {heapStones.map(([dx, dy], i) => (
+        <Pop key={i} at={{ x: heap.x + dx * 1.3, y: heap.y + dy * 1.3 }} t={2.1 + i * 0.1}>
+          <Stone w={5} h={3.8} />
+        </Pop>
+      ))}
+    </>
+  );
+}
+
+/** 8장: 에발산에서 빛줄기가 퍼진다(율법 낭독) */
+function Rays({ at }: { at: Pt }) {
+  return Array.from({ length: 10 }, (_, i) => {
+    const a = (i / 10) * Math.PI * 2;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    return (
+      <line
+        key={i}
+        className="fx-ray"
+        x1={at.x + c * 18}
+        y1={at.y + s * 18}
+        x2={at.x + c * 27}
+        y2={at.y + s * 27}
+        stroke="var(--color-main)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        style={T(i * 0.05)}
+      />
+    );
+  });
+}
+
+/** 10장: 기브온 위에 해, 아얄론 골짜기에 달 — 떠서 멈춰 있다 */
+function SunMoon() {
+  const sun = offset(SITES.gibeon, 8, -34);
+  const moon = EFFECT_SPOTS.aijalon;
+  return (
+    <>
+      <Pop at={sun} t={0}>
+        <circle r="6" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.6" />
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (i / 8) * Math.PI * 2;
+          return (
+            <line
+              key={i}
+              x1={Math.cos(a) * 8.5}
+              y1={Math.sin(a) * 8.5}
+              x2={Math.cos(a) * 11}
+              y2={Math.sin(a) * 11}
+              stroke="var(--color-main)"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </Pop>
+      <Pop at={moon} t={0.45}>
+        {/* 초승달: 바깥 반원 + 안쪽 반타원 */}
+        <path d="M0,-7.5 A7.5,7.5 0 1,0 0,7.5 A4,7.5 0 1,1 0,-7.5Z" fill="var(--color-main)" />
+      </Pop>
+    </>
+  );
+}
+
+/** 11장: 북쪽 왕들이 메롬 물가로 모여들었다가(11:5) 흩어진다 */
+function Kings() {
+  const c = EFFECT_SPOTS.merom;
+  return Array.from({ length: 8 }, (_, i) => {
+    const a = (i / 8) * Math.PI * 2 + 0.3;
+    const from = { x: c.x + Math.cos(a) * 46, y: c.y + Math.sin(a) * 40 };
+    const to = { x: c.x + Math.cos(a) * 7, y: c.y + Math.sin(a) * 6 };
+    return <Traveler key={i} from={from} to={to} t={(i % 4) * 0.08} dur={1.1} r={2.2} round />;
+  });
+}
+
+/** 지금까지 머문 장소들(장 순서, 중복 없이) */
+function sitesUpTo(day: number): SiteId[] {
+  return [...new Set(JOURNEY_DAYS.slice(0, day).map((d) => d.site))];
+}
+
+/** 12장: 지나온 장소들이 차례로 반짝인다 */
+function Overview({ upTo }: { upTo: number }) {
+  return sitesUpTo(upTo).map((id, i) => <Pulse key={id} at={SITES[id]} t={i * 0.14} />);
+}
+
+/** 18장: 회막이 길갈에서 실로로 옮겨진다 */
+function MoveBase() {
+  const a = offset(SITES.gilgal, -12, -10);
+  const b = offset(SITES.shiloh, -18, -14);
+  return (
+    <>
+      <g className="fx-travel fx-keep" style={T(0, { "--dx": `${b.x - a.x}px`, "--dy": `${b.y - a.y}px`, "--dur": "1.4s" })}>
+        <path
+          d={`M${a.x - 8},${a.y + 6} L${a.x},${a.y - 6} L${a.x + 8},${a.y + 6}Z`}
+          fill="var(--color-main)"
+          stroke="var(--color-surface)"
+          strokeWidth="1"
+          strokeLinejoin="round"
+        />
+      </g>
+      <Pulse at={SITES.shiloh} t={1.45} />
+    </>
+  );
+}
+
+/** 20장: 도피성 여섯 곳에 등불이 켜진다 */
+function RefugeCities() {
+  return REFUGE_CITIES.map((c, i) => {
+    const at = c.site ? offset(c, 13, -12) : c;
+    return (
+      <g key={c.name}>
+        <Pop at={at} t={i * 0.18}>
+          <circle r="5.5" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.4" />
+          <circle r="2.4" fill="var(--color-main)" />
+        </Pop>
+        {!c.site && (
+          <text
+            className="fx-appear map-label"
+            x={c.x}
+            y={c.y + 15}
+            textAnchor="middle"
+            fontSize="9.5"
+            fontWeight="600"
+            fill="var(--color-mute)"
+            style={T(i * 0.18 + 0.2)}
+          >
+            {c.name}
+          </text>
+        )}
+      </g>
+    );
+  });
+}
+
+/** 21장: 레위인의 성읍 마흔여덟 곳이 땅 곳곳에 점으로 — 위치는 개념도(고르게 흩어 보이기만) */
+function LeviteCities() {
+  return levitePoints().map((p, i) => (
+    <circle
+      key={i}
+      className="fx-pop-dot"
+      cx={p.x}
+      cy={p.y}
+      r="1.9"
+      fill="var(--color-main)"
+      fillOpacity=".75"
+      style={T((i % 16) * 0.06 + Math.floor(i / 16) * 0.12)}
+    />
+  ));
+}
+
+/** 정해진 씨앗으로 고르게 흩은 48점(서쪽 땅 36 · 동쪽 12). 그릴 때마다 같다 */
+function levitePoints(): Pt[] {
+  let seed = 48;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pts: Pt[] = [];
+  // 서쪽: 위에서 아래로 — 왼쪽 끝은 바다 경계, 오른쪽 끝은 요단보다 안쪽
+  for (let i = 0; i < 36; i++) {
+    const y = 60 + (i / 36) * 410 + rnd() * 10;
+    const west = 84 - (y / 500) * 34;
+    const east = y < 400 ? 236 : 246;
+    pts.push({ x: west + 8 + rnd() * (east - west - 16), y });
+  }
+  for (let i = 0; i < 12; i++) pts.push({ x: 286 + rnd() * 52, y: 140 + (i / 12) * 240 + rnd() * 12 });
+  return pts;
+}
+
+/** 22장: 동쪽 지파가 요단을 건너 돌아가고, 요단 가에 제단이 선다(22:10) */
+function ReturnEast() {
+  const a = offset(SITES.shiloh, 14, 2);
+  const b = offset(SITES.east, -10, 4);
+  return (
+    <>
+      {[0, 0.15, 0.3].map((t, i) => (
+        <Traveler key={i} from={offset(a, 0, i * 5 - 5)} to={offset(b, 0, i * 5 - 5)} t={t} dur={1.4} />
+      ))}
+      <Pop at={EFFECT_SPOTS.jordanAltar} t={1.3}>
+        <rect x="-5" y="-4" width="10" height="8" rx="1.2" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.5" />
+        <path d="M-5,-1 H5" stroke="var(--color-main)" strokeWidth="1" />
+      </Pop>
+    </>
+  );
+}
+
+/** 23장: 사방에서 백성이 세겜으로 모인다(23:2) */
+function Gather() {
+  const c = SITES.shechem;
+  const from: SiteId[] = ["hazor", "east", "gilgal", "jericho", "gibeon", "hebron", "shiloh", "ebal"];
+  return from.map((id, i) => <Traveler key={id} from={SITES[id]} to={c} t={i * 0.07} dur={1.3} />);
+}
+
+/** 24장: 지나온 모든 장소가 반짝이고, 세겜에 큰 돌이 세워진다(24:26) */
+function ArriveFinal() {
+  const stone = offset(SITES.shechem, 0, -27);
+  return (
+    <>
+      <Overview upTo={24} />
+      <Pop at={stone} t={1.8}>
+        <rect x="-4" y="-8" width="8" height="15" rx="2.5" fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth="1.2" />
+      </Pop>
+    </>
   );
 }
