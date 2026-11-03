@@ -64,8 +64,8 @@ export type JourneyMapProps = {
   className?: string;
 };
 
-// 내 아바타 반지름 — 모바일에서 장소 아이콘(13.5)보다 작아 잘 안 보여 키웠다(9.5 → 14, 2026-11-03)
-const AVATAR_R = 14;
+// 내 아바타 반지름 — 모바일에서 잘 안 보여 키웠다(9.5 → 14 → 12, 2026-11-04: 장소 아이콘(13.5)보다는 작게)
+const AVATAR_R = 12;
 /** 장소별 아바타 자리(locations.ts avatarOffset)는 9.5 기준으로 맞춘 값 — 커진 만큼 아이콘에서 더 떨어뜨린다 */
 const AVATAR_GROW = AVATAR_R - 9.5;
 const MY_PLACE = "내 위치";
