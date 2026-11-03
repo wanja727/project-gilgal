@@ -1,6 +1,16 @@
 import type { MapEffect } from "@/lib/journey/days";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
-import { EFFECT_SPOTS, REFUGE_CITIES, SITES, type SiteId, TERRAIN, TERRITORIES, type TerritoryId } from "@/lib/journey/locations";
+import {
+  EFFECT_SPOTS,
+  REFUGE_CITIES,
+  SITES,
+  type SiteId,
+  siteLabelPosition,
+  TERRAIN,
+  TERRITORIES,
+  type TerritoryId,
+} from "@/lib/journey/locations";
+import { SiteGlyphPaths } from "./SiteGlyph";
 
 /**
  * 장소 사건 연출(ADR-037 · implementation-plan T23). 장을 볼 때 지도 위에 1~3초 한 번 재생된다.
@@ -72,7 +82,8 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
-  spies: { text: "두 정탐꾼", x: 248, y: 286, t: 0.2 },
+  // 위쪽은 3장 깃발·"내 위치" 이름표 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
+  spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
   "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
   "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
   "manna-ends": { text: "만나가 그침", x: 242, y: 266, t: 0.3 },
@@ -121,6 +132,7 @@ function Caption({ text, x, y, t, dur }: Cap) {
 
 function under(kind: MapEffect): React.ReactNode {
   if (kind === "cross-jordan") return <JordanStops />;
+  if (kind === "spies") return <GhostSite id="jericho" t={0} />;
   if (kind === "levite-cities") return <AllLandGlow t={2.4} />;
   const land = LAND[kind];
   if (land) return land.map((id, i) => <Land key={id} id={id} t={i * 0.5} />);
@@ -130,9 +142,15 @@ function under(kind: MapEffect): React.ReactNode {
 function over(kind: MapEffect): React.ReactNode {
   switch (kind) {
     case "spies":
-      return [0, 0.18].map((t, i) => (
-        <Traveler key={i} from={offset(SITES.shittim, -2 + i * 5, -4)} to={offset(SITES.jericho, 0, -2)} t={t} dur={1.1} round />
-      ));
+      return (
+        <>
+          {[0, 0.18].map((t, i) => (
+            <Traveler key={i} from={offset(SITES.shittim, -2 + i * 5, -4)} to={offset(SITES.jericho, 0, -2)} t={t} dur={1.1} round />
+          ))}
+          {/* 정탐꾼이 여리고에 닿는 때(왕복의 가운데) */}
+          <Pulse at={SITES.jericho} t={1.1} />
+        </>
+      );
     case "walls-fall":
       return <JerichoWalls />;
     case "twelve-stones":
@@ -197,6 +215,34 @@ function Pop({ at, t = 0, children }: { at: Pt; t?: number; children: React.Reac
 
 function Stone({ w = 4.6, h = 3.4 }: { w?: number; h?: number }) {
   return <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="1" fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
+}
+
+/**
+ * 아직 지도에 드러나지 않은 장소를 그 장을 볼 때만 흐리게(점선 테두리) — 2장 정탐꾼이 빈자리에 다녀오지 않게(2026-11-04).
+ * 2장 장 카드가 이미 "여리고"라고 알려 주므로 미리 보여도 새로 드러내는 것은 없다. 장소 아이콘 아래 층이라,
+ * 그 장소가 열린 뒤(6장~)에는 실제 아이콘이 그 위를 덮는다.
+ */
+function GhostSite({ id, t }: { id: SiteId; t: number }) {
+  const s = SITES[id];
+  const label = siteLabelPosition(id);
+  return (
+    <g className="fx-appear" style={T(t)}>
+      <circle cx={s.x} cy={s.y} r="13.5" fill="var(--color-surface)" stroke="var(--color-mid)" strokeWidth="1.2" strokeDasharray="3 2.5" />
+      <g
+        transform={`translate(${s.x - 9} ${s.y - 9}) scale(.75)`}
+        fill="none"
+        stroke="var(--color-mid)"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <SiteGlyphPaths id={id} />
+      </g>
+      <text className="map-label" x={label.x} y={label.y} textAnchor={label.anchor} fontSize="11.5" fontWeight="500" fill="var(--color-mute)">
+        {s.name}
+      </text>
+    </g>
+  );
 }
 
 /** 땅 모양 하나(띠는 가나안 모양으로 자른다) */

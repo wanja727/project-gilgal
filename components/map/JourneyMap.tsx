@@ -4,6 +4,7 @@ import {
   MAP_VIEWBOX,
   SITE_IDS,
   SITES,
+  siteLabelPosition,
   TERRAIN,
   type SiteId,
 } from "@/lib/journey/locations";
@@ -110,13 +111,7 @@ function curve(a: SiteId, b: SiteId, i: number): string {
   return `M${A.x},${A.y} Q${mx.toFixed(1)},${my.toFixed(1)} ${B.x},${B.y}`;
 }
 
-function labelPosition(id: SiteId) {
-  const s = SITES[id];
-  const { dx, dy, anchor } = s.label;
-  const lx = dx > 0 ? dx + 7 : dx < 0 ? dx - 7 : 0;
-  const ly = dy < 0 ? dy - 8 : dy > 8 ? dy + 7 : dy;
-  return { x: s.x + lx, y: s.y + ly, anchor };
-}
+const labelPosition = siteLabelPosition;
 
 export function JourneyMap({
   view,

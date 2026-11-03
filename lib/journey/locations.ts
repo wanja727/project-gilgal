@@ -230,3 +230,12 @@ export const EFFECT_SPOTS = {
   aijalon: { x: 82, y: 372 },
   assembly: { x: 228, y: 246 },
 } as const;
+
+/** 지도에 그리는 지명 자리(지점 중심 + label 오프셋을 아이콘 바깥으로 조금 더) — 지도와 연출(흐린 장소)이 같이 쓴다 */
+export function siteLabelPosition(id: SiteId): { x: number; y: number; anchor: LabelAnchor } {
+  const s = SITES[id];
+  const { dx, dy, anchor } = s.label;
+  const lx = dx > 0 ? dx + 7 : dx < 0 ? dx - 7 : 0;
+  const ly = dy < 0 ? dy - 8 : dy > 8 ? dy + 7 : dy;
+  return { x: s.x + lx, y: s.y + ly, anchor };
+}
