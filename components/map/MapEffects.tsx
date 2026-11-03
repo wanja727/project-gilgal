@@ -219,7 +219,7 @@ function JordanStops() {
   );
 }
 
-/** 4장: 길갈에 돌 열두 개(5·4·3 단)가 하나씩 쌓인다 */
+/** 4장: 길갈에 돌 열두 개(5·4·3 단)가 아랫줄부터 하나씩 위에서 떨어져 쌓인다 */
 function TwelveStones() {
   const base = offset(SITES.gilgal, -14, -30);
   const rows = [5, 4, 3];
@@ -230,9 +230,11 @@ function TwelveStones() {
     }
   });
   return stones.map((s) => (
-    <Pop key={s.n} at={s.at} t={s.n * 0.11}>
-      <Stone w={6.6} h={4.8} />
-    </Pop>
+    <g key={s.n} transform={`translate(${s.at.x} ${s.at.y})`}>
+      <g className="fx-drop" style={T(s.n * 0.13)}>
+        <Stone w={6.6} h={4.8} />
+      </g>
+    </g>
   ));
 }
 

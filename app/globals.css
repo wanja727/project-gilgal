@@ -340,6 +340,7 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 .fx-pulse,
 .fx-pop,
 .fx-pop-dot,
+.fx-drop,
 .fx-appear,
 .fx-land,
 .fx-fall {
@@ -377,6 +378,21 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation-name: fx-pop;
   animation-duration: 0.45s;
   animation-timing-function: var(--ease-sheet);
+}
+/* 4장 돌: 위에서 떨어져 닿을 때 살짝 눌렸다가 자리를 잡는다(아래 가장자리 기준) */
+.fx-drop {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-name: fx-drop;
+  animation-duration: 0.42s;
+  animation-timing-function: linear;
+}
+@keyframes fx-drop {
+  0% { opacity: 0; transform: translateY(-16px); animation-timing-function: cubic-bezier(0.5, 0, 1, 1); }
+  15% { opacity: 1; }
+  70% { transform: translateY(0) scale(1.12, 0.82); animation-timing-function: ease-out; }
+  85% { transform: translateY(-1.2px) scale(0.97, 1.04); }
+  100% { opacity: 1; transform: none; }
 }
 .fx-appear {
   animation-name: fx-in;
