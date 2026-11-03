@@ -271,12 +271,12 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 }
 @keyframes fx-hold {
   0% { opacity: 0; }
-  15%, 78% { opacity: 1; }
+  12%, 78% { opacity: 1; }
   100% { opacity: 0; }
 }
 @keyframes fx-heap {
   0% { transform: scaleY(0); }
-  20%, 78% { transform: scaleY(1); }
+  12%, 78% { transform: scaleY(1); }
   100% { transform: scaleY(0); }
 }
 /* 여리고: 행렬이 일곱 바퀴(2초) → 외침이 퍼지고 → 아이콘이 흔들리며 조각이 떨어진다 */

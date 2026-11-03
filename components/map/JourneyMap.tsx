@@ -141,6 +141,9 @@ export function JourneyMap({
   const fading = fadeFrom && !filled.has(fadeFrom) ? fadeFrom : null;
   const fadeKey = leg?.key ?? "arrival";
   const meAtFlag = !!avatarKey && view.me !== null && view.me === view.flag;
+  // 여정 탭 3장: 강물이 먼저 마르고 나서 길이 그려지고 아바타가 건넌다(도착 화면은 원래 아바타가 늦게 출발해 그대로)
+  const stepDelay = leg && effect?.kind === "cross-jordan" ? 0.5 : 0;
+  const delayed = stepDelay ? { animationDelay: `${stepDelay}s` } : undefined;
   return (
     <svg
       viewBox={crop ?? `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
@@ -225,7 +228,7 @@ export function JourneyMap({
             strokeWidth="2.8"
             strokeDasharray={strong.locked ? "4 4" : undefined}
             {...(arrival || leg
-              ? { pathLength: 1, className: strong.locked ? undefined : arrival ? "map-draw" : "map-draw-quick" }
+              ? { pathLength: 1, className: strong.locked ? undefined : arrival ? "map-draw" : "map-draw-quick", style: delayed }
               : {})}
           />
         )}
@@ -268,7 +271,7 @@ export function JourneyMap({
               {popClass && on ? (
                 <>
                   <Marker id={id} tone={beforeTone} />
-                  <g className={popClass}>
+                  <g className={popClass} style={popClass === "map-pop-quick" && stepDelay ? { animationDelay: `${0.45 + stepDelay}s` } : undefined}>
                     <Marker id={id} tone="on" />
                   </g>
                 </>
@@ -338,7 +341,7 @@ export function JourneyMap({
 
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
       {!focused && view.me && avatarKey && walker && (
-        <Walker walker={walker} leg={strong} avatarKey={avatarKey} tag={walker.to === view.me && !meAtFlag} />
+        <Walker walker={walker} leg={strong} avatarKey={avatarKey} tag={walker.to === view.me && !meAtFlag} delayMs={stepDelay * 1000} />
       )}
       {!focused && view.me && avatarKey && !walker && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
@@ -479,11 +482,13 @@ function Walker({
   leg,
   avatarKey,
   tag,
+  delayMs = 0,
 }: {
   walker: { from: SiteId | null; to: SiteId; key: string };
   leg: { from: SiteId; to: SiteId } | null;
   avatarKey: string;
   tag: boolean;
+  delayMs?: number;
 }) {
   const { from, to } = walker;
   if (!from || from === to) return <MapAvatar site={to} avatarKey={avatarKey} tag={tag} />;
@@ -496,7 +501,7 @@ function Walker({
       reverse={!forward}
       fromOffset={avatarOffset(from)}
       toOffset={avatarOffset(to)}
-      delayMs={0}
+      delayMs={delayMs}
       durationMs={600}
     >
       <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(to) : null} />
