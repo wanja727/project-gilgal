@@ -31,7 +31,6 @@ export function JourneyExplorer({
   statuses,
   position,
   flagDay,
-  flagLabel,
   avatarKey,
   initialChapter,
   revealed,
@@ -42,7 +41,6 @@ export function JourneyExplorer({
   statuses: ChapterStatus[];
   position: number;
   flagDay: number | null;
-  flagLabel: string | null;
   avatarKey: string;
   initialChapter: number;
   /** 지도에 드러난 장소(revealedSites) */
@@ -119,7 +117,6 @@ export function JourneyExplorer({
               // 지나온 길은 고른 장까지만 — 앞 장을 되짚을 때 그 뒤의 길까지 보이지 않게(ADR-038)
               view={{ ...view, walked: routeTrail(chapter) }}
               avatarKey={avatarKey}
-              flagLabel={flagLabel}
               selected={site}
               crop={EXPLORER_CROP}
               fit="meet"

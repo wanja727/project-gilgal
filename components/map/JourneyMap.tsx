@@ -26,10 +26,8 @@ import { SiteGlyphPaths } from "./SiteGlyph";
  */
 export type JourneyMapProps = {
   view: MapView;
-  /** 내 아바타 (view.me 지점 옆, 위에 "내 위치" 이름표) */
+  /** 내 아바타 (view.me 지점 옆) */
   avatarKey?: string;
-  /** 깃발 위 이름표 (예: "오늘 10장"). 없으면 깃발만 */
-  flagLabel?: string | null;
   /** 선택한 장소 테두리 */
   selected?: SiteId | null;
   /** 이 장소만 강조 (길·아바타·깃발을 그리지 않는다) */
@@ -58,7 +56,7 @@ export type JourneyMapProps = {
   leg?: { from: SiteId; to: SiteId; locked?: boolean; key: string; prev?: SiteId | null } | null;
   /**
    * 여정 되짚기(2026-11-01): 내 아바타가 내 위치(view.me) 대신 고른 장의 장소(to)에 서고, 장을 바꾸면 from 에서 걸어간다.
-   * 다음 장이면 진하게 그려지는 길을 함께 따라가고, 뒤로 가면 그 길을 되돌아간다. "내 위치" 이름표는 실제 내 위치에 섰을 때만.
+   * 다음 장이면 진하게 그려지는 길을 함께 따라가고, 뒤로 가면 그 길을 되돌아간다.
    */
   walker?: { from: SiteId | null; to: SiteId; key: string } | null;
   /**
@@ -79,7 +77,6 @@ export type JourneyMapProps = {
 const AVATAR_R = 12;
 /** 장소별 아바타 자리(locations.ts avatarOffset)는 9.5 기준으로 맞춘 값 — 커진 만큼 아이콘에서 더 떨어뜨린다 */
 const AVATAR_GROW = AVATAR_R - 9.5;
-const MY_PLACE = "내 위치";
 
 /**
  * 두 지점을 잇는 완만한 곡선. 구간마다 휘는 방향을 번갈아 겹치지 않게 한다.
@@ -116,7 +113,6 @@ const labelPosition = siteLabelPosition;
 export function JourneyMap({
   view,
   avatarKey,
-  flagLabel = null,
   selected = null,
   focus = null,
   crop,
@@ -155,7 +151,6 @@ export function JourneyMap({
   const fadeFrom = arrival ? strong?.from : leg?.prev;
   const fading = fadeFrom && !filled.has(fadeFrom) ? fadeFrom : null;
   const fadeKey = leg?.key ?? "arrival";
-  const meAtFlag = !!avatarKey && view.me !== null && view.me === view.flag;
   // 여정 탭 3장: 강물이 먼저 마르고 나서 길이 그려지고 아바타가 건넌다(도착 화면은 원래 아바타가 늦게 출발해 그대로)
   const stepDelay = leg && effect?.kind === "cross-jordan" ? 0.5 : 0;
   const delayed = stepDelay ? { animationDelay: `${stepDelay}s` } : undefined;
@@ -345,27 +340,20 @@ export function JourneyMap({
 
       {effect && !focused && <MapEffectLayer key={`o-${effect.key}`} kind={effect.kind} layer="over" delay={effect.delay} />}
 
-      {/* 깃발 */}
-      {/* 깃발과 내 위치가 같은 장소면 이름표가 겹치지 않게 깃발 하나로 합친다 */}
-      {!focused && view.flag && (
-        <Flag
-          x={SITES[view.flag].x}
-          y={SITES[view.flag].y}
-          label={meAtFlag ? [MY_PLACE, flagLabel].filter(Boolean).join(" · ") : flagLabel}
-        />
-      )}
+      {/* 깃발: 오늘의 장 — 글자 이름표 없이 깃발만(장 카드가 "오늘의 장"을 알려 준다, 2026-11-04) */}
+      {!focused && view.flag && <Flag x={SITES[view.flag].x} y={SITES[view.flag].y} />}
 
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
       {!focused && view.me && avatarKey && walker && (
-        <Walker walker={walker} leg={strong} avatarKey={avatarKey} tag={walker.to === view.me && !meAtFlag} delayMs={stepDelay * 1000} />
+        <Walker walker={walker} leg={strong} avatarKey={avatarKey} delayMs={stepDelay * 1000} />
       )}
       {!focused && view.me && avatarKey && !walker && (
         arrival && strong && strong.from !== strong.to && strong.to === view.me ? (
           <MovingAvatar d={legCurve(strong.from, strong.to)} fromOffset={avatarOffset(strong.from)} toOffset={avatarOffset(view.me)}>
-            <AvatarMark avatarKey={avatarKey} tag={meAtFlag ? null : tagSide(view.me)} tagDx={tagDx(view.me)} />
+            <AvatarMark avatarKey={avatarKey} />
           </MovingAvatar>
         ) : (
-          <MapAvatar site={view.me} avatarKey={avatarKey} tag={!meAtFlag} />
+          <MapAvatar site={view.me} avatarKey={avatarKey} />
         )
       )}
     </svg>
@@ -404,66 +392,11 @@ function Marker({ id, tone }: { id: SiteId; tone: "on" | "ring" | "off" }) {
   );
 }
 
-/**
- * 지도 위 작은 이름표. y 는 아래쪽 끝, x 는 align 에 따라 가운데 또는 왼쪽 끝.
- * 바탕을 깔아 길·아이콘 위에서도 읽히게 하고, 지도 밖으로 나가지 않게 안쪽으로 당긴다.
- */
-function Tag({
-  x,
-  y,
-  text,
-  tone,
-  align = "center",
-  clamp = true,
-}: {
-  x: number;
-  y: number;
-  text: string;
-  tone: "solid" | "line";
-  align?: "center" | "start";
-  /** 지도 밖으로 나가지 않게 당기기 (절대 좌표로 그릴 때만) */
-  clamp?: boolean;
-}) {
-  // 한글은 글자 크기만큼, 숫자·공백은 그 0.6배로 폭을 어림한다
-  const FS = 9.5;
-  const w = [...text].reduce((n, c) => n + (/[가-힣]/.test(c) ? FS : FS * 0.6), 0) + 11;
-  const h = 15;
-  const want = align === "start" ? x : x - w / 2;
-  const left = clamp ? Math.min(Math.max(want, 4), MAP_VIEWBOX.width - 4 - w) : want;
-  const cx = left + w / 2;
-  return (
-    <g aria-hidden>
-      <rect
-        x={left}
-        y={y - h}
-        width={w}
-        height={h}
-        rx={h / 2}
-        fill={tone === "solid" ? "var(--color-main)" : "var(--color-surface)"}
-        stroke="var(--color-main)"
-        strokeWidth="1"
-      />
-      <text
-        x={cx}
-        y={y - 4.4}
-        textAnchor="middle"
-        fontSize={FS}
-        fontWeight="700"
-        fill={tone === "solid" ? "var(--color-white, #fff)" : "var(--color-main)"}
-      >
-        {text}
-      </text>
-    </g>
-  );
-}
-
-function Flag({ x, y, label }: { x: number; y: number; label: string | null }) {
+function Flag({ x, y }: { x: number; y: number }) {
   return (
     <g aria-hidden>
       <line x1={x} y1={y - 14} x2={x} y2={y - 40} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
       <path d={`M${x + 1},${y - 40} L${x + 21},${y - 34} L${x + 1},${y - 28}Z`} fill="var(--color-main)" />
-      {/* 깃발이 오른쪽으로 날리므로 이름표도 깃대에서 오른쪽으로 */}
-      {label && <Tag x={x - 6} y={y - 44} text={label} tone="line" align="start" />}
     </g>
   );
 }
@@ -477,22 +410,13 @@ function avatarOffset(site: SiteId): { x: number; y: number } {
   return { x: off.dx * k, y: off.dy * k };
 }
 
-/** "내 위치" 이름표는 장소 아이콘 반대편: 아바타가 아이콘 아래에 있으면 아바타 아래로 */
-function tagSide(site: SiteId): "above" | "below" {
-  return avatarOffset(site).y > 0 ? "below" : "above";
-}
 
-function tagDx(site: SiteId): number {
-  const s = SITES[site];
-  return "tagDx" in s ? s.tagDx : 0;
-}
-
-function MapAvatar({ site, avatarKey, tag }: { site: SiteId; avatarKey: string; tag: boolean }) {
+function MapAvatar({ site, avatarKey }: { site: SiteId; avatarKey: string }) {
   const s = SITES[site];
   const off = avatarOffset(site);
   return (
     <g transform={`translate(${s.x + off.x} ${s.y + off.y})`}>
-      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(site) : null} tagDx={tagDx(site)} />
+      <AvatarMark avatarKey={avatarKey} />
     </g>
   );
 }
@@ -502,17 +426,15 @@ function Walker({
   walker,
   leg,
   avatarKey,
-  tag,
   delayMs = 0,
 }: {
   walker: { from: SiteId | null; to: SiteId; key: string };
   leg: { from: SiteId; to: SiteId } | null;
   avatarKey: string;
-  tag: boolean;
   delayMs?: number;
 }) {
   const { from, to } = walker;
-  if (!from || from === to) return <MapAvatar site={to} avatarKey={avatarKey} tag={tag} />;
+  if (!from || from === to) return <MapAvatar site={to} avatarKey={avatarKey} />;
   // 앞으로: 지금 그려지는 진한 구간 그대로. 그 밖(뒤로·건너뛰기): 반대 방향 구간(한 장 뒤로면 방금 보던 길)을 거꾸로
   const forward = leg?.from === from && leg?.to === to;
   return (
@@ -525,18 +447,20 @@ function Walker({
       delayMs={delayMs}
       durationMs={600}
     >
-      <AvatarMark avatarKey={avatarKey} tag={tag ? tagSide(to) : null} tagDx={tagDx(to)} />
+      <AvatarMark avatarKey={avatarKey} />
     </MovingAvatar>
   );
 }
 
-/** (0,0) 을 중심으로 그린 아바타와 이름표 */
-function AvatarMark({ avatarKey, tag, tagDx = 0 }: { avatarKey: string; tag: "above" | "below" | null; tagDx?: number }) {
+/**
+ * (0,0) 을 중심으로 그린 내 아바타. "내 위치" 이름표는 두지 않는다 — 내가 꾸민 얼굴이라 이름표 없이도 알아보고,
+ * 이름표가 연출 이름표·지명과 자꾸 겹쳤다(2026-11-04)
+ */
+function AvatarMark({ avatarKey }: { avatarKey: string }) {
   return (
     <g aria-hidden>
       <circle r={AVATAR_R + 2.5} fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="2" />
       <image href={avatarUrl(avatarKey)} x={-AVATAR_R} y={-AVATAR_R} width={AVATAR_R * 2} height={AVATAR_R * 2} />
-      {tag && <Tag x={tagDx} y={tag === "below" ? AVATAR_R + 20 : -AVATAR_R - 5} text={MY_PLACE} tone="solid" clamp={false} />}
     </g>
   );
 }

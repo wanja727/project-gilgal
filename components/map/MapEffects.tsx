@@ -85,17 +85,17 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
-  // 위쪽은 3장 깃발·"내 위치" 이름표 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
+  // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
   spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
   "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
   "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
-  // 아래는 길갈 아바타의 "내 위치" 이름표 자리라 그 위로
+  // 아래는 길갈 아바타 자리라 그 위로
   "manna-ends": { text: "만나가 그침", x: 248, y: 248, t: 0.3 },
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
-  // 왼쪽 위는 기브온 아바타의 "내 위치" 이름표 자리라 기브온 오른쪽 아래로
+  // 왼쪽 위는 기브온 아바타 자리라 기브온 오른쪽 아래로
   "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: 0.3 },
   "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
-  // 세겜 위는 20장 깃발·"내 위치" 이름표 자리라 지도 왼쪽 위 빈 곳에
+  // 세겜 위는 20장 깃발 자리라 지도 왼쪽 위 빈 곳에
   "refuge-cities": { text: "도피성 여섯 곳", x: 128, y: 84, t: 0.4 },
   "levite-cities": [
     { text: "레위인의 성읍 48", x: 170, y: 30, t: 0.3, dur: 2.2 },
@@ -407,7 +407,7 @@ function JerichoWalls() {
 
 /** 10장: 기브온 위에 해, 아얄론 골짜기에 달 — 떠서 멈춰 있다 */
 function SunMoon() {
-  // 기브온 위 — 아바타의 "내 위치" 이름표(왼쪽 위)보다 높이
+  // 기브온 위 — 왼쪽 위 아바타보다 높이
   const sun = offset(SITES.gibeon, 6, -66);
   const moon = EFFECT_SPOTS.aijalon;
   return (

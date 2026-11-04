@@ -1,7 +1,7 @@
 import { JourneyExplorer } from "@/components/journey/JourneyExplorer";
 import { requireMemberWithProgress } from "@/lib/data/viewer";
 import { JOURNEY_DAYS } from "@/lib/journey/days";
-import { flagCaption, journeyProgress } from "@/lib/journey/guide";
+import { journeyProgress } from "@/lib/journey/guide";
 import { chapterStatus, mapView, revealedSites } from "@/lib/journey/mapState";
 import { todaysDay } from "@/lib/journey/schedule";
 import { todayKst } from "@/lib/time";
@@ -24,7 +24,6 @@ export default async function JourneyPage() {
       statuses={statuses}
       position={p.position}
       flagDay={p.flag?.day ?? null}
-      flagLabel={flagCaption(p)}
       avatarKey={member.avatarKey}
       initialChapter={initialChapter}
       revealed={revealedSites(today)}

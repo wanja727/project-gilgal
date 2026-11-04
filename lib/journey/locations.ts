@@ -20,15 +20,13 @@ export type Site = {
   scene: string;
   /** 장소 카드 한 줄 설명 */
   description: string;
-  /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게). dy > 0 이면 "내 위치" 이름표는 아바타 아래 */
+  /** 지도에서 내 아바타를 지점 아이콘 옆에 둘 때의 오프셋 (아이콘·라벨을 가리지 않게) */
   avatarOffset?: { dx: number; dy: number };
-  /** "내 위치" 이름표를 아바타 기준 가로로 옮길 때(옆 장소 아이콘에 걸리는 자리) */
-  tagDx?: number;
 };
 
 export const SITES = {
   shittim: {
-    // 왼쪽 위는 아바타·"내 위치" 이름표 자리라 지명은 오른쪽에
+    // 왼쪽 위는 아바타 자리라 지명은 오른쪽에
     name: "싯딤", x: 318, y: 312, label: { dx: 12, dy: 4, anchor: "start" },
     scene: "이스라엘의 진영",
     description: "요단 동쪽에 진을 치고 강을 건널 준비를 한 곳이에요.",
@@ -37,13 +35,11 @@ export const SITES = {
     name: "요단강", x: 263, y: 340, label: { dx: 10, dy: 16, anchor: "start" },
     scene: "언약궤와 멈춘 강물",
     description: "언약궤를 멘 제사장들의 발이 물에 닿자 흐르던 물이 멈추었어요.",
-    // 강을 건넜다는 게 보이게 강줄기에서 비켜 서쪽 기슭(가나안 쪽, 아이콘 왼쪽 아래)에 선다(2026-11-04).
-    // 이름표는 아래 여리고 아이콘에 걸리지 않게 오른쪽으로
+    // 강을 건넜다는 게 보이게 강줄기에서 비켜 서쪽 기슭(가나안 쪽, 아이콘 왼쪽 아래)에 선다(2026-11-04)
     avatarOffset: { dx: -26, dy: 10 },
-    tagDx: 12,
   },
   gilgal: {
-    // 오른쪽엔 아바타와 "내 위치" 이름표가 오므로 지명은 왼쪽에 둔다
+    // 오른쪽엔 아바타가 오므로 지명은 왼쪽에 둔다
     name: "길갈", x: 242, y: 314, label: { dx: -12, dy: 4, anchor: "end" },
     scene: "열두 돌",
     description: "요단 가운데서 가져온 열두 돌을 세워 하나님이 하신 일을 기억하게 했어요.",
@@ -130,7 +126,7 @@ export const TERRAIN = {
   galilee: { cx: 252, cy: 112, rx: 11, ry: 17 },
   deadSea: { cx: 268, cy: 430, rx: 12, ry: 42 },
   labels: {
-    // 에발산의 "내 위치" 이름표와 겹치지 않게 조금 위로
+    // 에발산 아바타와 겹치지 않게 조금 위로
     canaan: { x: 112, y: 134, sub: { x: 113, y: 150 } },
     sea: { x: 40, y: 250, rotate: -82 },
     deadSea: { x: 284, y: 440 },
@@ -153,12 +149,12 @@ export function cropAround(id: SiteId, width = 180, height = 100): string {
  * 두 지점(출발 → 도착)이 함께 보이는 확대 영역 — 도착 화면에서 아바타가 화면 밖에서 들어오지 않게.
  * 기본 크기(width×height)에 들어가면 그 크기 그대로 두 지점의 가운데를 비추고,
  * 먼 걸음이면 가로세로 비율을 지킨 채 넓힌다(지도는 slice 로 채우므로 비율이 바뀌면 잘린다).
- * 여백은 아바타·"내 위치" 이름표·지명이 들어갈 만큼.
+ * 여백은 아바타·지명이 들어갈 만큼.
  */
 export function cropAroundLeg(from: SiteId, to: SiteId, width = 300, height = 250): string {
   const a = SITES[from];
   const b = SITES[to];
-  // 위쪽은 아바타 위 "내 위치" 이름표와 닫기 버튼 자리까지 넉넉히, 아래쪽은 지명만큼
+  // 위쪽은 아바타·깃발 자리까지 넉넉히, 아래쪽은 지명만큼
   const PAD_X = 60;
   const PAD_TOP = 84;
   const PAD_BOTTOM = 52;
@@ -195,7 +191,7 @@ export const TERRITORIES: Record<
   // 르우벤·갓·므낫세 반 지파 — 요단 동쪽(강 바로 동쪽부터)
   east: {
     name: "르우벤 · 갓 · 므낫세 반",
-    // 요단 동쪽 아바타의 "내 위치" 이름표(아이콘 왼쪽 위)보다 위에
+    // 요단 동쪽 아바타(아이콘 왼쪽 위)보다 위에
     label: { x: 318, y: 164 },
     d: "M262,128 C272,170 252,210 264,250 S278,300 272,340 S280,372 278,392 L350,398 L352,124Z",
   },
