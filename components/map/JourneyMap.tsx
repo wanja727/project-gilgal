@@ -356,6 +356,9 @@ export function JourneyMap({
           <MapAvatar site={view.me} avatarKey={avatarKey} />
         )
       )}
+
+      {/* 사건 이름표는 맨 위 — 몇 초 뒤 사라지므로 잠깐 깃발·아바타를 덮어도 된다 */}
+      {effect && !focused && <MapEffectLayer key={`c-${effect.key}`} kind={effect.kind} layer="caption" delay={effect.delay} />}
     </svg>
   );
 }

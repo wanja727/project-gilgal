@@ -19,7 +19,7 @@ import { SiteGlyphPaths } from "./SiteGlyph";
  * 시간은 CSS 변수 --fx-delay(길 그리기·아바타 도착 뒤) 기준, 요소마다 --t 만큼 더 늦게(globals.css .fx-*).
  * 움직임 줄이기 설정이면 그리지 않는다. 훅이 없어 JourneyMap 과 같이 서버·클라이언트 어디서든 그린다.
  *
- * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위
+ * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위 / caption = 맨 위(깃발·아바타도 사건 이름표를 가리지 않게)
  */
 /** 땅 전체에 걸친 연출 — 도착 화면에서도 확대하지 않고 땅 전체를 보여 준다(확대하면 이름표·땅이 잘린다) */
 export const WIDE_EFFECTS: readonly MapEffect[] = ["land-seven", "refuge-cities", "levite-cities"];
@@ -87,8 +87,9 @@ type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
   spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
-  "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 278, t: 0.2 },
-  "twelve-stones": { text: "열두 돌", x: 240, y: 258, t: 0.4 },
+  // 4장이 오늘인 날 길갈 깃발에 걸리지 않게 깃대 끝보다 위로
+  "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 258, t: 0.2 },
+  "twelve-stones": { text: "열두 돌", x: 219, y: 258, t: 0.4 },
   // 아래는 길갈 아바타 자리라 그 위로
   "manna-ends": { text: "만나가 그침", x: 248, y: 248, t: 0.3 },
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
@@ -107,10 +108,10 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
 };
 
-export function MapEffectLayer({ kind, layer, delay }: { kind: MapEffect; layer: "under" | "over"; delay: number }) {
+export function MapEffectLayer({ kind, layer, delay }: { kind: MapEffect; layer: "under" | "over" | "caption"; delay: number }) {
   const style = { "--fx-delay": `${delay}s` } as Style;
-  const body = layer === "under" ? under(kind) : over(kind);
-  const caps = layer === "over" ? [CAPTIONS[kind] ?? []].flat() : [];
+  const body = layer === "under" ? under(kind) : layer === "over" ? over(kind) : null;
+  const caps = layer === "caption" ? [CAPTIONS[kind] ?? []].flat() : [];
   if (!body && caps.length === 0) return null;
   return (
     <g aria-hidden className="fx" style={style} pointerEvents="none">
@@ -218,8 +219,9 @@ function Pop({ at, t = 0, children }: { at: Pt; t?: number; children: React.Reac
   );
 }
 
-function Stone({ w = 4.6, h = 3.4 }: { w?: number; h?: number }) {
-  return <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="1" fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
+/** 강바닥 돌(4:3 요단 가운데서 가져온 돌): 물에 닳아 둥글다. 크기·기울기를 조금씩 달라 쌓았을 때 벽돌처럼 보이지 않게 */
+function RiverStone({ rx, ry, tilt }: { rx: number; ry: number; tilt: number }) {
+  return <ellipse rx={rx} ry={ry} transform={`rotate(${tilt})`} fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
 }
 
 /**
@@ -330,9 +332,17 @@ function JordanStops() {
   );
 }
 
-/** 4장: 길갈에 돌 열두 개(5·4·3 단)가 아랫줄부터 하나씩 위에서 떨어져 쌓인다 */
+/** 열두 돌의 모양(rx, ry, 기울기) — 아랫줄이 조금 더 크다 */
+const RIVER_STONES: readonly [number, number, number][] = [
+  [3.9, 2.9, -6], [3.5, 3, 10], [4, 2.8, 3], [3.6, 3, -12], [3.8, 2.8, 7],
+  [3.6, 2.8, 8], [3.8, 2.9, -5], [3.4, 2.9, 12], [3.7, 2.7, -9],
+  [3.5, 2.7, -7], [3.7, 2.8, 6], [3.4, 2.7, -4],
+];
+
+/** 4장: 길갈에 강바닥의 둥근 돌 열두 개(5·4·3 단)가 아랫줄부터 하나씩 위에서 떨어져 쌓인다 */
 function TwelveStones() {
-  const base = offset(SITES.gilgal, -14, -30);
+  // 길갈이 오늘의 장인 날 깃대(x=길갈)에 가리지 않게 깃대 왼쪽에 쌓는다
+  const base = offset(SITES.gilgal, -23, -30);
   const rows = [5, 4, 3];
   const stones: { at: Pt; n: number }[] = [];
   rows.forEach((count, row) => {
@@ -340,13 +350,16 @@ function TwelveStones() {
       stones.push({ at: { x: base.x + (i - (count - 1) / 2) * 7.2, y: base.y - row * 5.4 }, n: stones.length });
     }
   });
-  return stones.map((s) => (
-    <g key={s.n} transform={`translate(${s.at.x} ${s.at.y})`}>
-      <g className="fx-drop" style={T(s.n * 0.13)}>
-        <Stone w={6.6} h={4.8} />
+  return stones.map((s) => {
+    const [rx, ry, tilt] = RIVER_STONES[s.n];
+    return (
+      <g key={s.n} transform={`translate(${s.at.x} ${s.at.y})`}>
+        <g className="fx-drop" style={T(s.n * 0.13)}>
+          <RiverStone rx={rx} ry={ry} tilt={tilt} />
+        </g>
       </g>
-    </g>
-  ));
+    );
+  });
 }
 
 /** 5장: 내리던 만나가 그친다(5:12) — 작은 알갱이가 내리다 멈춘다 */
