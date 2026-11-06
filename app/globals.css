@@ -460,6 +460,15 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
+/* 9장: 선이 천천히 이어져 남는다(pathLength=1 기준) */
+.fx-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: fx-draw 1.1s calc(var(--fx-delay) + var(--t, 0s)) ease-in-out forwards;
+}
+@keyframes fx-draw {
+  to { stroke-dashoffset: 0; }
+}
 /* 12장: 숫자 한 칸 — 겹쳐 둔 숫자가 차례로 잠깐씩 켜진다(훅 없이 --fx-delay 를 그대로 따르게) */
 .fx-tick {
   animation-name: fx-tick;

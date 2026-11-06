@@ -24,7 +24,7 @@ import { SiteGlyphPaths } from "./SiteGlyph";
  * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위 / caption = 맨 위(깃발·아바타도 사건 이름표를 가리지 않게)
  */
 /** 땅 전체에 걸친 연출 — 도착 화면에서도 확대하지 않고 땅 전체를 보여 준다(확대하면 이름표·땅이 잘린다) */
-export const WIDE_EFFECTS: readonly MapEffect[] = ["be-strong", "thirty-one-kings", "land-seven", "refuge-cities", "levite-cities"];
+export const WIDE_EFFECTS: readonly MapEffect[] = ["be-strong", "gibeon-ruse", "thirty-one-kings", "land-seven", "refuge-cities", "levite-cities"];
 
 export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
   "be-strong",
@@ -113,8 +113,9 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
     { text: "율법을 낭독함", x: 206, y: 152, t: 2 },
   ],
   "gibeon-ruse": [
-    { text: "먼 데서 온 척", x: 140, y: 394, t: 0.1, dur: 2 },
-    { text: "사흘 길 이웃", x: 140, y: 394, t: 2.1 },
+    // 긴 이름표라 장소들 아래 빈 곳에. 도착 화면도 그래서 땅 전체를 보여 준다(WIDE_EFFECTS)
+    { text: "여호와께 묻지 아니하고 조약", x: 165, y: 424, t: 0.1, dur: 2.9 },
+    { text: "사흘 뒤 이웃임이 드러남", x: 165, y: 424, t: 3 },
   ],
   // 왼쪽 위는 기브온 아바타 자리라 기브온 오른쪽 아래로
   "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: 0.3 },
@@ -170,7 +171,15 @@ function under(kind: MapEffect): React.ReactNode {
   if (kind === "be-strong") return <PromisedLandGlow />;
   if (kind === "cross-jordan") return <JordanStops />;
   if (kind === "spies") return <GhostSite id="jericho" t={0} />;
-  if (kind === "gibeon-ruse") return <GhostSite id="gibeon" t={0} />;
+  if (kind === "gibeon-ruse") {
+    return (
+      <>
+        {/* 흐린 기브온 아이콘이 선 끝을 덮도록 선을 먼저 */}
+        <NeighborLine />
+        <GhostSite id="gibeon" t={0} />
+      </>
+    );
+  }
   if (kind === "levite-cities") return <AllLandGlow t={2.4} />;
   const land = LAND[kind];
   if (land) return land.map((id, i) => <Land key={id} id={id} t={i * 0.5} />);
@@ -563,20 +572,38 @@ function AiVictory() {
   );
 }
 
-/** 9장: 기브온 사람들이 길갈로 왔다가(9:6) → 사흘 만에 기브온에 닿는다(9:16~17). 거리가 가까운 것이 곧 속임수가 드러나는 장면이다 */
+/** 9장: 기브온 사람 둘이 길갈로 천천히 걸어와(9:6) 조약을 맺는다(9:15) — 조약은 길갈에 퍼지는 고리 하나로 */
 function GibeonRuse() {
-  const g = SITES.gibeon;
   const camp = offset(SITES.gilgal, -14, 2);
   return (
     <>
-      {[0, 0.16].map((t, i) => (
-        <Traveler key={i} from={offset(g, 12, -2 + i * 5)} to={offset(camp, 0, i * 5)} t={t} dur={1.5} />
+      {[0, 0.18].map((t, i) => (
+        <Traveler key={i} from={offset(SITES.gibeon, 12, -2 + i * 5)} to={offset(camp, 0, i * 5)} t={t} dur={1.8} />
       ))}
-      {[0, 0.14, 0.28].map((t, i) => (
-        <Traveler key={i} from={offset(camp, 0, i * 4)} to={offset(g, 14, -3 + i * 4)} t={2.1 + t} dur={0.8} />
-      ))}
-      <Pulse at={g} t={3} />
+      <Pulse at={SITES.gilgal} t={2} />
+      <Pulse at={SITES.gibeon} t={3.9} />
     </>
+  );
+}
+
+/**
+ * 9장: 사흘 뒤 이웃임이 드러난다(9:16) — 길갈과 기브온 사이에 선이 이어져 가까운 거리를 말없이 보여 준다.
+ * 장소 아이콘·지명 아래 층이라 양 끝이 아이콘에 가려 깔끔하게 닿고 "길갈" 글자를 긋지 않는다.
+ */
+function NeighborLine() {
+  const a = SITES.gilgal;
+  const b = SITES.gibeon;
+  return (
+    <path
+      className="fx-draw"
+      d={`M${a.x},${a.y} L${b.x},${b.y}`}
+      pathLength={1}
+      fill="none"
+      stroke="var(--color-main)"
+      strokeOpacity=".5"
+      strokeWidth="1.8"
+      style={T(2.9)}
+    />
   );
 }
 
