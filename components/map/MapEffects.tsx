@@ -94,7 +94,7 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 /** 10장: 해와 달이 멈추는 때 — 이름표도 움직이는 동안이 아니라 멈춘 뒤에 뜬다 */
-const SKY_STOP = 2.6;
+const SKY_STOP = 3.6;
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   "be-strong": { text: "강하고 담대하라", x: 150, y: 84, t: 0.3 },
   // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
@@ -675,9 +675,9 @@ function SkyBody({ at, children }: { at: Pt; children: React.ReactNode }) {
 }
 
 /**
- * 10장: 해와 달이 기브온을 가운데 두고 시계 방향(동→남→서)으로 돌다가 점점 늦어져,
- * 해는 기브온 위, 달은 아얄론 골짜기에서 멈춘다(10:12~13). 서로 맞은편이라 시곗바늘처럼 함께 돌다 선다 —
- * 궤도는 "시간이 멈춘 날"을 보여 주는 그림일 뿐 실제 움직임이 아니다. 멈추면 고리가 퍼지고 그 장을 보는 동안 그대로 있다.
+ * 10장: 해와 달이 스르륵 나타나 기브온을 가운데 두고 네 분의 한 바퀴를 천천히 돌아, 해는 동쪽에서 올라 기브온 위 중천에,
+ * 달은 서쪽으로 내려가 아얄론 골짜기에 멈춘다(10:12~13). 여러 바퀴 돌면 가벼워 보여 한 번의 느린 움직임으로 무게를 준다.
+ * 궤도는 멈춤을 보여 주는 그림일 뿐 실제 움직임이 아니다. 멈추면 고리가 퍼지고 그 장을 보는 동안 그대로 있다.
  */
 function SunMoon() {
   // 기브온 위 — 왼쪽 위 아바타보다 높이

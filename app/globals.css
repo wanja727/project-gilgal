@@ -460,12 +460,12 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
-/* 10장: 해와 달이 한 바퀴 넘게 돌다 점점 늦어져 멈춘다. 해·달 자체는 반대로 돌려 똑바로 둔다 */
+/* 10장: 해와 달이 스르륵 나타나 천천히 네 분의 한 바퀴를 돌아 멈춘다. 해·달 자체는 반대로 돌려 똑바로 둔다 */
 .fx-sky-orbit,
 .fx-sky-upright {
   animation-delay: calc(var(--fx-delay) + var(--t, 0s));
-  animation-duration: var(--dur, 2.6s);
-  animation-timing-function: cubic-bezier(0.3, 0.2, 0.3, 1);
+  animation-duration: var(--dur, 3.6s);
+  animation-timing-function: cubic-bezier(0.4, 0.1, 0.3, 1);
   animation-fill-mode: both;
 }
 .fx-sky-orbit {
@@ -477,12 +477,12 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation-name: fx-sky-upright;
 }
 @keyframes fx-sky-orbit {
-  0% { opacity: 0; transform: rotate(-450deg); }
-  10% { opacity: 1; }
+  0% { opacity: 0; transform: rotate(90deg); }
+  45% { opacity: 1; }
   100% { opacity: 1; transform: none; }
 }
 @keyframes fx-sky-upright {
-  from { transform: rotate(450deg); }
+  from { transform: rotate(-90deg); }
   to { transform: none; }
 }
 /* 9장: 선이 천천히 이어져 남는다(pathLength=1 기준) */
