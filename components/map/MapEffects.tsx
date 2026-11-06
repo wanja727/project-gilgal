@@ -94,7 +94,7 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 /** 10장: 해와 달이 멈추는 때 — 이름표도 움직이는 동안이 아니라 멈춘 뒤에 뜬다 */
-const SKY_STOP = 2.3;
+const SKY_STOP = 2.6;
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   "be-strong": { text: "강하고 담대하라", x: 150, y: 84, t: 0.3 },
   // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
@@ -663,51 +663,53 @@ function EdAltar() {
   );
 }
 
-/** 하늘을 지나가다 at 에서 멈추는 것. dx·dy 는 출발 자리(at 기준) — 가로와 세로를 따로 늦춰 둥글게 지나간다 */
-function SkyBody({ at, dx, dy, children }: { at: Pt; dx: number; dy: number; children: React.ReactNode }) {
+/** 궤도 위의 해·달: 궤도는 돌아도 해와 달 자체는 기울지 않게 반대로 돌려 세운다. children 은 (0,0) 기준 */
+function SkyBody({ at, children }: { at: Pt; children: React.ReactNode }) {
   return (
     <g transform={`translate(${at.x} ${at.y})`}>
-      <g className="fx-sky-x" style={T(0, { "--dx": `${dx}px`, "--dur": `${SKY_STOP}s` })}>
-        <g className="fx-sky-y" style={T(0, { "--dy": `${dy}px`, "--dur": `${SKY_STOP}s` })}>
-          {children}
-        </g>
+      <g className="fx-sky-upright" style={T(0, { "--dur": `${SKY_STOP}s` })}>
+        {children}
       </g>
     </g>
   );
 }
 
 /**
- * 10장: 해와 달이 동쪽(지도 오른쪽)에서 서쪽으로 지나가다 기브온 위와 아얄론 골짜기에서 멈춘다(10:12~13) —
- * "태양이 중천에 머물러서"라 해는 높이 올라 멈추고, 멈추면 고리가 퍼지며 그 장을 보는 동안 그대로 있다.
+ * 10장: 해와 달이 기브온을 가운데 두고 시계 방향(동→남→서)으로 돌다가 점점 늦어져,
+ * 해는 기브온 위, 달은 아얄론 골짜기에서 멈춘다(10:12~13). 서로 맞은편이라 시곗바늘처럼 함께 돌다 선다 —
+ * 궤도는 "시간이 멈춘 날"을 보여 주는 그림일 뿐 실제 움직임이 아니다. 멈추면 고리가 퍼지고 그 장을 보는 동안 그대로 있다.
  */
 function SunMoon() {
   // 기브온 위 — 왼쪽 위 아바타보다 높이
   const sun = offset(SITES.gibeon, 6, -66);
   const moon = EFFECT_SPOTS.aijalon;
+  const g = SITES.gibeon;
   return (
     <>
-      <SkyBody at={sun} dx={130} dy={46}>
-        <circle r="6" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.6" />
-        {Array.from({ length: 8 }, (_, i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return (
-            <line
-              key={i}
-              x1={Math.cos(a) * 8.5}
-              y1={Math.sin(a) * 8.5}
-              x2={Math.cos(a) * 11}
-              y2={Math.sin(a) * 11}
-              stroke="var(--color-main)"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
-          );
-        })}
-      </SkyBody>
-      <SkyBody at={moon} dx={70} dy={26}>
-        {/* 초승달: 바깥 반원 + 안쪽 반타원 */}
-        <path d="M0,-7.5 A7.5,7.5 0 1,0 0,7.5 A4,7.5 0 1,1 0,-7.5Z" fill="var(--color-main)" />
-      </SkyBody>
+      <g className="fx-sky-orbit" style={{ ...T(0, { "--dur": `${SKY_STOP}s` }), transformOrigin: `${g.x}px ${g.y}px` }}>
+        <SkyBody at={sun}>
+          <circle r="6" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.6" />
+          {Array.from({ length: 8 }, (_, i) => {
+            const a = (i / 8) * Math.PI * 2;
+            return (
+              <line
+                key={i}
+                x1={Math.cos(a) * 8.5}
+                y1={Math.sin(a) * 8.5}
+                x2={Math.cos(a) * 11}
+                y2={Math.sin(a) * 11}
+                stroke="var(--color-main)"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </SkyBody>
+        <SkyBody at={moon}>
+          {/* 초승달: 바깥 반원 + 안쪽 반타원 */}
+          <path d="M0,-7.5 A7.5,7.5 0 1,0 0,7.5 A4,7.5 0 1,1 0,-7.5Z" fill="var(--color-main)" />
+        </SkyBody>
+      </g>
       <Pulse at={sun} t={SKY_STOP} r={15} />
       <Pulse at={moon} t={SKY_STOP} r={12} />
     </>

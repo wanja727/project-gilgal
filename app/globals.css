@@ -460,28 +460,29 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
-/* 10장: 해와 달이 일정하게 지나가다 끝에서 늦춰 멈춘다. 세로는 먼저 올라 높이를 잡아 둥글게 지나간다 */
-.fx-sky-x,
-.fx-sky-y {
+/* 10장: 해와 달이 한 바퀴 넘게 돌다 점점 늦어져 멈춘다. 해·달 자체는 반대로 돌려 똑바로 둔다 */
+.fx-sky-orbit,
+.fx-sky-upright {
   animation-delay: calc(var(--fx-delay) + var(--t, 0s));
-  animation-duration: var(--dur, 2.3s);
+  animation-duration: var(--dur, 2.6s);
+  animation-timing-function: cubic-bezier(0.3, 0.2, 0.3, 1);
   animation-fill-mode: both;
 }
-.fx-sky-x {
-  animation-name: fx-sky-x;
-  animation-timing-function: cubic-bezier(0.35, 0.35, 0.45, 1);
+.fx-sky-orbit {
+  animation-name: fx-sky-orbit;
 }
-.fx-sky-y {
-  animation-name: fx-sky-y;
-  animation-timing-function: ease-out;
+.fx-sky-upright {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: fx-sky-upright;
 }
-@keyframes fx-sky-x {
-  0% { opacity: 0; transform: translateX(var(--dx)); }
-  14% { opacity: 1; }
+@keyframes fx-sky-orbit {
+  0% { opacity: 0; transform: rotate(-450deg); }
+  10% { opacity: 1; }
   100% { opacity: 1; transform: none; }
 }
-@keyframes fx-sky-y {
-  from { transform: translateY(var(--dy)); }
+@keyframes fx-sky-upright {
+  from { transform: rotate(450deg); }
   to { transform: none; }
 }
 /* 9장: 선이 천천히 이어져 남는다(pathLength=1 기준) */
