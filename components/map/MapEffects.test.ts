@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { landsBefore } from "./MapEffects";
+import { JOURNEY_DAYS } from "@/lib/journey/days";
+import { landsBefore, PLAYABLE_EFFECTS } from "./MapEffects";
+
+describe("장소 사건 연출", () => {
+  it("스물네 장 모두 재생되는 연출이 있다", () => {
+    expect(JOURNEY_DAYS.filter((d) => !d.mapEffect || !PLAYABLE_EFFECTS.includes(d.mapEffect))).toEqual([]);
+  });
+});
 
 describe("이미 나뉜 땅(누적)", () => {
   it("13장 전에는 없다", () => {

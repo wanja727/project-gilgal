@@ -19,18 +19,26 @@ import { SiteGlyphPaths } from "./SiteGlyph";
  * 시간은 CSS 변수 --fx-delay(길 그리기·아바타 도착 뒤) 기준, 요소마다 --t 만큼 더 늦게(globals.css .fx-*).
  * 움직임 줄이기 설정이면 그리지 않는다. 훅이 없어 JourneyMap 과 같이 서버·클라이언트 어디서든 그린다.
  *
+ * [2026-11-06] 뺐던 일곱 장(1·7·8·9·11·12·22장)을 이름표와 함께 새 장면으로 넣어 24장 모두 연출이 있다.
+ *
  * layer: under = 강·길 위, 장소 아이콘 아래(물길·땅) / over = 장소 아이콘 위 / caption = 맨 위(깃발·아바타도 사건 이름표를 가리지 않게)
  */
 /** 땅 전체에 걸친 연출 — 도착 화면에서도 확대하지 않고 땅 전체를 보여 준다(확대하면 이름표·땅이 잘린다) */
-export const WIDE_EFFECTS: readonly MapEffect[] = ["land-seven", "refuge-cities", "levite-cities"];
+export const WIDE_EFFECTS: readonly MapEffect[] = ["be-strong", "thirty-one-kings", "land-seven", "refuge-cities", "levite-cities"];
 
 export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
+  "be-strong",
   "spies",
   "cross-jordan",
   "twelve-stones",
   "manna-ends",
   "walls-fall",
+  "ai-defeat",
+  "ai-victory",
+  "gibeon-ruse",
   "sun-moon",
+  "north-kings",
+  "thirty-one-kings",
   "land-east",
   "land-caleb",
   "land-judah",
@@ -40,6 +48,7 @@ export const PLAYABLE_EFFECTS: readonly MapEffect[] = [
   "land-seven",
   "refuge-cities",
   "levite-cities",
+  "ed-altar",
   "gather",
   "arrive-final",
 ];
@@ -85,6 +94,7 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
+  "be-strong": { text: "강하고 담대하라", x: 150, y: 84, t: 0.3 },
   // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
   spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
   // 4장이 오늘인 날 길갈 깃발에 걸리지 않게 깃대 끝보다 위로
@@ -93,8 +103,27 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   // 아래는 길갈 아바타 자리라 그 위로
   "manna-ends": { text: "만나가 그침", x: 248, y: 248, t: 0.3 },
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
+  // 패배와 돌무더기는 같은 자리에서 이름표가 바뀐다 — 7장의 끝은 패배가 아니라 돌무더기(7:26). 긴 이름표라 장소들 아래 빈 곳에
+  "ai-defeat": [
+    { text: "아이에서 패함", x: 165, y: 424, t: 0.1, dur: 2.2 },
+    { text: "아간의 죄, 아골 골짜기 돌무더기", x: 165, y: 424, t: 2.4 },
+  ],
+  "ai-victory": [
+    { text: "아이 성 승리", x: 112, y: 270, t: 0.1, dur: 2.2 },
+    { text: "율법을 낭독함", x: 206, y: 152, t: 2 },
+  ],
+  "gibeon-ruse": [
+    { text: "먼 데서 온 척", x: 140, y: 394, t: 0.1, dur: 2 },
+    { text: "사흘 길 이웃", x: 140, y: 394, t: 2.1 },
+  ],
   // 왼쪽 위는 기브온 아바타 자리라 기브온 오른쪽 아래로
   "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: 0.3 },
+  "north-kings": [
+    { text: "북쪽 왕들의 연합", x: 128, y: 70, t: 0.1, dur: 2 },
+    { text: "하솔을 불사름", x: 128, y: 70, t: 2.1 },
+  ],
+  // 숫자가 다 오른 뒤 바로 아래에
+  "thirty-one-kings": { text: "서른한 왕", x: 112, y: 282, t: 2.6 },
   "move-base": { text: "회막을 실로에", x: 130, y: 248, t: 0.6 },
   // 세겜 위는 20장 깃발 자리라 지도 왼쪽 위 빈 곳에
   "refuge-cities": { text: "도피성 여섯 곳", x: 128, y: 84, t: 0.4 },
@@ -103,6 +132,7 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
     // 21:43 — 레위 성읍까지 나뉘고 나서 온 땅이 함께 빛난다(AllLandGlow 와 같은 때)
     { text: "온 땅을 다 주심", x: 170, y: 30, t: 2.6 },
   ],
+  "ed-altar": { text: "증거의 제단", x: 236, y: 200, t: 0.8 },
   // 23장은 모인 장소가 본문에 없어 세겜이 아니라 땅 가운데로 모인다
   gather: { text: "온 이스라엘을 불러 모음", x: 264, y: 196, t: 0.4 },
   "arrive-final": { text: "큰 돌을 세움", x: 180, y: 166, t: 1.8 },
@@ -137,8 +167,10 @@ function Caption({ text, x, y, t, dur }: Cap) {
 }
 
 function under(kind: MapEffect): React.ReactNode {
+  if (kind === "be-strong") return <PromisedLandGlow />;
   if (kind === "cross-jordan") return <JordanStops />;
   if (kind === "spies") return <GhostSite id="jericho" t={0} />;
+  if (kind === "gibeon-ruse") return <GhostSite id="gibeon" t={0} />;
   if (kind === "levite-cities") return <AllLandGlow t={2.4} />;
   const land = LAND[kind];
   if (land) return land.map((id, i) => <Land key={id} id={id} t={i * 0.5} />);
@@ -159,6 +191,18 @@ function over(kind: MapEffect): React.ReactNode {
       );
     case "walls-fall":
       return <JerichoWalls />;
+    case "ai-defeat":
+      return <AiDefeat />;
+    case "ai-victory":
+      return <AiVictory />;
+    case "gibeon-ruse":
+      return <GibeonRuse />;
+    case "north-kings":
+      return <NorthKings />;
+    case "thirty-one-kings":
+      return <ThirtyOneKings />;
+    case "ed-altar":
+      return <EdAltar />;
     case "twelve-stones":
       return <TwelveStones />;
     case "manna-ends":
@@ -224,6 +268,74 @@ function RiverStone({ rx, ry, tilt }: { rx: number; ry: number; tilt: number }) 
   return <ellipse rx={rx} ry={ry} transform={`rotate(${tilt})`} fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" />;
 }
 
+/** 아래에서부터 쌓는 돌무더기의 돌 자리(윗줄일수록 적게). n 은 쌓이는 순서 */
+function pileAt(base: Pt, rows: readonly number[], dx: number, dy: number): { at: Pt; n: number }[] {
+  const stones: { at: Pt; n: number }[] = [];
+  rows.forEach((count, row) => {
+    for (let i = 0; i < count; i++) {
+      stones.push({ at: { x: base.x + (i - (count - 1) / 2) * dx, y: base.y - row * dy }, n: stones.length });
+    }
+  });
+  return stones;
+}
+
+/** 들에서 모은 거친 돌 — 4장의 둥근 강돌과 구분되게 각지게(본문이 돌 모양을 말하는 것은 아니고 두 장면을 가르려는 표현) */
+const ROUGH_STONES = [
+  "M-3.8,1.4 L-2.8,-2.1 L.6,-2.9 L3.5,-1.2 L3.3,2.1 L-1.4,2.8Z",
+  "M-3.4,-.6 L-1.2,-2.9 L2.6,-2.3 L3.9,.7 L1.8,2.7 L-2.9,2.4Z",
+  "M-3.9,.2 L-2.2,-2.6 L1.9,-2.8 L3.6,.1 L2.7,2.6 L-2.4,2.7Z",
+];
+
+function RoughStone({ n }: { n: number }) {
+  return <path d={ROUGH_STONES[n % ROUGH_STONES.length]} fill="var(--color-main)" stroke="var(--color-surface)" strokeWidth=".8" strokeLinejoin="round" />;
+}
+
+/** 돌 제단(8·22장): 다듬지 않은 돌을 쌓은 작은 단(8:31). 나타나서 그 장을 보는 동안 남는다 */
+function Altar({ at, t }: { at: Pt; t: number }) {
+  return (
+    <Pop at={at} t={t}>
+      {pileAt({ x: 0, y: 5 }, [3, 2], 7, 5.4).map((s) => (
+        <g key={s.n} transform={`translate(${s.at.x} ${s.at.y})`}>
+          <RoughStone n={s.n} />
+        </g>
+      ))}
+    </Pop>
+  );
+}
+
+/** 성이 불탄다(8:19·11:11): 불꽃이 일었다가 잦아들고 연기가 오른다 — 아이콘 위 가장자리에서, 끝나면 사라진다 */
+function Burn({ at, t }: { at: Pt; t: number }) {
+  const base = offset(at, 0, -9);
+  return (
+    <>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <circle
+          key={i}
+          className="fx-smoke"
+          cx={base.x + [-5, 4, -2, 6, 0][i]}
+          cy={base.y - 10}
+          r="4"
+          fill="var(--color-mute)"
+          style={T(t + 0.3 + i * 0.32)}
+        />
+      ))}
+      {[-7, 7, 0].map((dx, i) => (
+        <g key={dx} transform={`translate(${base.x + dx} ${base.y}) scale(${dx === 0 ? 1 : 0.8})`}>
+          <path
+            className="fx-flame"
+            d="M0,0 C-6,-2 -6,-8 -1,-14 C0,-10 3,-10 3,-8 C6,-5 5,-1 0,0Z"
+            fill="var(--color-main)"
+            stroke="var(--color-surface)"
+            strokeWidth="1"
+            strokeLinejoin="round"
+            style={T(t + i * 0.1)}
+          />
+        </g>
+      ))}
+    </>
+  );
+}
+
 /**
  * 아직 지도에 드러나지 않은 장소를 그 장을 볼 때만 흐리게(점선 테두리) — 2장 정탐꾼이 빈자리에 다녀오지 않게(2026-11-04).
  * 2장 장 카드가 이미 "여리고"라고 알려 주므로 미리 보여도 새로 드러내는 것은 없다. 장소 아이콘 아래 층이라,
@@ -276,6 +388,11 @@ function LandShape({ id, clipId, paint }: { id: TerritoryId; clipId: string; pai
     );
   }
   return "d" in land ? <path d={land.d} {...p} /> : <circle {...land.circle} {...p} />;
+}
+
+/** 1장: 약속하신 땅 전체가 한 번 빛나고 잦아든다(1:3~6) — 21장 "온 땅을 다 주심"의 빛남과 짝 */
+function PromisedLandGlow() {
+  return <path className="fx-flash" d={TERRAIN.canaan} fill="var(--color-main)" fillOpacity=".12" style={T(0)} />;
 }
 
 /** 21장: 레위 성읍까지 나뉜 뒤 온 땅이 함께 한 번 빛난다(21:43 "온 땅을 다 주셨으므로") */
@@ -342,14 +459,7 @@ const RIVER_STONES: readonly [number, number, number][] = [
 /** 4장: 길갈에 강바닥의 둥근 돌 열두 개(5·4·3 단)가 아랫줄부터 하나씩 위에서 떨어져 쌓인다 */
 function TwelveStones() {
   // 길갈이 오늘의 장인 날 깃대(x=길갈)에 가리지 않게 깃대 왼쪽에 쌓는다
-  const base = offset(SITES.gilgal, -23, -30);
-  const rows = [5, 4, 3];
-  const stones: { at: Pt; n: number }[] = [];
-  rows.forEach((count, row) => {
-    for (let i = 0; i < count; i++) {
-      stones.push({ at: { x: base.x + (i - (count - 1) / 2) * 7.2, y: base.y - row * 5.4 }, n: stones.length });
-    }
-  });
+  const stones = pileAt(offset(SITES.gilgal, -23, -30), [5, 4, 3], 7.2, 5.4);
   return stones.map((s) => {
     const [rx, ry, tilt] = RIVER_STONES[s.n];
     return (
@@ -414,6 +524,113 @@ function JerichoWalls() {
           style={{ animationDelay: `calc(var(--fx-delay) + ${2.25 + r.d}s)` }}
         />
       ))}
+    </>
+  );
+}
+
+/**
+ * 7장: 아이로 올라간 무리가 되밀려 내려오고(7:4~5, 앞으로만 가던 지도의 첫 뒷걸음) → 잠시 뒤 아골 골짜기에 돌무더기가 쌓여 남는다(7:26).
+ * 진노는 그림으로 표현하지 않는다 — 사건만 보여 주고 뜻은 본문에 맡긴다(본문 해석 금지).
+ */
+function AiDefeat() {
+  const from = offset(SITES.jericho, -8, -15);
+  const to = offset(SITES.ai, 8, 13);
+  return (
+    <>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Traveler key={i} from={offset(from, (i % 2) * 5 - 2, i)} to={offset(to, (i % 2) * 5 - 2, i)} t={i * 0.1} dur={0.8} round />
+      ))}
+      {pileAt(EFFECT_SPOTS.achor, [4, 3, 2, 1], 7, 5.2).map((s) => (
+        <g key={s.n} transform={`translate(${s.at.x} ${s.at.y})`}>
+          <g className="fx-drop" style={T(2.4 + s.n * 0.16)}>
+            <RoughStone n={s.n} />
+          </g>
+        </g>
+      ))}
+    </>
+  );
+}
+
+/** 8장: 아이 성에서 불과 연기가 오르고(8:19~20) → 에발산에 제단을 쌓아 율법을 낭독한다(8:30~35) — 낭독은 퍼지는 동그라미로 */
+function AiVictory() {
+  return (
+    <>
+      <Burn at={SITES.ai} t={0} />
+      <Altar at={EFFECT_SPOTS.ebalAltar} t={1.8} />
+      {[2.1, 2.6, 3.1].map((t) => (
+        <Pulse key={t} at={SITES.ebal} t={t} r={16} />
+      ))}
+    </>
+  );
+}
+
+/** 9장: 기브온 사람들이 길갈로 왔다가(9:6) → 사흘 만에 기브온에 닿는다(9:16~17). 거리가 가까운 것이 곧 속임수가 드러나는 장면이다 */
+function GibeonRuse() {
+  const g = SITES.gibeon;
+  const camp = offset(SITES.gilgal, -14, 2);
+  return (
+    <>
+      {[0, 0.16].map((t, i) => (
+        <Traveler key={i} from={offset(g, 12, -2 + i * 5)} to={offset(camp, 0, i * 5)} t={t} dur={1.5} />
+      ))}
+      {[0, 0.14, 0.28].map((t, i) => (
+        <Traveler key={i} from={offset(camp, 0, i * 4)} to={offset(g, 14, -3 + i * 4)} t={2.1 + t} dur={0.8} />
+      ))}
+      <Pulse at={g} t={3} />
+    </>
+  );
+}
+
+/** 11장: 많은 무리가 메롬 물가로 모였다가 흩어지고(11:4~8) → 하솔이 불탄다(11:11) */
+function NorthKings() {
+  const c = EFFECT_SPOTS.merom;
+  const from = Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * Math.PI * 2;
+    return offset(c, Math.cos(a) * (46 + (i % 3) * 8), Math.sin(a) * (32 + (i % 3) * 7));
+  });
+  return (
+    <>
+      {from.map((p, i) => (
+        <Traveler key={i} from={p} to={offset(c, ((i * 5) % 12) - 6, ((i * 7) % 10) - 5)} t={(i % 4) * 0.06} dur={0.8} r={2} round />
+      ))}
+      <Burn at={SITES.hazor} t={1.8} />
+    </>
+  );
+}
+
+/**
+ * 12장: 왕들의 목록(12:9~24)에 있고 지도에 드러나 있는 성이 차례로 반짝이고, 숫자가 31까지 오른다.
+ * 31명의 자리를 다 찍으면 지리가 부정확해져 숫자로만 센다. 기브온은 조약을 맺어 목록에 없으므로 반짝이지 않는다.
+ */
+function ThirtyOneKings() {
+  const STEP = 0.08;
+  const at = { x: 112, y: 262 };
+  const number = (n: number, className: string, t: number) => (
+    <text key={n} className={className} x={at.x} y={at.y} textAnchor="middle" fontSize="26" fontWeight="700" fill="var(--color-main)" style={T(t)}>
+      {n}
+    </text>
+  );
+  return (
+    <>
+      {(["jericho", "ai", "hazor"] as const).map((id, i) => (
+        <Pulse key={id} at={SITES[id]} t={0.3 + i * 0.8} />
+      ))}
+      {Array.from({ length: 30 }, (_, i) => number(i + 1, "fx-tick", i * STEP))}
+      {number(31, "fx-appear", 30 * STEP)}
+    </>
+  );
+}
+
+/** 22장: 동쪽 지파가 실로를 떠나 집으로 돌아가며(22:9) 가나안 쪽 요단 가에 제단을 쌓는다(22:10~11) */
+function EdAltar() {
+  const from = offset(SITES.shiloh, 14, -2);
+  const to = offset(SITES.east, -8, 12);
+  return (
+    <>
+      {[0, 1, 2, 3].map((i) => (
+        <Traveler key={i} from={offset(from, 0, i * 3 - 4)} to={offset(to, 0, i * 3 - 4)} t={i * 0.14} dur={1.7} />
+      ))}
+      <Altar at={EFFECT_SPOTS.edAltar} t={0.75} />
     </>
   );
 }

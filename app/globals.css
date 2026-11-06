@@ -343,7 +343,11 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 .fx-drop,
 .fx-appear,
 .fx-land,
-.fx-fall {
+.fx-fall,
+.fx-smoke,
+.fx-flame,
+.fx-flash,
+.fx-tick {
   opacity: 0;
   animation-delay: calc(var(--fx-delay) + var(--t, 0s));
   animation-fill-mode: forwards;
@@ -408,6 +412,56 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   animation-name: fx-fall;
   animation-duration: 0.9s;
   animation-timing-function: ease-in;
+}
+/* 8·11장: 연기가 오르며 퍼지다 사라진다 */
+.fx-smoke {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: fx-smoke;
+  animation-duration: 1.7s;
+  animation-timing-function: ease-out;
+}
+@keyframes fx-smoke {
+  0% { opacity: 0; transform: none; }
+  20% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateY(-30px) scale(2); }
+}
+/* 8·11장: 불꽃이 일렁이다 잦아든다(아래 가장자리 기준) */
+.fx-flame {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-name: fx-flame;
+  animation-duration: 2.2s;
+  animation-timing-function: ease-in-out;
+}
+@keyframes fx-flame {
+  0% { opacity: 0; transform: scale(0.3); }
+  12% { opacity: 1; transform: scale(1.1); }
+  28% { transform: scale(0.9, 1.05); }
+  44% { transform: scale(1.06, 0.94); }
+  60% { transform: scale(0.94, 1.04); }
+  78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.6); }
+}
+/* 1장: 약속하신 땅이 한 번 빛나고 잦아든다 — 아직 들어가지 않은 땅이라 남기지 않는다 */
+.fx-flash {
+  animation-name: fx-flash;
+  animation-duration: 2.8s;
+  animation-timing-function: ease-in-out;
+}
+@keyframes fx-flash {
+  0%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+/* 12장: 숫자 한 칸 — 겹쳐 둔 숫자가 차례로 잠깐씩 켜진다(훅 없이 --fx-delay 를 그대로 따르게) */
+.fx-tick {
+  animation-name: fx-tick;
+  animation-duration: 0.09s;
+  animation-timing-function: linear;
+}
+@keyframes fx-tick {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
 }
 /* 21장: 온 땅이 한 번 빛났다가 잦아든다 */
 .fx-glow {

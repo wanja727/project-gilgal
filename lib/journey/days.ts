@@ -21,12 +21,18 @@ export type MapMode = "journey" | "territory" | "review";
  * land-*: 그 장에서 나뉜 땅(lib/journey/locations.ts TERRITORIES)
  */
 export type MapEffect =
+  | "be-strong"
   | "spies"
   | "cross-jordan"
   | "twelve-stones"
   | "manna-ends"
   | "walls-fall"
+  | "ai-defeat"
+  | "ai-victory"
+  | "gibeon-ruse"
   | "sun-moon"
+  | "north-kings"
+  | "thirty-one-kings"
   | "land-east"
   | "land-caleb"
   | "land-judah"
@@ -36,6 +42,7 @@ export type MapEffect =
   | "land-seven"
   | "refuge-cities"
   | "levite-cities"
+  | "ed-altar"
   | "gather"
   | "arrive-final";
 
@@ -123,7 +130,7 @@ const SUMMARIES: string[] = [
  */
 const CONTENT: DayContent[] = [
   // ─── ACT 1 — 약속의 땅으로 들어가다 (1~5장) ───
-  { title: "여호수아를 세우심", place: "싯딤", site: "shittim", mapMode: "journey",
+  { title: "여호수아를 세우심", place: "싯딤", site: "shittim", mapMode: "journey", mapEffect: "be-strong",
     completion: { headline: "여정을 시작했어요" } },
   { title: "라합과 정탐꾼", place: "여리고", site: "shittim", mapMode: "journey", mapEffect: "spies",
     completion: { headline: "여리고를 살피고 돌아왔어요" } },
@@ -137,17 +144,17 @@ const CONTENT: DayContent[] = [
   // ─── ACT 2 — 약속의 땅을 정복하다 (6~12장) ───
   { title: "성벽이 무너지다", place: "여리고", site: "jericho", mapMode: "journey", mapEffect: "walls-fall",
     completion: { headline: "여리고에 도착했어요" } },
-  { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey",
+  { title: "아간의 죄", place: "아이", site: "ai", mapMode: "journey", mapEffect: "ai-defeat",
     completion: { headline: "아이 앞에서 잠시 멈추었어요" } },
-  { title: "아이 성 승리, 율법 낭독", place: "에발산", site: "ebal", mapMode: "journey",
+  { title: "아이 성 승리, 율법 낭독", place: "에발산", site: "ebal", mapMode: "journey", mapEffect: "ai-victory",
     completion: { headline: "에발산에 이르렀어요" } },
-  { title: "기브온과의 조약", place: "길갈", site: "gilgal", mapMode: "journey",
+  { title: "기브온과의 조약", place: "길갈", site: "gilgal", mapMode: "journey", mapEffect: "gibeon-ruse",
     completion: { headline: "다시 길갈로 돌아왔어요" } },
   { title: "해와 달이 멈추다", place: "기브온", site: "gibeon", mapMode: "journey", mapEffect: "sun-moon",
     completion: { headline: "기브온에 이르렀어요" } },
-  { title: "북쪽 왕들과의 싸움", place: "하솔", site: "hazor", mapMode: "journey",
+  { title: "북쪽 왕들과의 싸움", place: "하솔", site: "hazor", mapMode: "journey", mapEffect: "north-kings",
     completion: { headline: "북쪽 하솔까지 이르렀어요" } },
-  { title: "정복한 서른한 왕", place: "길갈", site: "gilgal", mapMode: "review",
+  { title: "정복한 서른한 왕", place: "길갈", site: "gilgal", mapMode: "review", mapEffect: "thirty-one-kings",
     completion: { headline: "지나온 길을 돌아보았어요" } },
 
   // ─── ACT 3 — 약속의 땅을 분배하다 (13~21장) ───
@@ -172,7 +179,7 @@ const CONTENT: DayContent[] = [
 
   // ─── ACT 4 — 언약을 새롭게 하다 (22~24장) ───
   // 22장은 지도에서는 아직 땅(territory) 표현을 이어 간다 — 동쪽 지파가 자기 땅으로 돌아가는 장면
-  { title: "엣 제단", place: "요단 가", site: "east", mapMode: "territory",
+  { title: "엣 제단", place: "요단 가", site: "east", mapMode: "territory", mapEffect: "ed-altar",
     completion: { headline: "요단 동쪽 지파가 집으로 돌아갔어요" } },
 
   { title: "여호수아의 마지막 권면", place: "이스라엘", site: "shechem", mapMode: "review", mapEffect: "gather",
