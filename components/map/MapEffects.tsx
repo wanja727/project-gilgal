@@ -99,7 +99,7 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   spies: { text: "두 정탐꾼", x: 314, y: 386, t: 0.2 },
   // 4장이 오늘인 날 길갈 깃발에 걸리지 않게 깃대 끝보다 위로
   "cross-jordan": { text: "요단 물이 멈춤", x: 265, y: 258, t: 0.2 },
-  "twelve-stones": { text: "열두 돌", x: 219, y: 258, t: 0.4 },
+  "twelve-stones": { text: "열두 돌", x: 242, y: 258, t: 0.4 },
   // 아래는 길갈 아바타 자리라 그 위로
   "manna-ends": { text: "만나가 그침", x: 248, y: 248, t: 0.3 },
   "walls-fall": { text: "일곱째 날 일곱 바퀴", x: 210, y: 416, t: 0.2 },
@@ -458,8 +458,7 @@ const RIVER_STONES: readonly [number, number, number][] = [
 
 /** 4장: 길갈에 강바닥의 둥근 돌 열두 개(5·4·3 단)가 아랫줄부터 하나씩 위에서 떨어져 쌓인다 */
 function TwelveStones() {
-  // 길갈이 오늘의 장인 날 깃대(x=길갈)에 가리지 않게 깃대 왼쪽에 쌓는다
-  const stones = pileAt(offset(SITES.gilgal, -23, -30), [5, 4, 3], 7.2, 5.4);
+  const stones = pileAt(offset(SITES.gilgal, 0, -30), [5, 4, 3], 7.2, 5.4);
   return stones.map((s) => {
     const [rx, ry, tilt] = RIVER_STONES[s.n];
     return (
