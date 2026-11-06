@@ -340,8 +340,11 @@ export function JourneyMap({
 
       {effect && !focused && <MapEffectLayer key={`o-${effect.key}`} kind={effect.kind} layer="over" delay={effect.delay} />}
 
-      {/* 깃발: 오늘의 장 — 글자 이름표 없이 깃발만(장 카드가 "오늘의 장"을 알려 준다, 2026-11-04) */}
-      {!focused && view.flag && <Flag x={SITES[view.flag].x} y={SITES[view.flag].y} />}
+      {/*
+        깃발: 오늘의 장 — 글자 이름표 없이 깃발만(장 카드가 "오늘의 장"을 알려 준다, 2026-11-04).
+        그 장소를 고른 동안에는 숨긴다 — 선택 테두리와 장 카드가 이미 알려 주고, 깃발이 그 장소 바로 위라 연출·남는 그림과 겹친다(2026-11-06)
+      */}
+      {!focused && view.flag && <Flag x={SITES[view.flag].x} y={SITES[view.flag].y} hidden={view.flag === selected} />}
 
       {/* 내 아바타: 장소 아이콘을 가리지 않게 옆에 둔다 */}
       {!focused && view.me && avatarKey && walker && (
@@ -395,9 +398,9 @@ function Marker({ id, tone }: { id: SiteId; tone: "on" | "ring" | "off" }) {
   );
 }
 
-function Flag({ x, y }: { x: number; y: number }) {
+function Flag({ x, y, hidden }: { x: number; y: number; hidden: boolean }) {
   return (
-    <g aria-hidden>
+    <g aria-hidden className="map-flag" data-hidden={hidden || undefined}>
       <line x1={x} y1={y - 14} x2={x} y2={y - 40} stroke="var(--color-main)" strokeWidth="2" strokeLinecap="round" />
       <path d={`M${x + 1},${y - 40} L${x + 21},${y - 34} L${x + 1},${y - 28}Z`} fill="var(--color-main)" />
     </g>

@@ -247,6 +247,13 @@ body:has(#reader-root[data-reader-theme="dark"]) {
 .map-fade-in {
   animation: map-fade-in 0.45s var(--ease-journey) both;
 }
+/* 깃발: 그 장소를 고르면 사라지고 다른 장으로 옮기면 돌아온다 */
+.map-flag {
+  transition: opacity 0.3s var(--ease-journey);
+}
+.map-flag[data-hidden] {
+  opacity: 0;
+}
 /* 3장: 요단을 건너면 가나안 점선이 사라지고 영역이 옅게 채워진다 */
 .map-canaan-in {
   animation: map-fill-in 1.4s 1.4s var(--ease-journey) forwards;
