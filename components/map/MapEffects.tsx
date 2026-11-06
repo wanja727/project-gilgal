@@ -93,6 +93,8 @@ export function GivenLands({ ids }: { ids: readonly TerritoryId[] }) {
  * x·y 는 이름표 가운데 — 장소 아이콘·아바타·지명을 피한 자리, t 는 그 사건이 보이는 때.
  */
 type Cap = { text: string; x: number; y: number; t: number; dur?: number };
+/** 10장: 해와 달이 멈추는 때 — 이름표도 움직이는 동안이 아니라 멈춘 뒤에 뜬다 */
+const SKY_STOP = 2.3;
 const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
   "be-strong": { text: "강하고 담대하라", x: 150, y: 84, t: 0.3 },
   // 위쪽은 3장 깃발 자리라(3장이 오늘인 날) 싯딤 아래 빈 곳에
@@ -118,7 +120,7 @@ const CAPTIONS: Partial<Record<MapEffect, Cap | Cap[]>> = {
     { text: "사흘 뒤 이웃임이 드러남", x: 165, y: 424, t: 3 },
   ],
   // 왼쪽 위는 기브온 아바타 자리라 기브온 오른쪽 아래로
-  "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: 0.3 },
+  "sun-moon": { text: "해와 달이 머묾", x: 180, y: 350, t: SKY_STOP },
   "north-kings": [
     { text: "북쪽 왕들의 연합", x: 128, y: 70, t: 0.1, dur: 2 },
     { text: "하솔을 불사름", x: 128, y: 70, t: 2.1 },
@@ -661,14 +663,30 @@ function EdAltar() {
   );
 }
 
-/** 10장: 기브온 위에 해, 아얄론 골짜기에 달 — 떠서 멈춰 있다 */
+/** 하늘을 지나가다 at 에서 멈추는 것. dx·dy 는 출발 자리(at 기준) — 가로와 세로를 따로 늦춰 둥글게 지나간다 */
+function SkyBody({ at, dx, dy, children }: { at: Pt; dx: number; dy: number; children: React.ReactNode }) {
+  return (
+    <g transform={`translate(${at.x} ${at.y})`}>
+      <g className="fx-sky-x" style={T(0, { "--dx": `${dx}px`, "--dur": `${SKY_STOP}s` })}>
+        <g className="fx-sky-y" style={T(0, { "--dy": `${dy}px`, "--dur": `${SKY_STOP}s` })}>
+          {children}
+        </g>
+      </g>
+    </g>
+  );
+}
+
+/**
+ * 10장: 해와 달이 동쪽(지도 오른쪽)에서 서쪽으로 지나가다 기브온 위와 아얄론 골짜기에서 멈춘다(10:12~13) —
+ * "태양이 중천에 머물러서"라 해는 높이 올라 멈추고, 멈추면 고리가 퍼지며 그 장을 보는 동안 그대로 있다.
+ */
 function SunMoon() {
   // 기브온 위 — 왼쪽 위 아바타보다 높이
   const sun = offset(SITES.gibeon, 6, -66);
   const moon = EFFECT_SPOTS.aijalon;
   return (
     <>
-      <Pop at={sun} t={0}>
+      <SkyBody at={sun} dx={130} dy={46}>
         <circle r="6" fill="var(--color-surface)" stroke="var(--color-main)" strokeWidth="1.6" />
         {Array.from({ length: 8 }, (_, i) => {
           const a = (i / 8) * Math.PI * 2;
@@ -685,11 +703,13 @@ function SunMoon() {
             />
           );
         })}
-      </Pop>
-      <Pop at={moon} t={0.45}>
+      </SkyBody>
+      <SkyBody at={moon} dx={70} dy={26}>
         {/* 초승달: 바깥 반원 + 안쪽 반타원 */}
         <path d="M0,-7.5 A7.5,7.5 0 1,0 0,7.5 A4,7.5 0 1,1 0,-7.5Z" fill="var(--color-main)" />
-      </Pop>
+      </SkyBody>
+      <Pulse at={sun} t={SKY_STOP} r={15} />
+      <Pulse at={moon} t={SKY_STOP} r={12} />
     </>
   );
 }

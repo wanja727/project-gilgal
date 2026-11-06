@@ -460,6 +460,30 @@ body:has(#reader-root[data-reader-theme="dark"]) {
   0%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
+/* 10장: 해와 달이 일정하게 지나가다 끝에서 늦춰 멈춘다. 세로는 먼저 올라 높이를 잡아 둥글게 지나간다 */
+.fx-sky-x,
+.fx-sky-y {
+  animation-delay: calc(var(--fx-delay) + var(--t, 0s));
+  animation-duration: var(--dur, 2.3s);
+  animation-fill-mode: both;
+}
+.fx-sky-x {
+  animation-name: fx-sky-x;
+  animation-timing-function: cubic-bezier(0.35, 0.35, 0.45, 1);
+}
+.fx-sky-y {
+  animation-name: fx-sky-y;
+  animation-timing-function: ease-out;
+}
+@keyframes fx-sky-x {
+  0% { opacity: 0; transform: translateX(var(--dx)); }
+  14% { opacity: 1; }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes fx-sky-y {
+  from { transform: translateY(var(--dy)); }
+  to { transform: none; }
+}
 /* 9장: 선이 천천히 이어져 남는다(pathLength=1 기준) */
 .fx-draw {
   stroke-dasharray: 1;
