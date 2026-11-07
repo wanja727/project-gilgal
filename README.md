@@ -7,16 +7,16 @@
 따라가고, 그 장소에서 있었던 사건이 지도 위에 짧은 연출로 펼쳐집니다.
 
 <p>
-  <img width="200" alt="오늘" src="docs/readme/home.png" />
-  <img width="200" alt="여정 지도" src="docs/readme/journey.png" />
-  <img width="200" alt="도착 화면" src="docs/readme/arrival.png" />
-  <img width="200" alt="본문 읽기" src="docs/readme/reading.png" />
+  <img align="top" width="200" alt="오늘" src="docs/readme/home.png" />
+  <img align="top" width="200" alt="여정 지도" src="docs/readme/journey.png" />
+  <img align="top" width="200" alt="도착 화면" src="docs/readme/arrival.png" />
+  <img align="top" width="200" alt="본문 읽기" src="docs/readme/reading.png" />
 </p>
 
 <p>
-  <img width="270" alt="요단을 건너다(3장 도착 화면)" src="docs/readme/anim-arrival.gif" />
-  <img width="270" alt="여리고 성벽(6장)" src="docs/readme/anim-walls.gif" />
-  <img width="270" alt="해와 달이 머물다(10장)" src="docs/readme/anim-sun-moon.gif" />
+  <img align="top" width="270" alt="요단을 건너다(3장 도착 화면)" src="docs/readme/anim-arrival.gif" />
+  <img align="top" width="270" alt="여리고 성벽(6장)" src="docs/readme/anim-walls.gif" />
+  <img align="top" width="270" alt="해와 달이 머물다(10장)" src="docs/readme/anim-sun-moon.gif" />
 </p>
 
 ---
@@ -63,8 +63,8 @@
 만들었습니다.
 
 <p>
-  <img width="270" alt="홈 진행도 연출" src="docs/readme/anim-home.gif" />
-  <img width="200" alt="여정 지도" src="docs/readme/journey.png" />
+  <img align="top" width="270" alt="홈 진행도 연출" src="docs/readme/anim-home.gif" />
+  <img align="top" width="200" alt="여정 지도" src="docs/readme/journey.png" />
 </p>
 
 ### 2. 장소마다 펼쳐지는 사건 연출 (24장 전부)
@@ -82,7 +82,7 @@
 | 13~19장 땅 분배 | 지파의 땅이 장마다 한 조각씩 채워지고, 21장에서 온 땅이 함께 빛난다 |
 
 <p>
-  <img width="270" alt="땅이 장마다 쌓인다(13~16장)" src="docs/readme/anim-lands.gif" />
+  <img align="top" width="270" alt="땅이 장마다 쌓인다(13~16장)" src="docs/readme/anim-lands.gif" />
 </p>
 
 ### 3. 본문 읽기 · 형광펜 · 구절을 담은 나눔
@@ -93,8 +93,8 @@
 글자 크기·글꼴·굵기·줄 간격·배경(기본/종이/어둡게) 읽기 설정도 있습니다.
 
 <p>
-  <img width="200" alt="본문 읽기와 절 도구" src="docs/readme/reading.png" />
-  <img width="200" alt="모든 나눔" src="docs/readme/share.png" />
+  <img align="top" width="200" alt="본문 읽기와 절 도구" src="docs/readme/reading.png" />
+  <img align="top" width="200" alt="모든 나눔" src="docs/readme/share.png" />
 </p>
 
 ### 4. 나만의 아바타 · 개관 · 관리자 지표
@@ -104,8 +104,8 @@
 - **관리자 지표** — 참여율·읽기 추이·셀별/개인별 진행·방문 기록. 관리자 권한은 DB에서만 부여합니다.
 
 <p>
-  <img width="200" alt="아바타 꾸미기" src="docs/readme/avatar.png" />
-  <img width="200" alt="개관" src="docs/readme/overview.png" />
+  <img align="top" width="200" alt="아바타 꾸미기" src="docs/readme/avatar.png" />
+  <img align="top" width="200" alt="개관" src="docs/readme/overview.png" />
 </p>
 
 ---
