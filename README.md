@@ -201,19 +201,13 @@
 회원번호로 연결하고, 실명·셀 정보만 오픈 전 1회 CSV 로 이관했습니다. 카카오 회원번호는 클라이언트로 보내지
 않고, 이관 CSV 는 적재 후 삭제합니다.
 
-### 3. 성경 본문 저작권
-
-개역개정은 저작권 보호 대상이라 **본문을 저장소에 커밋하지 않습니다.** 본문은 `BibleTextProvider` 를 통해서만
-가져오고(`mock` / `db`), 운영자가 제공한 파일을 `pnpm bible:load` 로 DB 에 적재합니다. 저장소와 이 README 의
-화면은 자리 표시 문장(Mock)만 담고 있습니다.
-
-### 4. 운영 중 장애 대응
+### 3. 운영 중 장애 대응
 
 - **홈 멈춤** — 서버리스 환경에서 DB 연결이 쌓이며 홈이 멈추던 문제를 `pg` + Vercel `attachDatabasePool` 로
   드라이버를 바꿔 해결(ADR-032). 홈 질의도 5개 → 2개로 줄이고 병렬화했습니다.
 - **방문 기록** — 응답을 늦추지 않도록 `after()` 로 응답 후에 기록합니다.
 
-### 5. 설계 문서와 결정 기록
+### 4. 설계 문서와 결정 기록
 
 요구사항(`docs/requirements.md`) · 아키텍처(`docs/architecture.md`) · 구현 계획(`docs/implementation-plan.md`)을
 먼저 쓰고, 중요한 결정은 **결정 / 배경 / 대안 / 결과** 형식의 ADR 로 38개를 남겼습니다. 결정을 뒤집을 때도 지우지
@@ -273,13 +267,6 @@ pnpm typecheck && pnpm lint && pnpm test
 
 `.env.example` 의 키를 `.env.local` 에 채웁니다 — 카카오 OAuth(`AUTH_KAKAO_ID`·`AUTH_KAKAO_SECRET`), `AUTH_SECRET`,
 Postgres 연결(`DATABASE_URL`·`DIRECT_URL`), `BIBLE_PROVIDER`(`mock`/`db`), 캠페인 slug(`GILGAL_CAMPAIGN`).
-
----
-
-## ⚠️ 저작권
-
-성경 본문(개역개정)은 대한성서공회의 저작물입니다. 이 저장소에는 본문이 포함되어 있지 않으며, 화면 캡처는
-자리 표시 문장(Mock)으로 찍었습니다. 장별 절 수 같은 메타데이터만 코드에 있습니다.
 
 ---
 
