@@ -34,6 +34,14 @@ export default async function AdminPage() {
       value: `${m.caughtUp}명`,
       sub: m.openDays > 0 ? `${m.openDays}장까지 · ${pct(m.caughtUp, m.members)}%` : "아직 출발 전",
     },
+    {
+      label: "꾸준히 읽은 사람",
+      value: m.steadyDays > 0 ? `${m.steady}명` : "—",
+      sub:
+        m.steadyDays > 0
+          ? `어제까지 ${m.steadyDays}장을 모두 당일에 읽음 · ${pct(m.steady, m.members)}%`
+          : "첫날이 지나면 셀 수 있어요",
+    },
   ];
 
   return (
@@ -49,8 +57,12 @@ export default async function AdminPage() {
       </p>
 
       <dl className="mx-gutter mt-4 grid grid-cols-2 gap-2">
-        {tiles.map((t) => (
-          <div key={t.label} className="rounded-tile bg-surface px-4 py-3.5">
+        {tiles.map((t, i) => (
+          // 칸이 홀수면 마지막 칸을 한 줄 전체로 — 빈 칸이 남지 않게
+          <div
+            key={t.label}
+            className={`rounded-tile bg-surface px-4 py-3.5 ${tiles.length % 2 === 1 && i === tiles.length - 1 ? "col-span-2" : ""}`}
+          >
             <dt className="text-caption text-mute">{t.label}</dt>
             <dd className="mt-0.5 text-[22px] font-bold tracking-[-0.03em] text-main tabular-nums">{t.value}</dd>
             {t.sub && <dd className="text-[11px] text-mid">{t.sub}</dd>}

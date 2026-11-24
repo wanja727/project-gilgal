@@ -10,6 +10,9 @@ import { addDays, type IsoDate } from "@/lib/time";
  * - 참여자: 온보딩을 마친 사람(공동체 집계와 같은 기준, 테스트 계정 제외).
  * - "읽은 날": 완료 기록 시각의 서비스 날짜(새벽 4시 기준). 지난 장을 몰아 읽어도 그날 한 번 센다.
  * - 진행률: 오늘까지 열린 장 중 읽은 장. 셀 진행률 = 셀원이 읽은 열린 장 합 / (셀원 수 × 열린 장 수).
+ * - 당일 읽음: 그 장이 열린 서비스 날짜에 완료한 장. 완료는 되돌릴 수 없어(insert 만) 첫 완료 시각이 곧 기준이다.
+ * - 꾸준히 읽은 사람: 어제까지 열린 장을 모두 당일에 읽은 사람. 오늘의 장은 하루가 끝나지 않았으니
+ *   아직 안 읽어도 빼지 않는다. 주일·Catch-up 처럼 새 장이 없는 날은 판단할 장이 없어 자연히 건너뛴다.
  */
 
 export type AdminMember = { userId: string; name: string; cell: string; personal: boolean };
@@ -36,6 +39,10 @@ export type PersonRow = {
   cell: string;
   /** 읽은 열린 장 수 */
   done: number;
+  /** 열린 날 당일에 읽은 장 수 */
+  onTime: number;
+  /** 어제까지 열린 장을 모두 당일에 읽음 */
+  steady: boolean;
   lastRead: IsoDate | null;
   lastVisit: IsoDate | null;
 };
@@ -52,6 +59,10 @@ export type AdminMetrics = {
   /** 오늘의 장을 읽은 참여자(언제 읽었든) */
   todayChapterDone: number | null;
   caughtUp: number;
+  /** 꾸준히 읽은 사람(어제까지 열린 장을 모두 당일에 읽음) */
+  steady: number;
+  /** 꾸준함을 판단한 장 수 = 어제까지 열린 장. 0 이면 아직 판단할 수 없다 */
+  steadyDays: number;
   trend: TrendPoint[];
   chapters: ChapterPoint[];
   cells: CellRow[];
@@ -76,13 +87,21 @@ export function buildAdminMetrics(input: {
   const openSet = new Set(open.map((d) => d.day));
   const todayJourney = JOURNEY_DAYS.find((d) => d.readingDate === today) ?? null;
 
-  // 사람별 읽은 열린 장·마지막 읽은 날·마지막 방문일
+  const readingDateOf = new Map(open.map((d) => [d.day, d.readingDate]));
+  const pastDays = open.filter((d) => d.readingDate < today);
+
+  // 사람별 읽은 열린 장·당일에 읽은 장·마지막 읽은 날·마지막 방문일
   const doneBy = new Map<string, Set<number>>();
+  const onTimeBy = new Map<string, Set<number>>();
   const lastReadBy = new Map<string, IsoDate>();
   for (const c of completions) {
     if (openSet.has(c.dayNo)) {
       if (!doneBy.has(c.userId)) doneBy.set(c.userId, new Set());
       doneBy.get(c.userId)!.add(c.dayNo);
+      if (readingDateOf.get(c.dayNo) === c.date) {
+        if (!onTimeBy.has(c.userId)) onTimeBy.set(c.userId, new Set());
+        onTimeBy.get(c.userId)!.add(c.dayNo);
+      }
     }
     if ((lastReadBy.get(c.userId) ?? "") < c.date) lastReadBy.set(c.userId, c.date);
   }
@@ -92,6 +111,7 @@ export function buildAdminMetrics(input: {
   const doneCount = (id: string) => doneBy.get(id)?.size ?? 0;
   const didToday = (id: string) => (todayJourney ? (doneBy.get(id)?.has(todayJourney.day) ?? false) : false);
   const isCaughtUp = (id: string) => open.length > 0 && doneCount(id) === open.length;
+  const isSteady = (id: string) => pastDays.length > 0 && pastDays.every((d) => onTimeBy.get(id)?.has(d.day));
 
   // 날짜별 방문·읽은 사람(시작일 ~ 오늘, 시작 전이면 비움)
   const visitorsOn = groupDistinct(visits);
@@ -127,6 +147,8 @@ export function buildAdminMetrics(input: {
     name: m.name,
     cell: m.cell,
     done: doneCount(m.userId),
+    onTime: onTimeBy.get(m.userId)?.size ?? 0,
+    steady: isSteady(m.userId),
     lastRead: lastReadBy.get(m.userId) ?? null,
     lastVisit: lastVisitBy.get(m.userId) ?? null,
   }));
@@ -141,6 +163,8 @@ export function buildAdminMetrics(input: {
     readersToday: readersOn.get(today)?.size ?? 0,
     todayChapterDone: todayJourney ? members.filter((m) => didToday(m.userId)).length : null,
     caughtUp: members.filter((m) => isCaughtUp(m.userId)).length,
+    steady: members.filter((m) => isSteady(m.userId)).length,
+    steadyDays: pastDays.length,
     trend,
     chapters,
     cells,

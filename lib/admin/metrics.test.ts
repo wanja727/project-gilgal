@@ -60,6 +60,61 @@ describe("관리자 지표", () => {
     expect(m.people.find((p) => p.name === "나")).toMatchObject({ done: 2, lastRead: "2026-11-04" });
   });
 
+  it("꾸준히 읽은 사람: 어제까지 열린 장을 모두 당일에 읽음", () => {
+    // a 는 1·2·3장을 모두 당일에, b 는 몰아 읽어 당일 0장
+    expect(m.steadyDays).toBe(2);
+    expect(m.steady).toBe(1);
+    expect(m.people.find((p) => p.name === "가")).toMatchObject({ onTime: 3, steady: true });
+    expect(m.people.find((p) => p.name === "나")).toMatchObject({ onTime: 0, steady: false });
+
+    // 오늘의 장은 아직 안 읽어도 꾸준함에서 빠지지 않는다. 하루 늦게 읽은 장이 있으면 빠진다
+    const m2 = buildAdminMetrics({
+      ...base,
+      completions: [
+        { userId: "a", dayNo: 1, date: "2026-11-02" },
+        { userId: "a", dayNo: 2, date: "2026-11-03" },
+        { userId: "b", dayNo: 1, date: "2026-11-02" },
+        { userId: "b", dayNo: 2, date: "2026-11-04" },
+        { userId: "b", dayNo: 3, date: "2026-11-04" },
+      ],
+      visits: [],
+    });
+    expect(m2.people.find((p) => p.name === "가")).toMatchObject({ onTime: 2, steady: true });
+    expect(m2.people.find((p) => p.name === "나")).toMatchObject({ onTime: 2, steady: false });
+    expect(m2.steady).toBe(1);
+  });
+
+  it("주일은 판단할 장이 없어 건너뛴다", () => {
+    // 11/9(월) 기준 어제까지 = 1~6장(11/2~11/7). 주일 11/8 에 읽은 것이 없어도 꾸준하다
+    const days = [
+      ["2026-11-02", 1],
+      ["2026-11-03", 2],
+      ["2026-11-04", 3],
+      ["2026-11-05", 4],
+      ["2026-11-06", 5],
+      ["2026-11-07", 6],
+    ] as const;
+    const mon = buildAdminMetrics({
+      ...base,
+      today: "2026-11-09",
+      completions: days.map(([date, dayNo]) => ({ userId: "a", dayNo, date })),
+      visits: [],
+    });
+    expect(mon.steadyDays).toBe(6);
+    expect(mon.steady).toBe(1);
+  });
+
+  it("첫날에는 꾸준함을 셀 수 없다", () => {
+    const first = buildAdminMetrics({
+      ...base,
+      today: "2026-11-02",
+      completions: [{ userId: "a", dayNo: 1, date: "2026-11-02" }],
+      visits: [],
+    });
+    expect(first.steadyDays).toBe(0);
+    expect(first.steady).toBe(0);
+  });
+
   it("주일에는 오늘의 장이 없다", () => {
     const sunday = buildAdminMetrics({ ...base, today: "2026-11-08", completions: [], visits: [] });
     expect(sunday.todayDay).toBeNull();
